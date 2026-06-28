@@ -1,0 +1,634 @@
+"""
+ITASORL - Experiment B-v2: survival-coupled incidental detection.
+
+Experiment B asked whether a PREDICTION-only agent incidentally encodes world
+identity. It does not (target AUROC ~= 0.50). The conjecture (FINDINGS.md "next
+steps") is that what an objective does not REQUIRE, the agent does not represent.
+B-v2 changes exactly one thing: the agent now ACTS to stay alive, in a world
+whose dynamics drift (L2). Surviving well depends on coping with the drifting
+drag, so representing the dynamics becomes instrumentally useful - and the SAME
+probe asks whether world identity is now decodable from the recurrent state.
+
+Readout, not reward: world identity is never in the observation or the reward.
+
+Pipeline (all knobs in run_expB2.py):
+  1. train_actor_critic    - recurrent A2C + GAE (+ optional world-model decoder aux)
+  2. engagement_metric     - GATE: trained return must beat random/scripted, else the
+                             null is uninformative (cf. the open-loop MSE check in FINDINGS)
+  3. matched_pair_recurrent_rollout - shared authentic prefix, then branch authentic vs
+                             drift from an IDENTICAL world+agent state; record h_t per branch.
+                             Kills the lifetime/return confound (both branches share history).
+  4. probe + leakage_audit_b2 - target/shuffled/speed AUROC on h_t (reusing experiment_b's
+                             harness) and a battery proving the probe reads the artifact,
+                             not reward/length/lifetime.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import torch
+
+from agent_ac import RecurrentActorCritic
+from experiment_b import episode_features, probe_auroc, scripted_policy
+from patch_of_earth import PatchOfEarthV0
+from world import SeedBundle, WorldParams
+
+
+def default_device() -> str:
+    return "cuda" if torch.cuda.is_available() else "cpu"
+
+
+# Harsh metabolism so SURVIVAL ACTUALLY BITES: with the stock constants the agent
+# never dies inside a tractable horizon, so "survival pressure" is only a marginal
+# foraging-return signal. Lowering starting energy and raising the basal burn makes a
+# non-forager starve in ~50 steps, so foraging - and thus coping with the drifting
+# drag that governs movement - becomes life-or-death. Applied to EVERY B-v2 world
+# (train, readout, baselines) for consistency. Experiments A/B build their own worlds
+# and are untouched.
+SURVIVAL_METAB = {"E0": 1.0, "basal_E": 0.4, "Hyd0": 8.0, "basal_Hyd": 0.005}
+# Denser, larger, easier-to-reach food so the eat-reward is not impossibly sparse for
+# a from-scratch policy (the exploration bottleneck). Drift still governs how thrust
+# translates into reaching that food, so the dynamics stay survival-relevant.
+SURVIVAL_FOOD = {"n_pellets": 24, "reach": 0.08, "pellet_r": 0.03}
+
+
+def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int) -> PatchOfEarthV0:
+    w = PatchOfEarthV0(params or WorldParams(), drift_sigma=drift_sigma)
+    w.ray_steps = ray_steps
+    for k, v in {**SURVIVAL_METAB, **SURVIVAL_FOOD}.items():  # override before reset()
+        setattr(w, k, v)
+    return w
+
+
+def _food_potential(world) -> float:
+    """Potential Phi(s) = -distance to the nearest available pellet (0 if none/terminal).
+    Used for POTENTIAL-BASED shaping, which provably preserves the optimal policy - a
+    learning aid, not reward hacking, and identical in authentic vs surrogate worlds."""
+    avail = world.pellet_amt > 1e-9
+    if not avail.any():
+        return 0.0
+    d2 = np.sum((world.pellets[avail] - world.pos) ** 2, axis=1)
+    return -float(np.sqrt(d2.min()))
+
+
+def _seeds(base: int) -> SeedBundle:
+    return SeedBundle(world=base, weather=base + 7000, ecology=base + 13000)
+
+
+# ---------------------------------------------------------------------------
+# Online observation normalizer (Welford). Frozen after training so the probe
+# and the matched-pair readout see the SAME normalization the agent trained with.
+# ---------------------------------------------------------------------------
+class RunningNorm:
+    def __init__(self, dim: int) -> None:
+        self.mean = np.zeros(dim, np.float64)
+        self.var = np.ones(dim, np.float64)
+        self.count = 1e-4
+        self.frozen = False
+
+    def update(self, x: np.ndarray) -> None:
+        if self.frozen:
+            return
+        x = np.atleast_2d(x)
+        n = x.shape[0]
+        bm = x.mean(0)
+        bv = x.var(0)
+        tot = self.count + n
+        delta = bm - self.mean
+        self.mean += delta * n / tot
+        self.var = (self.var * self.count + bv * n + delta**2 * self.count * n / tot) / tot
+        self.count = tot
+
+    def __call__(self, x: np.ndarray) -> np.ndarray:
+        return (x - self.mean) / (np.sqrt(self.var) + 1e-6)
+
+    def freeze(self) -> "RunningNorm":
+        self.frozen = True
+        return self
+
+
+# ---------------------------------------------------------------------------
+# Episode collection over parallel envs (one independent recurrent sequence each).
+# ---------------------------------------------------------------------------
+def collect_episodes_ac(agent: RecurrentActorCritic, norm: RunningNorm, params, drift_sigma,
+                        n_eps: int, max_steps: int, device: str, seed_base: int,
+                        ray_steps: int = 5, deterministic: bool = False, update_norm: bool = True,
+                        shaping_coef: float = 0.0, gamma: float = 0.99):
+    """Run n_eps parallel envs to death/max_steps. Returns padded torch tensors on
+    `device` for the A2C update plus per-episode scalars. h0 is zero per episode.
+
+    shaping_coef>0 adds potential-based food-approach shaping to the TRAINING reward
+    (optimal-policy-preserving); `ret`/lengths still report the TRUE task outcome."""
+    A = agent.act_dim
+    envs = [make_world(params, drift_sigma, ray_steps) for _ in range(n_eps)]
+    obs = np.stack([e.reset(_seeds(seed_base + i)).obs for i, e in enumerate(envs)]).astype(np.float64)
+    active = np.ones(n_eps, bool)
+    h = agent.initial_state(n_eps, device)
+    prev_env_act = torch.zeros(n_eps, A, device=device)
+    phi_prev = np.array([_food_potential(e) for e in envs])
+
+    seq_obs = [[] for _ in range(n_eps)]      # normalized obs fed to the agent
+    seq_actin = [[] for _ in range(n_eps)]    # prev env action fed to the GRU
+    seq_raw = [[] for _ in range(n_eps)]      # raw sampled action (for log-prob)
+    seq_env = [[] for _ in range(n_eps)]      # env action applied (decoder conditioning)
+    seq_rew = [[] for _ in range(n_eps)]      # TRAINING reward (true + shaping)
+    seq_true = [[] for _ in range(n_eps)]     # TRUE reward only (for engagement/return)
+    speeds = [[] for _ in range(n_eps)]
+    terminated = np.zeros(n_eps, bool)
+
+    for _ in range(max_steps):
+        if not active.any():
+            break
+        if update_norm:
+            norm.update(obs[active])
+        obs_n = norm(obs)
+        obs_t = torch.as_tensor(obs_n, dtype=torch.float32, device=device)
+        raw_act, env_act, _, _, h = agent.act(obs_t, prev_env_act, h, deterministic=deterministic)
+        env_np = env_act.detach().cpu().numpy()
+        for i in range(n_eps):
+            if not active[i]:
+                continue
+            seq_obs[i].append(obs_n[i].astype(np.float32))
+            seq_actin[i].append(prev_env_act[i].detach().cpu().numpy())
+            seq_raw[i].append(raw_act[i].detach().cpu().numpy())
+            seq_env[i].append(env_np[i])
+            r = envs[i].step(env_np[i].astype(np.float32))
+            shaped = r.reward
+            if shaping_coef:
+                phi_new = 0.0 if r.terminated else _food_potential(envs[i])
+                shaped = r.reward + shaping_coef * (gamma * phi_new - phi_prev[i])
+                phi_prev[i] = phi_new
+            seq_rew[i].append(shaped)
+            seq_true[i].append(r.reward)
+            speeds[i].append(float(np.linalg.norm(envs[i].vel)))
+            obs[i] = r.obs
+            if r.terminated:
+                active[i] = False
+                terminated[i] = True
+        prev_env_act = env_act
+        # zero hidden + prev action for finished envs (clean episode boundary if reused)
+        amask = torch.as_tensor(active, dtype=torch.float32, device=device).unsqueeze(-1)
+        h = h * amask
+        prev_env_act = prev_env_act * amask
+
+    lengths = np.array([len(s) for s in seq_obs])
+    Tmax = int(lengths.max())
+    O, Adim = agent.obs_dim, A
+
+    def pad(seqs, width):
+        out = np.zeros((n_eps, Tmax, width), np.float32)
+        for i, s in enumerate(seqs):
+            if s:
+                out[i, : len(s)] = np.asarray(s, np.float32)
+        return out
+
+    mask = np.zeros((n_eps, Tmax), np.float32)
+    for i, n in enumerate(lengths):
+        mask[i, :n] = 1.0
+    rew = np.zeros((n_eps, Tmax), np.float32)        # shaped reward -> GAE target
+    for i, s in enumerate(seq_rew):
+        rew[i, : len(s)] = np.asarray(s, np.float32)
+    true_ret = np.array([float(np.sum(s)) for s in seq_true])  # TRUE return -> engagement
+
+    batch = {
+        "obs": torch.as_tensor(pad(seq_obs, O), device=device),
+        "act_in": torch.as_tensor(pad(seq_actin, Adim), device=device),
+        "raw": torch.as_tensor(pad(seq_raw, Adim), device=device),
+        "env_act": torch.as_tensor(pad(seq_env, Adim), device=device),
+        "reward": torch.as_tensor(rew, device=device),
+        "mask": torch.as_tensor(mask, device=device),
+        "terminated": torch.as_tensor(terminated.astype(np.float32), device=device),
+        "lengths": lengths,
+        "ret": true_ret,
+        "speed": np.array([np.mean(s) if s else 0.0 for s in speeds]),
+    }
+    return batch
+
+
+def compute_gae(reward, value, mask, terminated, gamma, lam):
+    """Per-episode GAE. reward/value/mask (B,T); terminated (B,). Bootstrap is 0 for
+    episodes that ended in death, else the last in-episode value (truncation)."""
+    B, T = reward.shape
+    adv = torch.zeros_like(reward)
+    last_idx = mask.sum(1).long().clamp(min=1) - 1  # final valid step per episode
+    boot = torch.where(terminated > 0.5, torch.zeros(B, device=reward.device),
+                       value.gather(1, last_idx.unsqueeze(1)).squeeze(1))
+    gae = torch.zeros(B, device=reward.device)
+    next_v = boot
+    for t in reversed(range(T)):
+        m = mask[:, t]
+        nonterm = m  # within episode; beyond episode m=0 so contributions vanish
+        delta = reward[:, t] + gamma * next_v * nonterm - value[:, t]
+        gae = delta + gamma * lam * nonterm * gae
+        adv[:, t] = gae * m
+        next_v = torch.where(m > 0.5, value[:, t], next_v)
+    ret = adv + value
+    return adv, ret
+
+
+def train_actor_critic(drift_sigma: float, params=None, *, n_eps: int = 16, updates: int = 200,
+                       embed: int = 64, hidden: int = 96, world_model: bool = True,
+                       lr: float = 3e-4, gamma: float = 0.99, lam: float = 0.95,
+                       ent_coef: float = 0.01, vf_coef: float = 0.5, wm_coef: float = 1.0,
+                       shaping_coef: float = 0.5, max_steps: int = 80, ray_steps: int = 5,
+                       seed: int = 0, device: str | None = None, log_every: int = 0):
+    device = device or default_device()
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    probe = make_world(params, drift_sigma, ray_steps)
+    obs_dim, act_dim = probe.obs_spec.size, probe.action_spec.size
+    agent = RecurrentActorCritic(obs_dim, act_dim, embed, hidden, world_model).to(device)
+    opt = torch.optim.Adam(agent.parameters(), lr=lr)
+    norm = RunningNorm(obs_dim)
+    history = []
+    for u in range(updates):
+        seed_base = 100_000 + seed * 10_000 + u * n_eps
+        batch = collect_episodes_ac(agent, norm, params, drift_sigma, n_eps, max_steps,
+                                    device, seed_base, ray_steps, deterministic=False,
+                                    shaping_coef=shaping_coef, gamma=gamma)
+        logp, value, ent, states = agent.score_actions(batch["obs"], batch["act_in"], batch["raw"],
+                                                        agent.initial_state(n_eps, device))
+        with torch.no_grad():
+            adv, ret = compute_gae(batch["reward"], value, batch["mask"], batch["terminated"], gamma, lam)
+            am = batch["mask"].sum()
+            adv = (adv - (adv * batch["mask"]).sum() / am) / ((adv * batch["mask"]).std() + 1e-6)
+        m = batch["mask"]
+        pg = -(logp * adv * m).sum() / am
+        vloss = (((value - ret) ** 2) * m).sum() / am
+        entropy = (ent * m).sum() / am
+        loss = pg + vf_coef * vloss - ent_coef * entropy
+        if world_model:
+            pred = agent.predict_next(states, batch["env_act"])  # predict obs_{t+1} from (h_t, a_t)
+            wm = (((pred[:, :-1] - batch["obs"][:, 1:]) ** 2) * m[:, 1:].unsqueeze(-1)).sum() / (m[:, 1:].sum() * obs_dim + 1e-6)
+            loss = loss + wm_coef * wm
+        opt.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(agent.parameters(), 1.0)
+        opt.step()
+        history.append(float(batch["ret"].mean()))
+        if log_every and (u % log_every == 0 or u == updates - 1):
+            print(f"   update {u:4d}  mean_return={np.mean(history[-log_every:]):+.3f}  "
+                  f"len={batch['lengths'].mean():.0f}  ent={float(entropy):.2f}")
+    norm.freeze()
+    return agent, norm, history
+
+
+# ---------------------------------------------------------------------------
+# Engagement gate - the trained policy must out-survive random / scripted.
+# ---------------------------------------------------------------------------
+def _baseline_return(kind: str, params, drift_sigma, n_eps, max_steps, ray_steps, seed_base):
+    rng = np.random.default_rng(seed_base)
+    rets, lens = [], []
+    for i in range(n_eps):
+        w = make_world(params, drift_sigma, ray_steps)
+        w.reset(_seeds(seed_base + i))
+        R, t = 0.0, 0
+        for _ in range(max_steps):
+            if kind == "random":
+                a = np.array([rng.uniform(0, 1), rng.uniform(-1, 1), float(rng.random() < 0.5),
+                              float(rng.random() < 0.5), 0.0], np.float32)
+            else:
+                a = scripted_policy(rng)
+            r = w.step(a)
+            R += r.reward
+            t += 1
+            if r.terminated:
+                break
+        rets.append(R)
+        lens.append(t)
+    return float(np.mean(rets)), float(np.mean(lens))
+
+
+def engagement_metric(agent, norm, params, drift_sigma, *, n_eps: int = 64, max_steps: int = 80,
+                      ray_steps: int = 5, device: str | None = None, seed_base: int = 900_000) -> dict:
+    device = device or default_device()
+    b = collect_episodes_ac(agent, norm, params, drift_sigma, n_eps, max_steps, device,
+                            seed_base, ray_steps, deterministic=True, update_norm=False)
+    trained_ret, trained_len = float(b["ret"].mean()), float(b["lengths"].mean())
+    rnd_ret, rnd_len = _baseline_return("random", params, drift_sigma, n_eps, max_steps, ray_steps, seed_base + 1)
+    scr_ret, scr_len = _baseline_return("scripted", params, drift_sigma, n_eps, max_steps, ray_steps, seed_base + 2)
+    # Engagement requires BOTH higher true return AND longer lifetime than random/scripted.
+    # (Return alone can tie near the death penalty while the agent dies just as fast -
+    #  the v2 false positive; lifetime is the cleaner survival signal.)
+    better_return = trained_ret > max(rnd_ret, scr_ret)
+    longer_life = trained_len > max(rnd_len, scr_len)
+    return {
+        "trained_return": trained_ret, "random_return": rnd_ret, "scripted_return": scr_ret,
+        "trained_len": trained_len, "random_len": rnd_len, "scripted_len": scr_len,
+        "better_return": better_return, "longer_life": longer_life,
+        "engaged": better_return and longer_life,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Matched-pair recurrent readout - the keystone confound control with a recurrent
+# agent. Shared authentic prefix, snapshot world + agent state, then branch
+# authentic vs drift from the IDENTICAL state. Records h_t per branch for the probe.
+# ---------------------------------------------------------------------------
+def _run_branch(agent, norm, world, h0, prev_act0, branch_steps, device):
+    """Step `world` with the (frozen, deterministic) agent for branch_steps, carrying
+    the recurrent state. Returns per-step h_t (T,H), speeds, rewards, and `alive`."""
+    h = h0.clone()
+    prev = prev_act0.clone()
+    obs = world.observe().astype(np.float64)
+    Hs, spd, rew = [], [], []
+    alive = True
+    for _ in range(branch_steps):
+        obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
+        _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
+        Hs.append(h[0].detach().cpu().numpy())
+        env_np = env_act[0].detach().cpu().numpy().astype(np.float32)
+        r = world.step(env_np)
+        spd.append(float(np.linalg.norm(world.vel)))
+        rew.append(float(r.reward))
+        obs = r.obs.astype(np.float64)
+        prev = env_act
+        if r.terminated:
+            alive = False
+            break
+    return np.asarray(Hs, np.float32), spd, rew, alive
+
+
+def matched_pair_recurrent_rollout(agent, norm, params, drift_sigma, *, n_pairs: int = 60,
+                                   prefix_steps: int = 20, branch_steps: int = 24, ray_steps: int = 5,
+                                   device: str | None = None, seed_base: int = 700_000) -> tuple[list, list]:
+    """Returns (auth_eps, surr_eps): per-branch dicts with H (T,Hdim), speed, reward_sum,
+    length, lifetime. Authentic vs surrogate branch from a bit-identical shared state."""
+    device = device or default_device()
+    auth_eps, surr_eps = [], []
+    for p in range(n_pairs):
+        seeds = _seeds(seed_base + p)
+        # shared authentic prefix (drift OFF) with the frozen agent, carrying h_t
+        base = make_world(params, 0.0, ray_steps)
+        base.reset(seeds)
+        h = agent.initial_state(1, device)
+        prev = torch.zeros(1, agent.act_dim, device=device)
+        obs = base.observe().astype(np.float64)
+        for _ in range(prefix_steps):
+            obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
+            _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
+            r = base.step(env_act[0].detach().cpu().numpy().astype(np.float32))
+            obs = r.obs.astype(np.float64)
+            prev = env_act
+            if r.terminated:
+                break
+        snapshot = base.get_state()
+        h_branch, prev_branch = h.clone(), prev.clone()
+
+        # authentic branch: fresh authentic world restored to the snapshot
+        aw = make_world(params, 0.0, ray_steps)
+        aw.reset(seeds)
+        aw.set_state(snapshot)
+        Ha, spa, rea, alivea = _run_branch(agent, norm, aw, h_branch, prev_branch, branch_steps, device)
+
+        # surrogate branch: drift world restored to the SAME snapshot (drift activates here)
+        sw = make_world(params, drift_sigma, ray_steps)
+        sw.reset(seeds)
+        sw.set_state(snapshot)
+        Hs, sps, res, alives = _run_branch(agent, norm, sw, h_branch, prev_branch, branch_steps, device)
+
+        # Truncate BOTH branches of the pair to equal length so episode length /
+        # lifetime cannot leak the label (the matched-pair confound guard, by construction).
+        L = min(len(Ha), len(Hs))
+        if L == 0:
+            continue
+        full = int(L == branch_steps)
+        auth_eps.append({"H": Ha[:L], "label": 0, "speed": float(np.mean(spa[:L])),
+                         "reward_sum": float(np.sum(rea[:L])), "length": L, "lifetime": full})
+        surr_eps.append({"H": Hs[:L], "label": 1, "speed": float(np.mean(sps[:L])),
+                         "reward_sum": float(np.sum(res[:L])), "length": L, "lifetime": full})
+    return auth_eps, surr_eps
+
+
+# ---------------------------------------------------------------------------
+# Probe + leakage audit (reuse experiment_b.probe_auroc / grouped_auroc).
+# ---------------------------------------------------------------------------
+def _episode_feature(H: np.ndarray) -> np.ndarray:
+    """Per-episode probe input = [mean recurrent state, final recurrent state].
+    Matches experiment_b.episode_features semantics for a single variable-length episode."""
+    return np.concatenate([H.mean(0), H[-1]])
+
+
+def probe_world_identity(auth_eps: list, surr_eps: list, seed: int = 0) -> dict:
+    eps = auth_eps + surr_eps
+    X = np.stack([_episode_feature(e["H"]) for e in eps])
+    y = np.array([e["label"] for e in eps])
+    spd = np.array([e["speed"] for e in eps])
+    rng = np.random.default_rng(seed)
+    return {
+        "target": probe_auroc(X, y),                                   # H4: decode world identity
+        "shuffled": probe_auroc(X, rng.permutation(y)),                # negative control
+        "speed": probe_auroc(X, (spd > np.median(spd)).astype(int)),   # positive control
+        "n": len(eps),
+    }
+
+
+def leakage_audit_b2(auth_eps: list, surr_eps: list) -> dict:
+    """Confound battery: world identity must NOT be decodable from reward/length/lifetime.
+    A clean target probe with these near 0.5 proves it reads the artifact, not 'I lived longer'."""
+    eps = auth_eps + surr_eps
+    y = np.array([e["label"] for e in eps])
+
+    def channel(key):
+        v = np.array([e[key] for e in eps], np.float64).reshape(-1, 1)
+        return probe_auroc(v, y)
+
+    audit = {k: channel(k) for k in ("reward_sum", "length", "lifetime")}
+    audit["max_abs_dev"] = max(abs(a - 0.5) for a in audit.values())
+    audit["clean"] = audit["max_abs_dev"] < 0.1
+    return audit
+
+
+# ---------------------------------------------------------------------------
+# Control agents: same trunk, different objective, probed by the IDENTICAL readout.
+#   untrained_agent     - random init -> the MECHANICAL floor (drift perturbs inputs,
+#                         so any recurrent state separates the worlds somewhat).
+#   train_predictor_only- Experiment B's objective (next-step prediction, scripted
+#                         policy) on this trunk -> tests prediction WITHOUT survival.
+# "Survival pressure induces encoding" requires survival > predictor-only > untrained.
+# ---------------------------------------------------------------------------
+def untrained_agent(params, drift_sigma, ray_steps, hidden, embed, world_model, device, seed=0):
+    torch.manual_seed(seed)
+    probe = make_world(params, drift_sigma, ray_steps)
+    agent = RecurrentActorCritic(probe.obs_spec.size, probe.action_spec.size, embed, hidden, world_model).to(device)
+    norm = RunningNorm(probe.obs_spec.size)
+    # a short normalizer warmup so the probe sees sensibly-scaled inputs
+    collect_episodes_ac(agent, norm, params, drift_sigma, 8, 40, device, 555_000, ray_steps,
+                        deterministic=False, update_norm=True)
+    return agent.train(False), norm.freeze()
+
+
+def _collect_scripted(agent, norm, params, drift_sigma, n_eps, max_steps, device, seed_base, ray_steps):
+    """Collect episodes driven by the fixed scripted policy (Experiment B's policy),
+    for training the prediction-only control. Returns padded tensors + mask."""
+    A = agent.act_dim
+    envs = [make_world(params, drift_sigma, ray_steps) for _ in range(n_eps)]
+    rngs = [np.random.default_rng(seed_base + i) for i in range(n_eps)]
+    obs = np.stack([e.reset(_seeds(seed_base + i)).obs for i, e in enumerate(envs)]).astype(np.float64)
+    active = np.ones(n_eps, bool)
+    seq_obs = [[] for _ in range(n_eps)]
+    seq_actin = [[] for _ in range(n_eps)]
+    seq_env = [[] for _ in range(n_eps)]
+    prev = [np.zeros(A, np.float32) for _ in range(n_eps)]
+    for _ in range(max_steps):
+        if not active.any():
+            break
+        norm.update(obs[active])
+        obs_n = norm(obs)
+        for i in range(n_eps):
+            if not active[i]:
+                continue
+            a = scripted_policy(rngs[i])
+            seq_obs[i].append(obs_n[i].astype(np.float32))
+            seq_actin[i].append(prev[i])
+            seq_env[i].append(a)
+            r = envs[i].step(a)
+            obs[i] = r.obs
+            prev[i] = a
+            if r.terminated:
+                active[i] = False
+    lengths = np.array([len(s) for s in seq_obs])
+    Tmax = int(lengths.max())
+
+    def pad(seqs, w):
+        out = np.zeros((n_eps, Tmax, w), np.float32)
+        for i, s in enumerate(seqs):
+            if s:
+                out[i, : len(s)] = np.asarray(s, np.float32)
+        return out
+    mask = np.zeros((n_eps, Tmax), np.float32)
+    for i, n in enumerate(lengths):
+        mask[i, :n] = 1.0
+    return (torch.as_tensor(pad(seq_obs, agent.obs_dim), device=device),
+            torch.as_tensor(pad(seq_actin, A), device=device),
+            torch.as_tensor(pad(seq_env, A), device=device),
+            torch.as_tensor(mask, device=device))
+
+
+def train_predictor_only(drift_sigma, params=None, *, n_eps=16, updates=200, embed=64, hidden=96,
+                         lr=1e-3, max_steps=80, ray_steps=5, seed=0, device=None, log_every=0):
+    device = device or default_device()
+    torch.manual_seed(seed)
+    np.random.seed(seed)
+    probe = make_world(params, drift_sigma, ray_steps)
+    agent = RecurrentActorCritic(probe.obs_spec.size, probe.action_spec.size, embed, hidden, True).to(device)
+    opt = torch.optim.Adam(agent.parameters(), lr=lr)
+    norm = RunningNorm(probe.obs_spec.size)
+    for u in range(updates):
+        obs, act_in, env_act, mask = _collect_scripted(agent, norm, params, drift_sigma, n_eps,
+                                                        max_steps, device, 200_000 + seed * 9000 + u * n_eps, ray_steps)
+        loss, _ = agent.world_model_loss(obs, act_in, env_act, mask, agent.initial_state(n_eps, device))
+        opt.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(agent.parameters(), 1.0)
+        opt.step()
+        if log_every and (u % log_every == 0 or u == updates - 1):
+            print(f"   pred-only update {u:4d}  wm_loss={float(loss):.4f}")
+    return agent.train(False), norm.freeze()
+
+
+# ---------------------------------------------------------------------------
+# PRIMARY readout - non-matched pooled episodes, fixed length, trained policy.
+# This is Experiment B's exact frame (independent authentic vs surrogate pools,
+# probe a PERSISTENT world-identity direction in h_t), so the result is directly
+# comparable to Exp B's 0.50 null. Fixed length + drop-on-early-death keeps episode
+# length constant across pools, so length/lifetime cannot leak the label.
+# ---------------------------------------------------------------------------
+def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_base, ray_steps):
+    """Collect up to n_eps episodes of EXACTLY `steps` length (drop early deaths) with
+    the frozen deterministic agent. Returns H (k,steps,Hdim), speeds (k,)."""
+    Hs, spd = [], []
+    for i in range(n_eps):
+        w = make_world(params, drift_sigma, ray_steps)
+        w.reset(_seeds(seed_base + i))
+        h = agent.initial_state(1, device)
+        prev = torch.zeros(1, agent.act_dim, device=device)
+        obs = w.observe().astype(np.float64)
+        Hrow, sp, died = [], [], False
+        for _ in range(steps):
+            obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
+            _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
+            Hrow.append(h[0].detach().cpu().numpy())
+            r = w.step(env_act[0].detach().cpu().numpy().astype(np.float32))
+            sp.append(float(np.linalg.norm(w.vel)))
+            obs = r.obs.astype(np.float64)
+            prev = env_act
+            if r.terminated:
+                died = True
+                break
+        if not died and len(Hrow) == steps:
+            Hs.append(np.asarray(Hrow, np.float32))
+            spd.append(float(np.mean(sp)))
+    return (np.stack(Hs) if Hs else np.zeros((0, steps, agent.hidden), np.float32)), np.asarray(spd)
+
+
+def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray_steps=5,
+                   device=None, seed=0) -> dict:
+    """Experiment-B-style probe: decode world identity across independent episodes."""
+    device = device or default_device()
+    Ha, spa = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 800_000, ray_steps)
+    Hs, sps = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, 850_000, ray_steps)
+    if len(Ha) < 5 or len(Hs) < 5:
+        return {"target": float("nan"), "shuffled": float("nan"), "speed": float("nan"),
+                "n": len(Ha) + len(Hs), "too_few_survivors": True}
+    H = np.concatenate([Ha, Hs])
+    X = episode_features(H)                          # reuse Exp B's feature builder verbatim
+    y = np.concatenate([np.zeros(len(Ha)), np.ones(len(Hs))]).astype(int)
+    spd = np.concatenate([spa, sps])
+    rng = np.random.default_rng(seed)
+    return {
+        "target": probe_auroc(X, y),
+        "shuffled": probe_auroc(X, rng.permutation(y)),
+        "speed": probe_auroc(X, (spd > np.median(spd)).astype(int)),
+        "n": len(y), "n_auth": len(Ha), "n_surr": len(Hs), "too_few_survivors": False,
+    }
+
+
+def readout(agent, norm, params, drift_sigma, *, n_pairs=60, prefix_steps=20, branch_steps=24,
+            ray_steps=5, device=None, seed_base=700_000, seed=0) -> dict:
+    """Run the SECONDARY matched-pair recurrent readout (detectability-style) and return
+    probe + leakage in one dict."""
+    a, s = matched_pair_recurrent_rollout(agent, norm, params, drift_sigma, n_pairs=n_pairs,
+                                          prefix_steps=prefix_steps, branch_steps=branch_steps,
+                                          ray_steps=ray_steps, device=device, seed_base=seed_base)
+    pr = probe_world_identity(a, s, seed=seed)
+    lk = leakage_audit_b2(a, s)
+    return {**pr, "leakage_clean": lk["clean"], "leakage_max_dev": lk["max_abs_dev"],
+            "leakage": lk, "n_pairs": len(a)}
+
+
+if __name__ == "__main__":
+    # tiny smoke test - confirms the whole 3-agent apparatus executes end to end.
+    # (tiny scale -> numbers are NOT the result, only proof the machinery runs)
+    dev = default_device()
+    D = 0.45
+    print(f"Experiment B-v2 smoke test  (device = {dev}, drift={D})")
+    P = WorldParams(k_land=1.5, k_water=1.5, gravity=0.4)
+    RS, NP, PF, BR = 4, 20, 12, 16
+
+    untr_a, untr_n = untrained_agent(P, D, RS, hidden=64, embed=64, world_model=True, device=dev, seed=0)
+    r_untr = readout(untr_a, untr_n, P, D, n_pairs=NP, prefix_steps=PF, branch_steps=BR, ray_steps=RS, device=dev)
+
+    pred_a, pred_n = train_predictor_only(D, P, n_eps=8, updates=10, hidden=64, max_steps=40,
+                                          ray_steps=RS, seed=0, device=dev)
+    r_pred = readout(pred_a, pred_n, P, D, n_pairs=NP, prefix_steps=PF, branch_steps=BR, ray_steps=RS, device=dev)
+
+    surv_a, surv_n, _ = train_actor_critic(D, P, n_eps=8, updates=10, hidden=64, max_steps=40,
+                                           ray_steps=RS, seed=0, device=dev, log_every=5)
+    eng = engagement_metric(surv_a, surv_n, P, D, n_eps=16, max_steps=40, ray_steps=RS, device=dev)
+    r_surv = readout(surv_a, surv_n, P, D, n_pairs=NP, prefix_steps=PF, branch_steps=BR, ray_steps=RS, device=dev)
+
+    p_untr = pooled_readout(untr_a, untr_n, P, D, n_eps=40, steps=BR, ray_steps=RS, device=dev)
+    p_pred = pooled_readout(pred_a, pred_n, P, D, n_eps=40, steps=BR, ray_steps=RS, device=dev)
+    p_surv = pooled_readout(surv_a, surv_n, P, D, n_eps=40, steps=BR, ray_steps=RS, device=dev)
+
+    print(f"   engagement: trained={eng['trained_return']:+.3f} random={eng['random_return']:+.3f} "
+          f"scripted={eng['scripted_return']:+.3f}  engaged={eng['engaged']}")
+    print("   PRIMARY pooled readout - target AUROC (~0.5 = no persistent encoding, Exp B frame):")
+    for name, r in (("untrained ", p_untr), ("predictor ", p_pred), ("survival  ", p_surv)):
+        print(f"     {name}: target={r['target']:.3f}  speed(+)={r['speed']:.3f}  "
+              f"shuffled={r['shuffled']:.3f}  (n={r['n']})")
+    print("   SECONDARY matched-pair readout - target AUROC (|dev from 0.5| = detectability):")
+    for name, r in (("untrained ", r_untr), ("predictor ", r_pred), ("survival  ", r_surv)):
+        print(f"     {name}: target={r['target']:.3f}  speed(+)={r['speed']:.3f}  "
+              f"leak_clean={r['leakage_clean']} (n={r['n_pairs']})")
