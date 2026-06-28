@@ -1,7 +1,7 @@
 """
 ITASORL - World protocol, observation/action specs, and the surrogate ladder.
 
-Companion to ITASORL_world_spec.md ("A Patch of Earth"). This module defines the
+Companion to docs/ITASORL_world_spec.md ("A Patch of Earth"). This module defines the
 *contract* (the World protocol + byte-identical obs/action specs) and the
 *surrogate ladder* (L0-L4) as composable wrappers, plus the matched-pair
 shared-world rollout that is the keystone confound control (spec sec. 11).
