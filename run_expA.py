@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -19,7 +18,7 @@ def show(tag, r):
 # Control: L0 (identical) -> detection must be at chance
 show("[L0 control, identical world]", run_experiment_a(clean, "L0", delta=0.06, sigma=SIGMA))
 # Main: L1 at a clearly-detectable grid -> oracle high, leakage clean
-show(f"[L1 discretization, delta=0.06]", run_experiment_a(clean, "L1", delta=0.06, sigma=SIGMA))
+show("[L1 discretization, delta=0.06]", run_experiment_a(clean, "L1", delta=0.06, sigma=SIGMA))
 # Contaminated: surrogate also makes food 'easier' -> the gate must catch it
 show("[L1 + contaminated reward (+0.02 in surrogate)]",
      run_experiment_a(clean, "L1", delta=0.06, sigma=SIGMA, contaminate=0.02))

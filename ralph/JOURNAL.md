@@ -33,4 +33,19 @@ Format per entry:
   `python run_expB_kstep.py` -> no liftoff, target 0.506/0.481/0.482 across
   horizons (FINDINGS 0.516/0.523/0.490). Both exit 0. `experiment_b.py` smoke and
   AST syntax check still pass (no regression to the default-signature callers).
+- Commit: 796c9b0.
+
+## 2026-06-27 — CI ruff gate: fix real (F) issues, defer style policy
+- Found: CI's `python` job (ci.yml) runs `ruff check .` + `ruff format --check .`
+  but there is no ruff config, so it lints with defaults and is RED — 57 errors.
+  Breakdown: 46 E702 (semicolons) + 5 E401 (multi-import) + 1 E701 + 1 E731 +
+  1 E741 (all deliberate compact style) and 3 genuine issues: 2 F401 unused
+  `numpy` imports (run_expA.py, run_expA_l2.py) + 1 F541 empty f-string
+  (run_expA.py).
+- Fix:   auto-fixed only the 3 F-code issues (`ruff check --select F401,F541
+  --fix`); `ruff check --select F` is now clean. Did NOT touch the 53 stylistic
+  errors: reformatting 14 files or relaxing the CI gate is a style-policy call,
+  recorded under BACKLOG "Questions / needs a human" with both options.
+- Verify: `python -m py_compile run_expA.py run_expA_l2.py` OK; diff shows only
+  the dead import lines + the f-string prefix changed (runtime unchanged).
 - Commit: this run.
