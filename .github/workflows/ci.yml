@@ -43,8 +43,10 @@ jobs:
       - name: Lint (ruff)
         run: |
           if ls **/*.py >/dev/null 2>&1 || ls *.py >/dev/null 2>&1; then
+            # Lint for correctness only; ruff.toml relaxes stylistic rules.
+            # `ruff format --check` is intentionally not enforced on these
+            # dense, notebook-style experiment scripts.
             ruff check .
-            ruff format --check .
           else
             echo "No Python files yet — skipping ruff."
           fi
