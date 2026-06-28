@@ -1,0 +1,12 @@
+# ITASORL runtime dependencies (see FINDINGS.md sec. 8).
+# Lower bounds reflect versions the experiments have been run against; they are
+# kept loose so the CI matrix (Python 3.10-3.12) can resolve current wheels.
+
+numpy>=1.24
+scikit-learn>=1.3
+matplotlib>=3.7
+
+# Experiment B (the recurrent world model). agent.py degrades to a numpy
+# Reservoir if torch is absent, but experiment_b.py and the run_expB_* scripts
+# require it.
+torch>=2.0

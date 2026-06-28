@@ -9,7 +9,6 @@ test/contract gap · **P3** footgun/cleanup.
 
 ## Open
 <!-- Ralph adds discovered issues here, highest severity first. -->
-P2 | repo root | No `requirements.txt` (CI's install + pip-cache steps are stubbed waiting for one). Deps per FINDINGS §8: numpy, scikit-learn, matplotlib, torch. Now unblocked (ruff gate green).
 P2 | repo root | No test suite (CI's pytest step skips itself). Add a real regression test - e.g. matched-pair L0 bit-identity + the open-loop rollout fix. Now unblocked.
 
 ## In progress
@@ -17,6 +16,7 @@ P2 | repo root | No test suite (CI's pytest step skips itself). Add a real regre
 
 ## Done
 <!-- Resolved items, newest first. Include the fixing commit's short SHA. -->
+P2 | requirements.txt + .github/workflows/ci.yml | No dependency manifest existed (CI install was stubbed, pip cache disabled). Added requirements.txt (numpy/scikit-learn/matplotlib/torch, loose lower bounds) and re-enabled `cache: pip` keyed on it. Validated current env satisfies all bounds. Fixed 2026-06-27.
 P1 | ruff.toml + .github/workflows/ci.yml | CI `python` job was RED: ruff lints with defaults but the repo uses a deliberate compact style (semicolons, multi-import lines). Decision (human-approved: keep style): added ruff.toml ignoring the stylistic E rules (E401/E701/E702/E731/E741) while keeping all F/E9 bug-catchers, and dropped the `ruff format --check` step (formatter can't preserve the style). `ruff check .` now passes. Fixed 2026-06-27.
 P3 | run_expA.py, run_expA_l2.py | Dead code flagged by CI's ruff gate: 2 unused `numpy` imports (F401) + 1 placeholder-less f-string (F541). Auto-fixed; `ruff check --select F` now clean. Fixed 2026-06-27.
 P0 | experiment_b.py + agent.py | `run_expB_gap.py` & `run_expB_kstep.py` crashed (missing `train_world_model(rollout_context=, delta=)` and `RecurrentWorldModel.forward_rollout`). Implemented the open-loop rollout API; both scripts now run and reproduce FINDINGS.md (gap: engaged, delta 1.07x; kstep: no liftoff). Fixed 2026-06-27.

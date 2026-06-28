@@ -60,4 +60,16 @@ Format per entry:
   config in ruff.toml, NOT pyproject.toml, to avoid tripping CI's `pip install
   -e .` and release.yml's `python -m build` (no packaging metadata exists).
 - Verify: `python -m ruff check .` -> "All checks passed!".
+- Commit: 1b1b39b.
+
+## 2026-06-27 — add requirements.txt + re-enable pip cache
+- Found: no dependency manifest; CI's install step was stubbed (`if [ -f
+  requirements.txt ]`) and the pip cache was disabled with a note to re-enable
+  once a manifest existed.
+- Fix:   added requirements.txt (numpy>=1.24, scikit-learn>=1.3, matplotlib>=3.7,
+  torch>=2.0; bounds loose for the 3.10-3.12 matrix) and set `cache: pip` +
+  `cache-dependency-path: requirements.txt` in ci.yml.
+- Verify: parsed every requirement with packaging.Requirement and confirmed the
+  installed versions (numpy 1.26.4 / sklearn 1.5.2 / matplotlib 3.9.4 / torch
+  2.7.0) satisfy the bounds -> ALL OK.
 - Commit: this run.
