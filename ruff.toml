@@ -1,0 +1,11 @@
+# ruff.toml — dense, notebook-style experiment scripts.
+# Keep pyflakes correctness checks (F: unused imports, undefined names);
+# relax pycodestyle style rules that clash with the compact one-liner style.
+[lint]
+ignore = [
+    "E701",  # multiple statements on one line (colon)
+    "E702",  # multiple statements on one line (semicolon)
+    "E401",  # multiple imports on one line
+    "E731",  # lambda assignment
+    "E741",  # ambiguous variable name (O, l, I)
+]

@@ -1,4 +1,4 @@
-import numpy as np, matplotlib
+import matplotlib
 matplotlib.use("Agg"); import matplotlib.pyplot as plt
 from experiment_a_l2 import generate_l2_pairs, run_experiment_a_l2
 
