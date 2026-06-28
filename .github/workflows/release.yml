@@ -1,0 +1,54 @@
+name: CD (Release)
+
+# Builds distributable artifacts when a version tag is pushed (e.g. v1.2.3).
+# Publishing to PyPI is left commented until the project is ready to release.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build package
+        run: |
+          if ls pyproject.toml setup.py setup.cfg >/dev/null 2>&1; then
+            python -m pip install --upgrade pip build
+            python -m build
+          else
+            echo "No packaging config (pyproject.toml/setup.py) yet — nothing to build."
+            echo "Add one to enable releases."
+            exit 0
+          fi
+
+      - name: Upload artifacts
+        if: hashFiles('dist/*') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/*
+
+  # Uncomment when ready to publish releases to PyPI.
+  # publish:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   environment: pypi
+  #   permissions:
+  #     id-token: write   # trusted publishing
+  #   steps:
+  #     - uses: actions/download-artifact@v4
+  #       with: { name: dist, path: dist }
+  #     - uses: pypa/gh-action-pypi-publish@release/v1
