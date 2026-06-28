@@ -46,7 +46,11 @@ if TORCH:
                 nn.Linear(hidden, embed), nn.ReLU(), nn.Linear(embed, obs_dim)
             )
             self.hidden = hidden
-            self.delta = False  # if True, decoder predicts obs change, not absolute next-obs
+            # Output convention of the decoder: False -> predict absolute next obs;
+            # True -> predict the observation *change* (obs[t+1]-obs[t]). The flag
+            # lives on the model because forward_rollout must integrate predictions
+            # back into inputs without being told the mode at call time.
+            self.delta = False
 
         def forward(self, obs, act):
             """obs (B,T,O), act (B,T,A) -> next-obs prediction (B,T,O), states (B,T,H)."""
@@ -67,36 +71,32 @@ if TORCH:
             return loss, states
 
         def forward_rollout(self, obs, act, context):
-            """Teacher-force the first `context` steps, then imagine open-loop.
-
-            For t < context the encoder sees the real obs[:, t]; for t >= context it
-            sees the model's own reconstruction of obs[:, t], so prediction errors
-            compound exactly as they would during free-running imagination. Returns
-            preds (B,T,O) where preds[:, t] is the guess for the transition out of
-            step t (absolute next-obs, or the obs delta when self.delta). The fed-back
-            predictions stay in the autograd graph, so a training loss over the
-            imagined region pushes gradients through the whole rollout.
+            """Teacher-force on real obs for the first `context` steps, then imagine
+            open-loop: feed the model's own predictions back as input, driven by the
+            given actions alone. Returns preds (B,T,O) with pred[:, t] the guess for
+            step t+1 (absolute or delta, per self.delta), same convention as forward.
             """
             B, T, _ = obs.shape
-            if context is None:
-                context = T
             h = torch.zeros(B, self.hidden, device=obs.device)
-            x, prev = obs[:, 0], None
+            x = obs[:, 0]
             preds = []
             for t in range(T):
-                if t == 0 or t < context:
-                    x = obs[:, t]                       # teacher forcing on real senses
-                else:
-                    x = prev if not self.delta else x + prev  # close the loop on own output
+                if t < context:
+                    x = obs[:, t]
+                else:  # open loop: reconstruct the predicted obs at time t
+                    prev = preds[-1]
+                    x = x + prev if self.delta else prev
                 h = self.cell(torch.cat([self.encoder(x), act[:, t]], dim=-1), h)
-                prev = self.decoder(h)
-                preds.append(prev)
+                preds.append(self.decoder(h))
             return torch.stack(preds, 1)
 
-        def rollout_loss(self, obs, act, context, delta):
+        def rollout_loss(self, obs, act, context):
+            """Open-loop prediction error over the imagined horizon (the trained
+            objective for the k-step / delta-rollout experiments)."""
             pred = self.forward_rollout(obs, act, context)
-            tgt = (obs[:, 1:] - obs[:, :-1]) if delta else obs[:, 1:]
-            return ((pred[:, :-1] - tgt) ** 2).mean()
+            P = pred[:, context:-1]
+            tgt = (obs[:, context + 1:] - obs[:, context:-1]) if self.delta else obs[:, context + 1:]
+            return ((P - tgt) ** 2).mean()
 
 
 class Reservoir:

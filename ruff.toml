@@ -1,11 +1,19 @@
-# ruff.toml — dense, notebook-style experiment scripts.
-# Keep pyflakes correctness checks (F: unused imports, undefined names);
-# relax pycodestyle style rules that clash with the compact one-liner style.
+# Ruff configuration.
+#
+# This codebase uses a deliberate compact style throughout (semicolon-separated
+# statements, multi-import lines, the occasional lambda). Keep ruff's default
+# bug-catching rules - pyflakes (F) and the pycodestyle error rules (E9) - but
+# ignore the purely-stylistic ones so the linter matches the project's style.
+#
+# Note: ruff's *formatter* (`ruff format`) cannot preserve this compact style
+# (it has no opt-out for one-line statements), so CI lints but does not run
+# `ruff format --check`. See .github/workflows/ci.yml.
+
 [lint]
 ignore = [
+    "E401",  # multiple imports on one line  (e.g. `import numpy as np, matplotlib`)
     "E701",  # multiple statements on one line (colon)
     "E702",  # multiple statements on one line (semicolon)
-    "E401",  # multiple imports on one line
     "E731",  # lambda assignment
-    "E741",  # ambiguous variable name (O, l, I)
+    "E741",  # ambiguous variable name
 ]

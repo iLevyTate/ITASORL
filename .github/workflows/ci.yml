@@ -28,8 +28,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          # NOTE: re-enable `cache: pip` once the repo has a
-          # requirements.txt / pyproject.toml for the cache key to hash.
+          cache: pip
+          cache-dependency-path: requirements.txt
 
       - name: Install dependencies
         run: |
@@ -43,9 +43,10 @@ jobs:
       - name: Lint (ruff)
         run: |
           if ls **/*.py >/dev/null 2>&1 || ls *.py >/dev/null 2>&1; then
-            # Lint for correctness only; ruff.toml relaxes stylistic rules.
-            # `ruff format --check` is intentionally not enforced on these
-            # dense, notebook-style experiment scripts.
+            # Lint rules are configured in ruff.toml to match the repo's compact
+            # style. `ruff format --check` is intentionally NOT run: the project's
+            # deliberate one-line/semicolon style is incompatible with ruff's
+            # formatter, which offers no opt-out for it.
             ruff check .
           else
             echo "No Python files yet — skipping ruff."
