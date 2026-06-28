@@ -50,6 +50,11 @@ SURVIVAL_METAB = {"E0": 1.0, "basal_E": 0.4, "Hyd0": 8.0, "basal_Hyd": 0.005}
 # a from-scratch policy (the exploration bottleneck). Drift still governs how thrust
 # translates into reaching that food, so the dynamics stay survival-relevant.
 SURVIVAL_FOOD = {"n_pellets": 24, "reach": 0.08, "pellet_r": 0.03}
+# Engagement gate: trained TRUE return must beat both baselines by ENGAGE_MARGIN, with
+# lifetime no worse than random by LIFE_TOL steps. Return is the discriminating signal;
+# lifetime saturates at this food density. Frozen from the de-risk (see engagement_metric).
+ENGAGE_MARGIN = 0.15
+LIFE_TOL = 2.0
 
 
 def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int) -> PatchOfEarthV0:
@@ -311,16 +316,19 @@ def engagement_metric(agent, norm, params, drift_sigma, *, n_eps: int = 64, max_
     trained_ret, trained_len = float(b["ret"].mean()), float(b["lengths"].mean())
     rnd_ret, rnd_len = _baseline_return("random", params, drift_sigma, n_eps, max_steps, ray_steps, seed_base + 1)
     scr_ret, scr_len = _baseline_return("scripted", params, drift_sigma, n_eps, max_steps, ray_steps, seed_base + 2)
-    # Engagement requires BOTH higher true return AND longer lifetime than random/scripted.
-    # (Return alone can tie near the death penalty while the agent dies just as fast -
-    #  the v2 false positive; lifetime is the cleaner survival signal.)
-    better_return = trained_ret > max(rnd_ret, scr_ret)
-    longer_life = trained_len > max(rnd_len, scr_len)
+    # Engagement = the trained policy forages MEANINGFULLY better than both baselines on
+    # TRUE return, with lifetime not worse. Return (not lifetime) is the discriminating
+    # signal: at the frozen food density lifetime saturates (even a random agent survives
+    # ~68/80), so requiring strictly-longer lifetime flips on ~1 step of noise. The margin
+    # cleanly separates a real forager (de-risk: +0.43 over random) from a non-learner
+    # (the v2 pilot: +0.04). Calibrated on de-risk data, frozen for the confirmatory run.
+    better_return = trained_ret >= max(rnd_ret, scr_ret) + ENGAGE_MARGIN
+    not_worse_life = trained_len >= rnd_len - LIFE_TOL
     return {
         "trained_return": trained_ret, "random_return": rnd_ret, "scripted_return": scr_ret,
         "trained_len": trained_len, "random_len": rnd_len, "scripted_len": scr_len,
-        "better_return": better_return, "longer_life": longer_life,
-        "engaged": better_return and longer_life,
+        "better_return": better_return, "not_worse_life": not_worse_life,
+        "engaged": better_return and not_worse_life,
     }
 
 

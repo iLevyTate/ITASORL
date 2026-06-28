@@ -68,8 +68,11 @@ Either outcome is a substantive, reportable result.
 
 ## 7. Gates — ALL must pass before the survival target is interpreted
 
-1. **Engagement:** the trained agent out-survives random and scripted policies (longer
-   mean lifetime AND higher true return). Otherwise the run is **uninformative**.
+1. **Engagement:** the trained agent forages meaningfully better than random *and*
+   scripted policies — true return higher by ≥ `ENGAGE_MARGIN` (0.15), with lifetime no
+   worse than random by `LIFE_TOL` (2 steps). Otherwise the run is **uninformative**.
+   (Return is the discriminating signal; lifetime saturates at the frozen food density —
+   see §12. Margin calibrated on the de-risk and frozen for the confirmatory run.)
 2. **L0 control:** at `drift=0` the pooled target is equivalent to 0.5 by TOST
    (margin ±0.05) — proves the readout manufactures no signal.
 3. **Positive control:** the speed probe is high (≥ 0.75) — the state is probeable.
@@ -113,4 +116,21 @@ vs drift per agent (`expB2_survival.png`); raw metrics in `expB2_results.json`.
 
 ## 12. Deviations from pre-registration
 
-(none yet — log any post-commit change here)
+- **2026-06-28 — GAE training bug found and fixed; sweep re-run.** The ralph hardening
+  pass found a real correctness bug in `compute_gae`: the advantage accumulator gated
+  its carry with the *current* step's mask instead of the *next* step's, leaking the
+  padded value slot into the last step of any episode shorter than `max_steps`. Under
+  the harsh metabolism most episodes die early, so the **survival** arm of the first
+  confirmatory run was trained with corrupted advantages (the `predictor` and
+  `untrained` baselines do not use GAE and were unaffected). Fixed (commit `679fee6`,
+  verified against an independent textbook GAE) and the confirmatory sweep was **re-run**
+  with the corrected code. The first run's artifacts/numbers are superseded.
+- **2026-06-28 — Engagement gate recalibrated on de-risk data.** The fixed-GAE de-risk
+  revealed that lifetime **saturates** at the frozen food density (24 pellets, 80-step
+  cap): a random agent already survives ~68/80, so the originally-specified "strictly
+  longer lifetime" criterion flips on ~1 step of noise even though the trained agent
+  forages far better on return (−0.55 vs −0.98). The gate was changed to a **true-return
+  margin** (≥ 0.15 over both baselines) with a lifetime "not-worse" check, calibrated on
+  de-risk (pilot) data and frozen before the confirmatory re-run — consistent with §9's
+  "tuned on the de-risk, frozen for the run" policy. This cleanly separates the engaged
+  forager (+0.43) from a non-learner (+0.04).
