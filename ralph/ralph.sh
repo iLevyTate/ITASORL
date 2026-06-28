@@ -27,7 +27,8 @@ LOG_DIR="${LOG_DIR:-ralph/logs}"
 CLAUDE_BIN="${CLAUDE_BIN:-claude}"
 # Flags passed to Claude. --dangerously-skip-permissions lets it run unattended;
 # the loop only ever runs the senior-dev PROMPT.md, on a feature branch.
-CLAUDE_FLAGS="${CLAUDE_FLAGS:---dangerously-skip-permissions --permission-mode acceptEdits}"
+# Override by exporting CLAUDE_FLAGS as a space-separated string.
+read -r -a CLAUDE_FLAGS <<< "${CLAUDE_FLAGS:---dangerously-skip-permissions --permission-mode acceptEdits}"
 
 # ---- preflight --------------------------------------------------------------
 cd "$(git rev-parse --show-toplevel 2>/dev/null)" || {
@@ -67,10 +68,10 @@ for (( i=1; i<=MAX_ITERATIONS; i++ )); do
   echo "----- iteration $i/$MAX_ITERATIONS  ($(date '+%H:%M:%S'))  -> $log"
 
   if [ "${DRY_RUN:-0}" = "1" ]; then
-    echo "[dry-run] $CLAUDE_BIN -p '<PROMPT.md>' $CLAUDE_FLAGS" | tee "$log"
+    echo "[dry-run] $CLAUDE_BIN -p '<PROMPT.md>' ${CLAUDE_FLAGS[*]}" | tee "$log"
   else
     # Fresh context every iteration; tee so you can watch live and grep later.
-    "$CLAUDE_BIN" -p "$PROMPT" $CLAUDE_FLAGS 2>&1 | tee "$log"
+    "$CLAUDE_BIN" -p "$PROMPT" "${CLAUDE_FLAGS[@]}" 2>&1 | tee "$log"
   fi
 
   # 1) Completion sentinel?
