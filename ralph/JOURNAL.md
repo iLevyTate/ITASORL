@@ -72,4 +72,17 @@ Format per entry:
 - Verify: parsed every requirement with packaging.Requirement and confirmed the
   installed versions (numpy 1.26.4 / sklearn 1.5.2 / matplotlib 3.9.4 / torch
   2.7.0) satisfy the bounds -> ALL OK.
+- Commit: 0da972d.
+
+## 2026-06-27 — add the first regression test suite
+- Found: no tests existed; CI's pytest step skipped itself, and the keystone
+  invariants (matched-pair L0 identity, exact snapshot/restore, the new rollout
+  API) had no guard.
+- Fix:   added pytest.ini (pythonpath=., testpaths=tests) and tests/ with 10
+  tests - obs-format contract, get/set_state exact roundtrip, matched-pair L0
+  bit-identity, L1 quantization-only divergence, and the open-loop rollout
+  (teacher-forced prefix == forward, full context == forward, finite loss in
+  both modes, open-loop ignores future obs).
+- Verify: `python -m pytest -q` -> 10 passed in ~2.6s; `python -m ruff check .`
+  -> All checks passed.
 - Commit: this run.
