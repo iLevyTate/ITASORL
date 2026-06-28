@@ -46,6 +46,11 @@ if TORCH:
                 nn.Linear(hidden, embed), nn.ReLU(), nn.Linear(embed, obs_dim)
             )
             self.hidden = hidden
+            # Output convention of the decoder: False -> predict absolute next obs;
+            # True -> predict the observation *change* (obs[t+1]-obs[t]). The flag
+            # lives on the model because forward_rollout must integrate predictions
+            # back into inputs without being told the mode at call time.
+            self.delta = False
 
         def forward(self, obs, act):
             """obs (B,T,O), act (B,T,A) -> next-obs prediction (B,T,O), states (B,T,H)."""
@@ -64,6 +69,34 @@ if TORCH:
             # pred[:, t] is the model's guess for obs[:, t+1]
             loss = ((pred[:, :-1] - obs[:, 1:]) ** 2).mean()
             return loss, states
+
+        def forward_rollout(self, obs, act, context):
+            """Teacher-force on real obs for the first `context` steps, then imagine
+            open-loop: feed the model's own predictions back as input, driven by the
+            given actions alone. Returns preds (B,T,O) with pred[:, t] the guess for
+            step t+1 (absolute or delta, per self.delta), same convention as forward.
+            """
+            B, T, _ = obs.shape
+            h = torch.zeros(B, self.hidden, device=obs.device)
+            x = obs[:, 0]
+            preds = []
+            for t in range(T):
+                if t < context:
+                    x = obs[:, t]
+                else:  # open loop: reconstruct the predicted obs at time t
+                    prev = preds[-1]
+                    x = x + prev if self.delta else prev
+                h = self.cell(torch.cat([self.encoder(x), act[:, t]], dim=-1), h)
+                preds.append(self.decoder(h))
+            return torch.stack(preds, 1)
+
+        def rollout_loss(self, obs, act, context):
+            """Open-loop prediction error over the imagined horizon (the trained
+            objective for the k-step / delta-rollout experiments)."""
+            pred = self.forward_rollout(obs, act, context)
+            P = pred[:, context:-1]
+            tgt = (obs[:, context + 1:] - obs[:, context:-1]) if self.delta else obs[:, context + 1:]
+            return ((P - tgt) ** 2).mean()
 
 
 class Reservoir:

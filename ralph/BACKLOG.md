@@ -15,6 +15,7 @@ test/contract gap · **P3** footgun/cleanup.
 
 ## Done
 <!-- Resolved items, newest first. Include the fixing commit's short SHA. -->
+P0 | experiment_b.py + agent.py | `run_expB_gap.py` & `run_expB_kstep.py` crashed (missing `train_world_model(rollout_context=, delta=)` and `RecurrentWorldModel.forward_rollout`). Implemented the open-loop rollout API; both scripts now run and reproduce FINDINGS.md (gap: engaged, delta 1.07x; kstep: no liftoff). Fixed 2026-06-27.
 
 ## Questions / needs a human
 <!-- Ambiguous or product-decision items Ralph should NOT decide alone. -->

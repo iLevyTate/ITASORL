@@ -57,7 +57,15 @@ def _stack(eps):
 
 
 def train_world_model(eps, epochs: int = 8, lr: float = 1e-3, embed: int = 64,
-                      hidden: int = 128, batch: int = 16, seed: int = 0):
+                      hidden: int = 128, batch: int = 16, seed: int = 0,
+                      rollout_context: int | None = None, delta: bool = False):
+    """Train the recurrent world model on next-step prediction.
+
+    rollout_context: if set, train the open-loop objective instead - teacher-force
+    the first `rollout_context` steps, then imagine forward and score the predicted
+    future (the k-step / delta-rollout experiments). delta: have the model predict
+    the observation change rather than the absolute next observation.
+    """
     import torch
     from agent import RecurrentWorldModel
     torch.manual_seed(seed)
@@ -67,13 +75,17 @@ def train_world_model(eps, epochs: int = 8, lr: float = 1e-3, embed: int = 64,
     sd = obs.std((0, 1), keepdim=True) + 1e-6
     obsn = (obs - mu) / sd
     model = RecurrentWorldModel(obs.shape[-1], act.shape[-1], embed, hidden)
+    model.delta = bool(delta)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     idx = np.arange(len(eps))
     for _ in range(epochs):
         np.random.shuffle(idx)
         for s in range(0, len(idx), batch):
             b = idx[s:s + batch]
-            loss, _ = model.prediction_loss(obsn[b], act[b])
+            if rollout_context is None:
+                loss, _ = model.prediction_loss(obsn[b], act[b])
+            else:
+                loss = model.rollout_loss(obsn[b], act[b], rollout_context)
             opt.zero_grad(); loss.backward(); opt.step()
     return model, (mu, sd)
 
