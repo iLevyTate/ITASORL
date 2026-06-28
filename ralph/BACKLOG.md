@@ -9,6 +9,11 @@ test/contract gap · **P3** footgun/cleanup.
 
 ## Open
 <!-- Ralph adds discovered issues here, highest severity first. -->
+P2 | experiment_b2.py:compute_gae | The A2C advantage math (per-episode GAE, padding/masking, bootstrap = 0 for terminated vs last value for truncated) is load-bearing and untested. Add correctness tests on hand-checkable inputs: a 2-step terminated episode (bootstrap 0), a truncated episode (bootstrap = last value), and that padded steps beyond `lengths` contribute zero. Hunt for off-by-one / mask leakage.
+P2 | experiment_b2.py:RunningNorm | The Welford observation normalizer is untested. Verify its running mean/var match `numpy` batch statistics over a stream to tolerance, and that `freeze()` halts further updates so the probe sees the same normalization the agent trained with. Hunt for numerical drift in the parallel-variance update.
+P2 | experiment_b2.py + agent_ac.py | CUDA/CPU parity + determinism: the matched-pair L0 readout must be bit-identical and the pooled readout deterministic given seeds on BOTH devices. Add a device-parametrized test (skip `cuda` when unavailable) asserting identical h_t / probe AUROC across a repeat run. This guards the keystone confound control on GPU.
+P2 | experiment_b2.py:pooled_readout/collect_pool | Drop-on-early-death can silently shrink the pools under the harsh B-v2 metabolism; verify `collect_pool` only returns full-length survivors and that the `too_few_survivors` guard fires (returns NaN, not a crash) when survivors < 5. Add a test.
+P3 | agent_ac.py:to_env_action | Confirm the squashed env action stays within the world's action ranges (thrust in [0,1], turn in [-1,1], binaries in {0,1}) for EXTREME raw latents (e.g. +/-50), not just typical samples. Add an extreme-value test.
 P3 | run_expA.py, run_expA_l2.py, run_expB_*.py | Run scripts have no `if __name__ == "__main__"` guard - importing one executes the whole (multi-minute) experiment. Harmless as scripts but a footgun and blocks importing them in tests. Deferred: wrapping 7 files in main() is churn for no current bug. Optional cleanup.
 
 ## In progress
