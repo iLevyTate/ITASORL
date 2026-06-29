@@ -187,6 +187,10 @@ Run the test suite:
 pytest -q
 ```
 
+**Google Colab (GPU):** open [`notebooks/colab_gpu.ipynb`](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/expB2-survival-coupling/notebooks/colab_gpu.ipynb), enable GPU runtime, run all cells. It clones the repo and runs `python scripts/run_e2e.py`.
+
+**Local Jupyter / VS Code:** open `notebooks/colab_gpu.ipynb` from this repo — it auto-detects local mode (no Drive/download cells).
+
 ---
 
 ## What to read first
