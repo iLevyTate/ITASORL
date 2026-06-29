@@ -299,31 +299,38 @@ direction across independent authentic (drift 0) vs surrogate (drift d) episodes
 |-------|----------------------|---------------------|
 | untrained | 0.460 ± 0.036 | 0.444 ± 0.027 |
 | predictor | 0.493 ± 0.079 | 0.485 ± 0.053 |
-| **survival** | 0.538 ± 0.016 | **0.581 ± 0.035** |
+| **survival** | 0.514 ± 0.052 | **0.595 ± 0.014** |
 
-Gates (all pre-registered): **engagement** passed in 100 % of seeds (the trained
-agent out-survives random and scripted on both return and lifetime); **positive
-control** (speed probe) 0.83–0.97; **leakage audit** (reward / length / lifetime)
-clean in every cell; **L0 equivalence** for the survival agent — point estimate
-0.538 sits inside the ±0.05 band but TOST is not significant at n = 3 (p = 0.19),
-i.e. underpowered rather than a clean pass.
+(Numbers are from the corrected run — see the GAE-bug deviation in
+`../PREREGISTRATION.md` §12. The first run was trained with a buggy advantage estimator
+that affected only the survival arm; the conclusion is unchanged.)
 
-**Result — the negative holds; a faint sub-threshold hint remains.**
+Gates (all pre-registered): **engagement** passed in 100 % of seeds (trained true
+return beats random and scripted by ≫ the 0.15 margin: ≈ −0.2 to −0.5 vs random −1.0);
+**positive control** (speed probe) 0.83–0.97; **leakage audit** (reward / length /
+lifetime) clean in every cell; **L0 equivalence** for the survival agent — point
+estimate 0.514 now sits comfortably inside the ±0.05 band, though TOST is still not
+significant at n = 3 (p = 0.22), i.e. underpowered rather than a clean pass.
+
+**Result — the negative holds, with a small but cleaner drift-specific trace.**
 
 - The `predictor` agent reproduces Experiment B's null *on this trunk* (flat at
   ≈ 0.49, |dev| ≈ 0.01) — an internal validation that the apparatus and the trunk
   carry no spurious signal.
-- The `survival` agent's pooled target (0.581 at drift 0.45) is the largest of the
-  three and shows the steepest drift slope (0.538 → 0.581), **but it falls far short
-  of the pre-registered SESOI of 0.65** (an oracle reads the same artifact at ≈ 0.99),
-  and its error bars overlap the untrained floor. Much of its ≈ 0.05 elevation is a
-  drift-independent *representational-richness* offset (it is already 0.538 at drift
-  0), not encoding of world identity.
+- The `survival` agent now starts **at chance** at drift 0 (0.514, |dev| ≈ 0.01 —
+  the buggy run's ≈ 0.04 offset was a training artifact) and rises to **0.595 ± 0.014
+  at drift 0.45**: the steepest drift slope of the three, clearly above both the
+  `predictor` (0.485) and `untrained` (0.444) agents, with tight error bars. So unlike
+  the prediction-only agent, survival pressure does leave a *small, drift-specific*
+  trace. **But it falls far short of the pre-registered SESOI of 0.65** (an oracle reads
+  the same artifact at ≈ 0.99).
 - **Verdict (pre-registered decision matrix): the strong hypothesis is not
   supported.** *Detectability ≫ incidental encoding* survives the move to survival
-  pressure: an agent whose life depends on the drifting dynamics still does not encode
-  *which world it is in* in any decodably persistent way. The small, drift-sensitive
-  lift unique to the survival agent is suggestive but sub-threshold.
+  pressure: an agent whose life depends on the drifting dynamics gains only a faint
+  statistical trace of its world's nature (≈ 0.60), not a decodable representation of
+  *which world it is in*. The trace is now cleaner than the buggy run (a real
+  drift-driven slope off a chance baseline, not a constant offset) and motivates a
+  higher-powered follow-up rather than supporting a positive claim.
 
 **Caveats.** n = 3 seeds (the TOST is underpowered); a single architecture, world
 family, and L2 only; 300 A2C updates (the forager is engaged but not expert); and the
