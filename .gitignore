@@ -185,3 +185,4 @@ temp.md
 
 # Recorded e2e run output (logs, figures, bundle.zip)
 results/runs/
+results/LATEST_RUN.txt

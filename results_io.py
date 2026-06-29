@@ -7,6 +7,7 @@ Used by run_e2e.py. Each run lands in results/runs/<run_id>/.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -253,10 +254,22 @@ class RunRecorder:
         import time
         t0 = time.perf_counter()
         print(f"\n{'=' * 72}\n$ {' '.join(cmd)}\n{'=' * 72}", flush=True)
-        proc = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+
+        # Stream stdout live (Colab/long runs) while capturing for logs + parsing.
+        env = os.environ.copy()
+        env["PYTHONUNBUFFERED"] = "1"
+        proc = subprocess.Popen(
+            cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            text=True, bufsize=1, env=env,
+        )
+        log_parts: list[str] = []
+        assert proc.stdout is not None
+        for line in proc.stdout:
+            print(line, end="", flush=True)
+            log_parts.append(line)
+        proc.wait()
         elapsed = time.perf_counter() - t0
-        log = proc.stdout + proc.stderr
-        print(log, end="", flush=True)
+        log = "".join(log_parts)
 
         log_path = self.run_dir / "steps" / f"{name}.log"
         log_path.write_text(log, encoding="utf-8")
@@ -337,10 +350,10 @@ class RunRecorder:
 
         print(f"\n{'=' * 72}", flush=True)
         print(f"Results recorded -> {self.run_dir}", flush=True)
-        print(f"  SUMMARY.md  - human-readable outcome", flush=True)
-        print(f"  manifest.json - machine-readable index", flush=True)
+        print("  SUMMARY.md  - human-readable outcome", flush=True)
+        print("  manifest.json - machine-readable index", flush=True)
         if make_zip:
-            print(f"  bundle.zip  - download everything", flush=True)
+            print("  bundle.zip  - download everything", flush=True)
         print(f"{'=' * 72}\n", flush=True)
         return self.run_dir
 
@@ -395,9 +408,9 @@ def build_summary(manifest: dict[str, Any], run_dir: Path) -> str:
         "",
         "## Files in this run",
         "",
-        f"- Full log: `combined.log`",
-        f"- Per-step logs: `steps/`",
-        f"- Figures + JSON: `artifacts/`",
+        "- Full log: `combined.log`",
+        "- Per-step logs: `steps/`",
+        "- Figures + JSON: `artifacts/`",
         "",
         "Download **`bundle.zip`** from this folder to keep everything.",
         "",
