@@ -182,10 +182,15 @@ cython_debug/
 
 # Local scratch / working status docs (not for the remote)
 temp.md
+docs/LESSWRONG_POST.md
+docs/DEVTO_POST.md
+docs/LINKEDIN_POSTS.md
+docs/BRAND_IDENTITY_BRIEF.md
 
 # Recorded e2e run output (logs, figures, bundle.zip)
 results/runs/
 results/LATEST_RUN.txt
+fullruns/
 
 # Local run logs and ad-hoc B-v2 outputs at repo root
 expB2_run*.log

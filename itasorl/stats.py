@@ -84,3 +84,112 @@ def equivalence_test(values, h0: float = 0.5, margin: float = 0.05,
     p = max(p_lower, p_upper)
     equivalent = bool(p < alpha and lower <= mean <= upper)
     return EquivalenceResult(mean, margin, lower, upper, p_lower, p_upper, p, equivalent, n)
+
+
+# ---------------------------------------------------------------------------
+# AUROC uncertainty. A point AUROC says nothing about precision; reviewers of a
+# null result will (rightly) ask for an interval. These are dependency-light
+# (numpy only) so they run wherever the pipeline runs.
+# ---------------------------------------------------------------------------
+def _rankdata_average(a: np.ndarray) -> np.ndarray:
+    """Tie-aware average ranks (1-based), matching scipy.stats.rankdata(method='average')."""
+    a = np.asarray(a)
+    sorter = np.argsort(a, kind="mergesort")
+    inv = np.empty(a.size, dtype=np.intp)
+    inv[sorter] = np.arange(a.size)
+    a_sorted = a[sorter]
+    obs = np.r_[True, a_sorted[1:] != a_sorted[:-1]]
+    dense = obs.cumsum()[inv]
+    count = np.r_[np.nonzero(obs)[0], a.size]
+    return 0.5 * (count[dense] + count[dense - 1] + 1)
+
+
+def auroc(y_true, y_score) -> float:
+    """AUROC via the Mann-Whitney U / rank statistic (handles ties). NaN if one class."""
+    y_true = np.asarray(y_true).astype(int)
+    y_score = np.asarray(y_score, dtype=float)
+    n_pos = int(np.sum(y_true == 1))
+    n_neg = int(np.sum(y_true == 0))
+    if n_pos == 0 or n_neg == 0:
+        return float("nan")
+    ranks = _rankdata_average(y_score)
+    sum_pos = float(ranks[y_true == 1].sum())
+    return (sum_pos - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg)
+
+
+def auroc_ci(y_true, y_score, level: float = 0.95, n_boot: int = 2000,
+             seed: int = 0) -> tuple[float, float]:
+    """Stratified bootstrap CI for a single AUROC. Resamples positives and negatives
+    with replacement (keeps both classes present) and recomputes the rank-AUROC; no
+    model refit, so it is cheap enough to attach to every reported number."""
+    y_true = np.asarray(y_true).astype(int)
+    y_score = np.asarray(y_score, dtype=float)
+    pos = np.flatnonzero(y_true == 1)
+    neg = np.flatnonzero(y_true == 0)
+    if pos.size == 0 or neg.size == 0:
+        return (float("nan"), float("nan"))
+    rng = np.random.default_rng(seed)
+    aucs = np.empty(n_boot)
+    for b in range(n_boot):
+        idx = np.concatenate([
+            pos[rng.integers(0, pos.size, pos.size)],
+            neg[rng.integers(0, neg.size, neg.size)],
+        ])
+        aucs[b] = auroc(y_true[idx], y_score[idx])
+    a = (1.0 - level) / 2.0
+    return (float(np.nanpercentile(aucs, 100 * a)), float(np.nanpercentile(aucs, 100 * (1 - a))))
+
+
+def mean_ci(values, level: float = 0.90, n_boot: int = 10000,
+            seed: int = 0) -> tuple[float, float, float]:
+    """Bootstrap CI of the across-seed mean. Seeds are the replication unit for a null
+    claim (cf. Colas et al., 'How many random seeds?'), so this is the decision-relevant
+    interval. Returns (mean, lo, hi)."""
+    x = np.asarray(values, dtype=float).ravel()
+    n = x.size
+    if n == 0:
+        return (float("nan"), float("nan"), float("nan"))
+    if n == 1:
+        return (float(x[0]), float(x[0]), float(x[0]))
+    rng = np.random.default_rng(seed)
+    means = x[rng.integers(0, n, size=(n_boot, n))].mean(axis=1)
+    a = (1.0 - level) / 2.0
+    return (float(x.mean()), float(np.percentile(means, 100 * a)), float(np.percentile(means, 100 * (1 - a))))
+
+
+@dataclass
+class RopeResult:
+    mean: float
+    rope: tuple[float, float]
+    hdi: tuple[float, float]      # bootstrap percentile interval of the mean
+    p_in_rope: float             # P(mean in ROPE) under the bootstrap posterior
+    accept: bool                 # 95% interval entirely inside ROPE -> accept equivalence
+    n: int
+
+    def __str__(self) -> str:
+        verdict = "ACCEPT equivalence" if self.accept else "inconclusive"
+        return (f"mean={self.mean:.3f}  ROPE=[{self.rope[0]:.3f},{self.rope[1]:.3f}]  "
+                f"95%HDI=[{self.hdi[0]:.3f},{self.hdi[1]:.3f}]  "
+                f"P(in ROPE)={self.p_in_rope:.3f}  -> {verdict} (n={self.n})")
+
+
+def rope_test(values, rope: tuple[float, float] = (0.45, 0.55), level: float = 0.95,
+              n_boot: int = 20000, seed: int = 0) -> RopeResult:
+    """Bayesian-style equivalence leg (Kruschke HDI+ROPE). A bootstrap posterior over the
+    across-seed mean; accept equivalence when the 95% interval lies entirely inside the
+    ROPE. Reported alongside TOST - both agreeing is a cheap, large credibility gain for
+    a null."""
+    x = np.asarray(values, dtype=float).ravel()
+    n = x.size
+    lo_r, hi_r = rope
+    if n < 2:
+        m = float(x.mean()) if n else float("nan")
+        inside = bool(lo_r <= m <= hi_r) if n else False
+        return RopeResult(m, (lo_r, hi_r), (m, m), float(inside), inside, n)
+    rng = np.random.default_rng(seed)
+    means = x[rng.integers(0, n, size=(n_boot, n))].mean(axis=1)
+    a = (1.0 - level) / 2.0
+    hdi = (float(np.percentile(means, 100 * a)), float(np.percentile(means, 100 * (1 - a))))
+    p_in = float(np.mean((means >= lo_r) & (means <= hi_r)))
+    accept = bool(hdi[0] >= lo_r and hdi[1] <= hi_r)
+    return RopeResult(float(x.mean()), (lo_r, hi_r), hdi, p_in, accept, n)

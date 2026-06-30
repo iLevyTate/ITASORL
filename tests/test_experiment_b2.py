@@ -65,6 +65,17 @@ def test_collect_pool_returns_fixed_length():
     assert H.ndim == 3 and H.shape[1] == 6 and H.shape[0] == len(spd)
 
 
+def test_collect_pool_anchors_aligned():
+    """return_anchors yields per-episode energy/food/drag arrays aligned with H - the
+    ceiling controls the readout depends on."""
+    agent, norm = _agent_norm()
+    out = collect_pool(agent, norm, P, 0.45, 5, 6, "cpu", 222, RS, return_anchors=True)
+    assert len(out) == 5
+    H, spd, energy, food, drag = out
+    k = H.shape[0]
+    assert spd.shape == (k,) and energy.shape == (k,) and food.shape == (k,) and drag.shape == (k,)
+
+
 def _ep(label, rsum):
     return {"H": np.zeros((3, 8), np.float32), "label": label, "speed": 0.0,
             "reward_sum": rsum, "length": 3, "lifetime": 1}

@@ -123,7 +123,11 @@ def _emit(clean: np.ndarray, quantize: bool, delta: float, sigma: float, rng) ->
 # Grouped AUROC (resample at the pair level, never the timestep)
 # ---------------------------------------------------------------------------
 
-def grouped_auroc(X: np.ndarray, y: np.ndarray, groups: np.ndarray, n_splits: int = 5) -> float:
+def grouped_auroc(X: np.ndarray, y: np.ndarray, groups: np.ndarray, n_splits: int = 5,
+                  return_oof: bool = False):
+    """Grouped 5-fold CV AUROC with the scaler fit on TRAIN folds only (no leakage).
+    With return_oof=True also returns the concatenated out-of-fold (y_true, y_score),
+    which lets callers bootstrap an AUROC CI without refitting the probe."""
     from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import roc_auc_score
     from sklearn.model_selection import GroupKFold
@@ -132,6 +136,7 @@ def grouped_auroc(X: np.ndarray, y: np.ndarray, groups: np.ndarray, n_splits: in
 
     gkf = GroupKFold(n_splits=n_splits)
     aucs = []
+    oof_y, oof_p = [], []
     for tr, te in gkf.split(X, y, groups):
         if len(np.unique(y[te])) < 2:
             continue
@@ -139,7 +144,15 @@ def grouped_auroc(X: np.ndarray, y: np.ndarray, groups: np.ndarray, n_splits: in
         clf.fit(X[tr], y[tr])
         p = clf.predict_proba(X[te])[:, 1]
         aucs.append(roc_auc_score(y[te], p))
-    return float(np.mean(aucs)) if aucs else 0.5
+        if return_oof:
+            oof_y.append(np.asarray(y[te]))
+            oof_p.append(np.asarray(p))
+    auc = float(np.mean(aucs)) if aucs else 0.5
+    if return_oof:
+        yv = np.concatenate(oof_y) if oof_y else np.zeros(0)
+        pv = np.concatenate(oof_p) if oof_p else np.zeros(0)
+        return auc, yv, pv
+    return auc
 
 
 # ---------------------------------------------------------------------------
