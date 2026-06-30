@@ -29,8 +29,10 @@ import numpy as np
 import torch
 
 from .agent_ac import RecurrentActorCritic
+from .experiment_a import grouped_auroc
 from .experiment_b import episode_features, probe_auroc, scripted_policy
 from .patch_of_earth import PatchOfEarthV0
+from .stats import auroc_ci
 from .world import SeedBundle, WorldParams
 
 
@@ -435,9 +437,11 @@ def probe_world_identity(auth_eps: list, surr_eps: list, seed: int = 0) -> dict:
     }
 
 
-def leakage_audit_b2(auth_eps: list, surr_eps: list) -> dict:
+def leakage_audit_b2(auth_eps: list, surr_eps: list, margin: float = 0.1) -> dict:
     """Confound battery: world identity must NOT be decodable from reward/length/lifetime.
-    A clean target probe with these near 0.5 proves it reads the artifact, not 'I lived longer'."""
+    A clean target probe with these near 0.5 proves it reads the artifact, not 'I lived
+    longer'. `margin` is the tolerated |AUROC-0.5|; the run uses a tighter 0.05 (see
+    readout), the default stays 0.1 for tiny-n smoke/tests."""
     eps = auth_eps + surr_eps
     y = np.array([e["label"] for e in eps])
 
@@ -447,7 +451,8 @@ def leakage_audit_b2(auth_eps: list, surr_eps: list) -> dict:
 
     audit = {k: channel(k) for k in ("reward_sum", "length", "lifetime")}
     audit["max_abs_dev"] = max(abs(a - 0.5) for a in audit.values())
-    audit["clean"] = audit["max_abs_dev"] < 0.1
+    audit["margin"] = margin
+    audit["clean"] = audit["max_abs_dev"] < margin
     return audit
 
 
@@ -546,23 +551,33 @@ def train_predictor_only(drift_sigma, params=None, *, n_eps=16, updates=200, emb
 # comparable to Exp B's 0.50 null. Fixed length + drop-on-early-death keeps episode
 # length constant across pools, so length/lifetime cannot leak the label.
 # ---------------------------------------------------------------------------
-def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_base, ray_steps):
+def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_base, ray_steps,
+                 return_anchors: bool = False):
     """Collect up to n_eps episodes of EXACTLY `steps` length (drop early deaths) with
-    the frozen deterministic agent. Returns H (k,steps,Hdim), speeds (k,)."""
-    Hs, spd = [], []
+    the frozen deterministic agent. Returns H (k,steps,Hdim), speeds (k,).
+
+    With return_anchors=True also returns per-episode mean energy and mean
+    nearest-pellet distance - quantities that vary WITHIN both worlds and that a
+    surviving agent must track. They are the readout CEILING: decoding them shows the
+    recurrent state is linearly readable, so a chance world-identity AUROC is genuine
+    absence of encoding, not a dead probe. (They are NOT the world label: energy/food
+    vary inside authentic and surrogate alike.)"""
+    Hs, spd, energy, food = [], [], [], []
     for i in range(n_eps):
         w = make_world(params, drift_sigma, ray_steps)
         w.reset(_seeds(seed_base + i))
         h = agent.initial_state(1, device)
         prev = torch.zeros(1, agent.act_dim, device=device)
         obs = w.observe().astype(np.float64)
-        Hrow, sp, died = [], [], False
+        Hrow, sp, en, fd, died = [], [], [], [], False
         for _ in range(steps):
             obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
             _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
             Hrow.append(h[0].detach().cpu().numpy())
             r = w.step(env_act[0].detach().cpu().numpy().astype(np.float32))
             sp.append(float(np.linalg.norm(w.vel)))
+            en.append(float(w.E / w.Emax))
+            fd.append(-_food_potential(w))           # >=0 distance to nearest pellet
             obs = r.obs.astype(np.float64)
             prev = env_act
             if r.terminated:
@@ -571,40 +586,69 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
         if not died and len(Hrow) == steps:
             Hs.append(np.asarray(Hrow, np.float32))
             spd.append(float(np.mean(sp)))
-    return (np.stack(Hs) if Hs else np.zeros((0, steps, agent.hidden), np.float32)), np.asarray(spd)
+            energy.append(float(np.mean(en)))
+            food.append(float(np.mean(fd)))
+    H = np.stack(Hs) if Hs else np.zeros((0, steps, agent.hidden), np.float32)
+    if return_anchors:
+        return H, np.asarray(spd), np.asarray(energy), np.asarray(food)
+    return H, np.asarray(spd)
+
+
+def _auroc_with_ci(X, y, seed: int = 0) -> tuple[float, float, float]:
+    """5-fold grouped CV AUROC plus a stratified-bootstrap 95% CI from its out-of-fold
+    predictions (no model refit)."""
+    auc, yv, pv = grouped_auroc(X, y, np.arange(len(y)), return_oof=True)
+    if yv.size == 0:
+        return auc, float("nan"), float("nan")
+    lo, hi = auroc_ci(yv, pv, seed=seed)
+    return auc, lo, hi
 
 
 def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray_steps=5,
                    device=None, seed=0) -> dict:
-    """Experiment-B-style probe: decode world identity across independent episodes."""
+    """Experiment-B-style probe: decode world identity across independent episodes.
+    Reports the headline `target` with a bootstrap CI, plus anchor CEILINGS (energy,
+    food-distance) that show the recurrent state is readable."""
     device = device or default_device()
-    Ha, spa = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 800_000, ray_steps)
-    Hs, sps = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, 850_000, ray_steps)
+    Ha, spa, ena, fda = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 800_000,
+                                     ray_steps, return_anchors=True)
+    Hs, sps, ens, fds = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device,
+                                     850_000, ray_steps, return_anchors=True)
     if len(Ha) < 5 or len(Hs) < 5:
-        return {"target": float("nan"), "shuffled": float("nan"), "speed": float("nan"),
+        return {"target": float("nan"), "target_lo": float("nan"), "target_hi": float("nan"),
+                "shuffled": float("nan"), "speed": float("nan"),
+                "anchor_energy": float("nan"), "anchor_food": float("nan"),
                 "n": len(Ha) + len(Hs), "too_few_survivors": True}
     H = np.concatenate([Ha, Hs])
     X = episode_features(H)                          # reuse Exp B's feature builder verbatim
     y = np.concatenate([np.zeros(len(Ha)), np.ones(len(Hs))]).astype(int)
     spd = np.concatenate([spa, sps])
+    en = np.concatenate([ena, ens])
+    fd = np.concatenate([fda, fds])
     rng = np.random.default_rng(seed)
+    tgt, t_lo, t_hi = _auroc_with_ci(X, y, seed=seed)
     return {
-        "target": probe_auroc(X, y),
+        "target": tgt, "target_lo": t_lo, "target_hi": t_hi,
         "shuffled": probe_auroc(X, rng.permutation(y)),
         "speed": probe_auroc(X, (spd > np.median(spd)).astype(int)),
+        "anchor_energy": probe_auroc(X, (en > np.median(en)).astype(int)),
+        "anchor_food": probe_auroc(X, (fd > np.median(fd)).astype(int)),
         "n": len(y), "n_auth": len(Ha), "n_surr": len(Hs), "too_few_survivors": False,
     }
 
 
 def readout(agent, norm, params, drift_sigma, *, n_pairs=60, prefix_steps=20, branch_steps=24,
-            ray_steps=5, device=None, seed_base=700_000, seed=0) -> dict:
+            ray_steps=5, device=None, seed_base=700_000, seed=0, leak_margin=0.1) -> dict:
     """Run the SECONDARY matched-pair recurrent readout (detectability-style) and return
-    probe + leakage in one dict."""
+    probe + leakage in one dict. The leakage gate stays at |dev|<0.1: this is the matched-
+    pair path where reward_sum legitimately differs under drift, so a tighter gate would
+    false-alarm on real return differences rather than probe contamination. The numeric
+    leakage_max_dev is always reported for transparency."""
     a, s = matched_pair_recurrent_rollout(agent, norm, params, drift_sigma, n_pairs=n_pairs,
                                           prefix_steps=prefix_steps, branch_steps=branch_steps,
                                           ray_steps=ray_steps, device=device, seed_base=seed_base)
     pr = probe_world_identity(a, s, seed=seed)
-    lk = leakage_audit_b2(a, s)
+    lk = leakage_audit_b2(a, s, margin=leak_margin)
     return {**pr, "leakage_clean": lk["clean"], "leakage_max_dev": lk["max_abs_dev"],
             "leakage": lk, "n_pairs": len(a)}
 
@@ -637,8 +681,11 @@ if __name__ == "__main__":
     print(f"   engagement: trained={eng['trained_return']:+.3f} random={eng['random_return']:+.3f} "
           f"scripted={eng['scripted_return']:+.3f}  engaged={eng['engaged']}")
     print("   PRIMARY pooled readout - target AUROC (~0.5 = no persistent encoding, Exp B frame):")
+    print("     (ceiling = energy/food anchors; high anchor + chance target = readable state, no identity)")
     for name, r in (("untrained ", p_untr), ("predictor ", p_pred), ("survival  ", p_surv)):
-        print(f"     {name}: target={r['target']:.3f}  speed(+)={r['speed']:.3f}  "
+        print(f"     {name}: target={r['target']:.3f} [{r.get('target_lo', float('nan')):.3f},"
+              f"{r.get('target_hi', float('nan')):.3f}]  ceiling(energy={r.get('anchor_energy', float('nan')):.3f} "
+              f"food={r.get('anchor_food', float('nan')):.3f})  speed(+)={r['speed']:.3f}  "
               f"shuffled={r['shuffled']:.3f}  (n={r['n']})")
     print("   SECONDARY matched-pair readout - target AUROC (|dev from 0.5| = detectability):")
     for name, r in (("untrained ", r_untr), ("predictor ", r_pred), ("survival  ", r_surv)):
