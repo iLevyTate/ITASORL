@@ -30,6 +30,6 @@ python scripts/watch_run.py --follow
 
 On Google Colab (see `notebooks/colab_gpu.ipynb`):
 
-- Results are written directly to Google Drive (`--results-dir`) so a VM crash does not lose completed steps.
-- `ITASORL_DRIVE_SYNC` mirrors `combined.log`, `status.json`, `manifest.json`, and per-step outputs after each step.
-- If Colab disconnects, set `RESUME_RUN_DIR` in the notebook and run `python scripts/run_e2e.py --resume <drive_run_folder>` to skip steps already marked `ok` in `manifest.json`.
+- Runs use **local disk** (`fullruns/` under the repo). Do not set `--results-dir` to Drive (FUSE I/O is slow and often fails).
+- `ITASORL_DRIVE_SYNC` mirrors `combined.log`, `status.json`, `manifest.json`, and per-step outputs to Drive after each step.
+- If Colab disconnects, set `RESUME_RUN_DIR` in the notebook to the mirrored Drive folder and run with `--resume` (the notebook copies Drive to local first).
