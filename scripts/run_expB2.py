@@ -270,7 +270,7 @@ def main():
         l0 = res[0.0]["survival"]["pool_target"]
         eq = equivalence_test(l0, h0=0.5, margin=0.05)
         rp = rope_test(l0, rope=(0.45, 0.55))
-        print(f"\nL0 control (survival pooled target @ drift=0):")
+        print("\nL0 control (survival pooled target @ drift=0):")
         print(f"  TOST  {eq}")
         print(f"  ROPE  {rp}")
         l0_ceiling = np.nanmean(np.array(res[0.0]["survival"]["pool_anchor_energy"], float))

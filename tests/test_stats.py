@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 
 import numpy as np
+import pytest
 
 from itasorl.stats import auroc, auroc_ci, equivalence_test, mean_ci, rope_test
 
@@ -20,13 +21,13 @@ def test_auroc_matches_known_cases():
 
 
 def test_auroc_matches_sklearn_on_random_data():
-    pytest_sklearn = __import__("sklearn.metrics", fromlist=["roc_auc_score"])
+    roc_auc_score = pytest.importorskip("sklearn.metrics").roc_auc_score
     rng = np.random.default_rng(1)
     y = rng.integers(0, 2, 200)
     while len(np.unique(y)) < 2:
         y = rng.integers(0, 2, 200)
     s = rng.normal(size=200) + 0.5 * y                          # mild signal + ties-free
-    assert abs(auroc(y, s) - pytest_sklearn.roc_auc_score(y, s)) < 1e-9
+    assert abs(auroc(y, s) - roc_auc_score(y, s)) < 1e-9
 
 
 def test_auroc_ci_brackets_and_bounded():

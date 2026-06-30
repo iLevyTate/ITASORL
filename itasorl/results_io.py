@@ -472,7 +472,7 @@ class RunRecorder:
         print("  manifest.json - machine-readable index", flush=True)
         if make_zip:
             print("  bundle.zip  - download everything", flush=True)
-        print(f"  tail live: python scripts/watch_run.py --follow", flush=True)
+        print("  tail live: python scripts/watch_run.py --follow", flush=True)
         print(f"{'=' * 72}\n", flush=True)
         return self.run_dir
 
