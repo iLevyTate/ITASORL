@@ -30,11 +30,14 @@ def _script(name: str) -> str:
     return str(SCRIPTS / name)
 
 
-def experiment_steps(*, quick: bool, b2_out: Path) -> list[tuple[str, list[str], list[str] | None]]:
+def experiment_steps(*, quick: bool, b2_out: Path,
+                     b2_extra: list[str] | None = None) -> list[tuple[str, list[str], list[str] | None]]:
     py = sys.executable
     b2 = [py, _script("run_expB2.py"), "--out-dir", str(b2_out)]
     if quick:
         b2.append("--quick")
+    if b2_extra:
+        b2.extend(b2_extra)
     return [
         ("expA_l1", [py, _script("run_expA.py")], None),
         ("expA_l2", [py, _script("run_expA_l2.py")], None),
@@ -61,7 +64,22 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--results-dir", type=Path, default=None,
                     help="Directory for this run's recorded output (default: results/runs/<timestamp>).")
     ap.add_argument("--no-zip", action="store_true", help="Do not create bundle.zip.")
+    ap.add_argument("--b2-seeds", type=int, nargs="+", default=None,
+                    help="Override Experiment B-v2 seeds (e.g. 0 1 2 ... 15 to power the null).")
+    ap.add_argument("--b2-updates", type=int, default=None, help="Override B-v2 training updates.")
+    ap.add_argument("--b2-hidden", type=int, default=None, help="Override B-v2 recurrent hidden size.")
     return ap.parse_args()
+
+
+def build_b2_extra(args: argparse.Namespace) -> list[str]:
+    extra: list[str] = []
+    if args.b2_seeds is not None:
+        extra += ["--seeds", *[str(s) for s in args.b2_seeds]]
+    if args.b2_updates is not None:
+        extra += ["--updates", str(args.b2_updates)]
+    if args.b2_hidden is not None:
+        extra += ["--hidden", str(args.b2_hidden)]
+    return extra
 
 
 def expand_skip(raw: list[str]) -> set[str]:
@@ -101,7 +119,8 @@ def main() -> None:
         recorder.run_step("pytest", [sys.executable, "-m", "pytest", "-q"], cwd=ROOT)
 
     if args.only != "pytest":
-        for name, cmd, extra in experiment_steps(quick=args.quick, b2_out=b2_out):
+        b2_extra = build_b2_extra(args)
+        for name, cmd, extra in experiment_steps(quick=args.quick, b2_out=b2_out, b2_extra=b2_extra):
             if name in skip:
                 print(f"\n--- skip {name} ---", flush=True)
                 recorder.manifest["steps"][name] = {"status": "skipped"}

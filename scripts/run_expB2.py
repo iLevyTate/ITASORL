@@ -46,7 +46,8 @@ from itasorl.experiment_b2 import (  # noqa: E402
     train_predictor_only,
     untrained_agent,
 )
-from itasorl.stats import equivalence_test  # noqa: E402
+import itasorl.experiment_b2 as b2  # noqa: E402
+from itasorl.stats import equivalence_test, mean_ci, rope_test  # noqa: E402
 from itasorl.world import WorldParams  # noqa: E402
 
 P = WorldParams(k_land=1.5, k_water=1.5, gravity=0.4)
@@ -70,6 +71,11 @@ def cfg():
     ap.add_argument("--mp_branch", type=int, default=24)
     ap.add_argument("--out-dir", type=str, default=".",
                     help="Directory for expB2_results.json and expB2_survival.png")
+    # Stage-2 objective-pressure overrides (scarcity). Default None keeps the frozen
+    # SURVIVAL_METAB/SURVIVAL_FOOD; setting these sweeps how hard survival bites.
+    ap.add_argument("--basal_e", type=float, default=None, help="override survival basal energy burn")
+    ap.add_argument("--n_pellets", type=int, default=None, help="override pellet count (scarcity)")
+    ap.add_argument("--reach", type=float, default=None, help="override eat reach radius")
     a = ap.parse_args()
     if a.quick:
         a.drifts, a.seeds, a.updates, a.n_eps, a.max_steps = [0.0, 0.45], [0, 1], 60, 8, 40
@@ -89,13 +95,30 @@ def evaluate_agent(agent, norm, drift, a, dev, seed):
 def main():
     a = cfg()
     dev = default_device()
+    # Stage-2 scarcity overrides patch the module-level survival constants in place.
+    if a.basal_e is not None:
+        b2.SURVIVAL_METAB["basal_E"] = a.basal_e
+    if a.n_pellets is not None:
+        b2.SURVIVAL_FOOD["n_pellets"] = a.n_pellets
+    if a.reach is not None:
+        b2.SURVIVAL_FOOD["reach"] = a.reach
+    os.makedirs(a.out_dir, exist_ok=True)
+    results_path = os.path.join(a.out_dir, "expB2_results.json")
     print(f"Experiment B-v2 full run  (device={dev}, drifts={a.drifts}, seeds={a.seeds}, "
-          f"updates={a.updates})\n")
+          f"updates={a.updates})")
+    print(f"  survival metabolism={b2.SURVIVAL_METAB}  food={b2.SURVIVAL_FOOD}\n")
     # results[drift][agent][metric] = list over seeds
     AG = ("untrained", "predictor", "survival")
-    res = {d: {g: {"pool_target": [], "pool_speed": [], "pool_shuffled": [],
+    res = {d: {g: {"pool_target": [], "pool_target_lo": [], "pool_target_hi": [],
+                   "pool_speed": [], "pool_shuffled": [],
+                   "pool_anchor_energy": [], "pool_anchor_food": [],
                    "mp_target": [], "mp_leak_clean": []} for g in AG} for d in a.drifts}
     eng_log = {d: [] for d in a.drifts}
+
+    def checkpoint():
+        """Persist results after every seed so a crash in a long run loses at most one cell."""
+        with open(results_path, "w") as f:
+            json.dump({str(d): {g: res[d][g] for g in AG} for d in a.drifts}, f, indent=2, default=float)
 
     for d in a.drifts:
         for s in a.seeds:
@@ -118,12 +141,21 @@ def main():
             for g in AG:
                 pool, mp = evaluate_agent(agents[g][0], agents[g][1], d, a, dev, s)
                 res[d][g]["pool_target"].append(pool["target"])
+                res[d][g]["pool_target_lo"].append(pool.get("target_lo"))
+                res[d][g]["pool_target_hi"].append(pool.get("target_hi"))
                 res[d][g]["pool_speed"].append(pool["speed"])
                 res[d][g]["pool_shuffled"].append(pool["shuffled"])
+                res[d][g]["pool_anchor_energy"].append(pool.get("anchor_energy"))
+                res[d][g]["pool_anchor_food"].append(pool.get("anchor_food"))
                 res[d][g]["mp_target"].append(mp["target"])
                 res[d][g]["mp_leak_clean"].append(bool(mp["leakage_clean"]))
-                print(f"   {g:10s} pool_target={pool['target']:.3f} (speed+={pool['speed']:.3f}) "
-                      f"mp_target={mp['target']:.3f} leak_clean={mp['leakage_clean']}", flush=True)
+                print(f"   {g:10s} pool_target={pool['target']:.3f} "
+                      f"[{pool.get('target_lo', float('nan')):.3f},{pool.get('target_hi', float('nan')):.3f}] "
+                      f"ceiling(E={pool.get('anchor_energy', float('nan')):.3f} "
+                      f"food={pool.get('anchor_food', float('nan')):.3f}) "
+                      f"speed+={pool['speed']:.3f} mp_target={mp['target']:.3f} "
+                      f"leak_clean={mp['leakage_clean']}(dev={mp['leakage_max_dev']:.3f})", flush=True)
+            checkpoint()  # incremental save: long runs survive a mid-run crash
 
     # ---- summary table ----
     print("\n================  SUMMARY (mean +/- std over seeds)  ================")
@@ -133,27 +165,47 @@ def main():
         print(f"  engagement passed in {eng_ok*100:.0f}% of seeds")
         for g in AG:
             t = np.array(res[d][g]["pool_target"]); sp = np.array(res[d][g]["pool_speed"])
+            ce = np.array(res[d][g]["pool_anchor_energy"], float)
+            cf = np.array(res[d][g]["pool_anchor_food"], float)
+            _, lo, hi = mean_ci(t, level=0.90)
             print(f"  {g:10s} PRIMARY pool target = {t.mean():.3f}+/-{t.std():.3f}   "
                   f"speed(+ctrl) = {sp.mean():.3f}   "
                   f"mp_target = {np.mean(res[d][g]['mp_target']):.3f}")
+            print(f"             across-seed 90% CI = [{lo:.3f},{hi:.3f}]   "
+                  f"ceiling(energy={np.nanmean(ce):.3f} food={np.nanmean(cf):.3f})")
 
     # ---- L0 equivalence gate on the survival agent (drift=0 must be at chance) ----
     if 0.0 in a.drifts:
-        eq = equivalence_test(res[0.0]["survival"]["pool_target"], h0=0.5, margin=0.05)
-        print(f"\nL0 control (survival pooled target @ drift=0): {eq}")
+        l0 = res[0.0]["survival"]["pool_target"]
+        eq = equivalence_test(l0, h0=0.5, margin=0.05)
+        rp = rope_test(l0, rope=(0.45, 0.55))
+        print(f"\nL0 control (survival pooled target @ drift=0):")
+        print(f"  TOST  {eq}")
+        print(f"  ROPE  {rp}")
+        l0_ceiling = np.nanmean(np.array(res[0.0]["survival"]["pool_anchor_energy"], float))
+        print(f"  ceiling(energy) @ L0 = {l0_ceiling:.3f}  "
+              f"({'apparatus ALIVE' if l0_ceiling >= 0.65 else 'WARNING: low ceiling - probe may be weak'})")
 
     # ---- decision readout on the strongest drift ----
     dmax = max(a.drifts)
     surv_t = np.array(res[dmax]["survival"]["pool_target"])
     pred_t = np.array(res[dmax]["predictor"]["pool_target"])
     untr_t = np.array(res[dmax]["untrained"]["pool_target"])
+    _, sm_lo, sm_hi = mean_ci(surv_t, level=0.90)
+    surv_ceil = np.nanmean(np.array(res[dmax]["survival"]["pool_anchor_energy"], float))
     print(f"\nAt strongest drift={dmax:.2f}: survival pooled target |dev|="
           f"{abs(surv_t.mean()-0.5):.3f}  predictor |dev|={abs(pred_t.mean()-0.5):.3f}  "
           f"untrained |dev|={abs(untr_t.mean()-0.5):.3f}")
+    print(f"  survival target = {surv_t.mean():.3f} (90% CI [{sm_lo:.3f},{sm_hi:.3f}])  "
+          f"ceiling(energy) = {surv_ceil:.3f}")
+    # Pre-registered primary: survival >= 0.65 AND beats predictor and untrained by >= 0.05.
+    h_b2 = (surv_t.mean() >= 0.65 and surv_t.mean() >= pred_t.mean() + 0.05
+            and surv_t.mean() >= untr_t.mean() + 0.05)
+    print(f"  primary H_B2 (survival-induced encoding) {'MET' if h_b2 else 'NOT met'}  "
+          f"-> {'encoding induced' if h_b2 else 'strengthened negative (state readable, identity not encoded)'}")
 
-    with open(os.path.join(a.out_dir, "expB2_results.json"), "w") as f:
-        json.dump({str(d): {g: res[d][g] for g in AG} for d in a.drifts}, f, indent=2, default=float)
-    print(f"saved {os.path.join(a.out_dir, 'expB2_results.json')}")
+    checkpoint()
+    print(f"saved {results_path}")
 
     # ---- figure: primary pooled |target-0.5| vs drift, per agent ----
     plt.figure(figsize=(7.6, 4.6))
