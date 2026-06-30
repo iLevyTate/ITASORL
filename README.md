@@ -127,7 +127,8 @@ objective-engagement and nonlinear-probe checks. See
 |   |-- PREREGISTRATION.md      B-v2 pre-registration
 |   `-- figures/                result figures (.png)
 |-- artifacts/expB2/            published B-v2 JSON/PNG (committed)
-|-- results/runs/               ephemeral e2e bundles (gitignored)
+|-- fullruns/                   e2e run bundles (gitignored; default output)
+|-- results/LATEST_RUN.txt      pointer to latest fullruns folder
 |-- notebooks/colab_gpu.ipynb   Colab end-to-end runner
 |-- tests/                      pytest regression suite
 `-- ralph/                      autonomous-loop tooling

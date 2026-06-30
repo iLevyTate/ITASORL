@@ -1,7 +1,13 @@
 """
 Record end-to-end run output: logs, parsed metrics, artifacts, summary, zip bundle.
 
-Used by run_e2e.py. Each run lands in results/runs/<run_id>/.
+Used by run_e2e.py. Each run lands in fullruns/<MMDDYYYY>/ by default (or
+fullruns/<MMDDYYYY_HHMMSS>/ when that date folder already contains a run).
+
+Logs are written incrementally so ``combined.log`` and ``status.json`` can be
+tailed while a run is in progress (see ``scripts/watch_run.py --follow``).
+Set ``ITASORL_DRIVE_SYNC`` to a directory path to mirror live logs there
+(e.g. Google Drive on Colab).
 """
 
 from __future__ import annotations
@@ -12,6 +18,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -19,7 +26,27 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
-RUNS_ROOT = ROOT / "results" / "runs"
+RUNS_ROOT = ROOT / "results" / "runs"  # legacy override via --results-dir
+FULLRUNS_ROOT = ROOT / "fullruns"
+LATEST_RUN_PTR = ROOT / "results" / "LATEST_RUN.txt"
+STATUS_SYNC_INTERVAL_SEC = 2.0
+
+
+def default_run_dir() -> Path:
+    """Primary output under fullruns/ (date folder; time suffix if date folder taken)."""
+    date = datetime.now().strftime("%m%d%Y")
+    base = FULLRUNS_ROOT / date
+    if base.exists() and any(base.iterdir()):
+        return FULLRUNS_ROOT / datetime.now().strftime("%m%d%Y_%H%M%S")
+    return base
+
+
+def read_latest_run_dir() -> Path | None:
+    """Resolve the most recent e2e run directory from LATEST_RUN.txt."""
+    if not LATEST_RUN_PTR.is_file():
+        return None
+    path = Path(LATEST_RUN_PTR.read_text(encoding="utf-8").strip())
+    return path if path.is_dir() else None
 
 # Repo-relative paths produced by reproduction scripts.
 STEP_ARTIFACTS: dict[str, list[str]] = {
@@ -229,16 +256,25 @@ class RunRecorder:
     quick: bool
     run_dir: Path
     manifest: dict[str, Any] = field(default_factory=dict)
-    combined_log: list[str] = field(default_factory=list)
+    _run_started: float = field(default=0.0, repr=False)
+    _status_last_write: float = field(default=0.0, repr=False)
+    _mirror_dir: Path | None = field(default=None, repr=False)
 
     @classmethod
     def create(cls, *, quick: bool, out_dir: Path | None = None) -> RunRecorder:
         run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-        run_dir = out_dir or (RUNS_ROOT / run_id)
+        run_dir = out_dir or default_run_dir()
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / "steps").mkdir(exist_ok=True)
         (run_dir / "artifacts").mkdir(exist_ok=True)
-        rec = cls(quick=quick, run_dir=run_dir)
+        mirror_raw = os.environ.get("ITASORL_DRIVE_SYNC", "").strip()
+        mirror_dir = Path(mirror_raw) if mirror_raw else None
+        rec = cls(
+            quick=quick,
+            run_dir=run_dir,
+            _run_started=time.perf_counter(),
+            _mirror_dir=mirror_dir,
+        )
         rec.manifest = {
             "run_id": run_id,
             "started_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -247,13 +283,84 @@ class RunRecorder:
             "environment": _device_info(),
             "steps": {},
         }
+        (run_dir / "combined.log").write_text("", encoding="utf-8")
+        rec._write_manifest()
+        rec._write_status(current_step=None, step_status="starting", last_line="")
+        LATEST_RUN_PTR.parent.mkdir(parents=True, exist_ok=True)
+        LATEST_RUN_PTR.write_text(str(run_dir.resolve()), encoding="utf-8")
+        rec._sync_mirror()
         return rec
+
+    def _combined_path(self) -> Path:
+        return self.run_dir / "combined.log"
+
+    def _status_path(self) -> Path:
+        return self.run_dir / "status.json"
+
+    def _manifest_path(self) -> Path:
+        return self.run_dir / "manifest.json"
+
+    def _append_combined(self, text: str) -> None:
+        with self._combined_path().open("a", encoding="utf-8") as fh:
+            fh.write(text)
+
+    def _write_manifest(self) -> None:
+        self._manifest_path().write_text(
+            json.dumps(self.manifest, indent=2), encoding="utf-8",
+        )
+
+    def _write_status(
+        self,
+        *,
+        current_step: str | None,
+        step_status: str,
+        last_line: str = "",
+        force: bool = False,
+    ) -> None:
+        now = time.perf_counter()
+        if not force and (now - self._status_last_write) < STATUS_SYNC_INTERVAL_SEC:
+            return
+        self._status_last_write = now
+        payload = {
+            "run_id": self.manifest.get("run_id"),
+            "run_dir": str(self.run_dir.resolve()),
+            "quick": self.quick,
+            "running": step_status not in ("finished", "failed"),
+            "current_step": current_step,
+            "step_status": step_status,
+            "elapsed_sec": round(now - self._run_started, 1),
+            "last_line": last_line.rstrip("\n")[-500:],
+            "updated_at_utc": datetime.now(timezone.utc).isoformat(),
+        }
+        self._status_path().write_text(json.dumps(payload, indent=2), encoding="utf-8")
+        self._sync_mirror()
+
+    def _sync_mirror(self) -> None:
+        if self._mirror_dir is None:
+            return
+        dest_root = self._mirror_dir / self.run_dir.name
+        dest_root.mkdir(parents=True, exist_ok=True)
+        for name in ("combined.log", "status.json", "manifest.json"):
+            src = self.run_dir / name
+            if src.is_file():
+                shutil.copy2(src, dest_root / name)
+
+    def note_step(self, name: str, *, status: str) -> None:
+        """Record a skipped or external step in manifest + status."""
+        self.manifest["steps"][name] = {"status": status}
+        self._write_manifest()
+        self._write_status(current_step=name, step_status=status, force=True)
 
     def run_step(self, name: str, cmd: list[str], *, cwd: Path = ROOT,
                  extra_artifacts: list[str] | None = None) -> None:
-        import time
         t0 = time.perf_counter()
-        print(f"\n{'=' * 72}\n$ {' '.join(cmd)}\n{'=' * 72}", flush=True)
+        header = f"\n{'=' * 72}\nSTEP {name}\n$ {' '.join(cmd)}\n{'=' * 72}\n"
+        print(header, end="", flush=True)
+        self._append_combined(header)
+        self._write_status(current_step=name, step_status="running", force=True)
+
+        log_path = self.run_dir / "steps" / f"{name}.log"
+        log_path.write_text("", encoding="utf-8")
 
         # Stream stdout live (Colab/long runs) while capturing for logs + parsing.
         env = os.environ.copy()
@@ -267,13 +374,13 @@ class RunRecorder:
         for line in proc.stdout:
             print(line, end="", flush=True)
             log_parts.append(line)
+            with log_path.open("a", encoding="utf-8") as fh:
+                fh.write(line)
+            self._append_combined(line)
+            self._write_status(current_step=name, step_status="running", last_line=line)
         proc.wait()
         elapsed = time.perf_counter() - t0
         log = "".join(log_parts)
-
-        log_path = self.run_dir / "steps" / f"{name}.log"
-        log_path.write_text(log, encoding="utf-8")
-        self.combined_log.append(f"\n{'=' * 72}\nSTEP {name}\n{'=' * 72}\n{log}")
 
         metrics = parse_step_metrics(name, log)
         metrics_path = self.run_dir / "steps" / f"{name}.json"
@@ -312,6 +419,13 @@ class RunRecorder:
             "metrics": str(metrics_path.relative_to(self.run_dir)),
             "artifacts": copied,
         }
+        self._write_manifest()
+        self._write_status(
+            current_step=name,
+            step_status=status,
+            last_line=log_parts[-1] if log_parts else "",
+            force=True,
+        )
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd, log)
 
@@ -326,18 +440,8 @@ class RunRecorder:
         self.manifest["total_elapsed_sec"] = round(total_sec, 1)
         self.manifest["run_dir"] = str(self.run_dir)
 
-        combined_path = self.run_dir / "combined.log"
-        combined_path.write_text("".join(self.combined_log), encoding="utf-8")
-
         summary_path = self.run_dir / "SUMMARY.md"
         summary_path.write_text(build_summary(self.manifest, self.run_dir), encoding="utf-8")
-
-        manifest_path = self.run_dir / "manifest.json"
-        manifest_path.write_text(json.dumps(self.manifest, indent=2), encoding="utf-8")
-
-        latest_ptr = ROOT / "results" / "LATEST_RUN.txt"
-        latest_ptr.parent.mkdir(parents=True, exist_ok=True)
-        latest_ptr.write_text(str(self.run_dir.resolve()), encoding="utf-8")
 
         zip_path = self.run_dir / "bundle.zip"
         if make_zip:
@@ -346,14 +450,29 @@ class RunRecorder:
                     if path.is_file() and path != zip_path:
                         zf.write(path, path.relative_to(self.run_dir))
             self.manifest["bundle_zip"] = str(zip_path.relative_to(self.run_dir))
-            manifest_path.write_text(json.dumps(self.manifest, indent=2), encoding="utf-8")
+
+        self._write_manifest()
+        self._write_status(current_step=None, step_status="finished", force=True)
+        LATEST_RUN_PTR.parent.mkdir(parents=True, exist_ok=True)
+        LATEST_RUN_PTR.write_text(str(self.run_dir.resolve()), encoding="utf-8")
+        self._sync_mirror()
+        if self._mirror_dir is not None:
+            dest_root = self._mirror_dir / self.run_dir.name
+            dest_root.mkdir(parents=True, exist_ok=True)
+            for name in ("SUMMARY.md", "bundle.zip"):
+                src = self.run_dir / name
+                if src.is_file():
+                    shutil.copy2(src, dest_root / name)
 
         print(f"\n{'=' * 72}", flush=True)
         print(f"Results recorded -> {self.run_dir}", flush=True)
         print("  SUMMARY.md  - human-readable outcome", flush=True)
+        print("  combined.log - full stdout (updated live during run)", flush=True)
+        print("  status.json - live step + last line", flush=True)
         print("  manifest.json - machine-readable index", flush=True)
         if make_zip:
             print("  bundle.zip  - download everything", flush=True)
+        print(f"  tail live: python scripts/watch_run.py --follow", flush=True)
         print(f"{'=' * 72}\n", flush=True)
         return self.run_dir
 
@@ -408,9 +527,11 @@ def build_summary(manifest: dict[str, Any], run_dir: Path) -> str:
         "",
         "## Files in this run",
         "",
-        "- Full log: `combined.log`",
+        "- Live log (tail while running): `combined.log` + `status.json`",
         "- Per-step logs: `steps/`",
         "- Figures + JSON: `artifacts/`",
+        "",
+        "While a run is in progress: `python scripts/watch_run.py --follow`",
         "",
         "Download **`bundle.zip`** from this folder to keep everything.",
         "",

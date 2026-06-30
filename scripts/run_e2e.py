@@ -1,8 +1,11 @@
 """
 ITASORL end-to-end runner: pytest + all reproduction scripts in FINDINGS order.
 
-Records every step under results/runs/<timestamp>/ (logs, metrics JSON, figures,
-SUMMARY.md, bundle.zip).
+Records every step under fullruns/<MMDDYYYY>/ by default (logs, metrics JSON,
+figures, SUMMARY.md, bundle.zip). Override with --results-dir.
+
+Live output while running: combined.log and status.json are updated incrementally.
+In a second terminal: python scripts/watch_run.py --follow
 
 Usage (from repo root):
     python scripts/run_e2e.py              # full suite + recorded results
@@ -62,7 +65,7 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--only", choices=("pytest", "experiments"),
                     help="Run only pytest or only the experiment scripts.")
     ap.add_argument("--results-dir", type=Path, default=None,
-                    help="Directory for this run's recorded output (default: results/runs/<timestamp>).")
+                    help="Directory for this run's recorded output (default: fullruns/<MMDDYYYY>/).")
     ap.add_argument("--no-zip", action="store_true", help="Do not create bundle.zip.")
     ap.add_argument("--b2-seeds", type=int, nargs="+", default=None,
                     help="Override Experiment B-v2 seeds (e.g. 0 1 2 ... 15 to power the null).")
@@ -123,7 +126,7 @@ def main() -> None:
         for name, cmd, extra in experiment_steps(quick=args.quick, b2_out=b2_out, b2_extra=b2_extra):
             if name in skip:
                 print(f"\n--- skip {name} ---", flush=True)
-                recorder.manifest["steps"][name] = {"status": "skipped"}
+                recorder.note_step(name, status="skipped")
                 continue
             recorder.run_step(name, cmd, cwd=ROOT, extra_artifacts=extra)
 
