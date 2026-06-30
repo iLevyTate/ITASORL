@@ -42,6 +42,7 @@ from itasorl.experiment_b2 import (  # noqa: E402
     engagement_metric,
     pooled_readout,
     readout,
+    survival_return,
     train_actor_critic,
     train_predictor_only,
     untrained_agent,
@@ -111,8 +112,8 @@ def main():
     AG = ("untrained", "predictor", "survival")
     res = {d: {g: {"pool_target": [], "pool_target_lo": [], "pool_target_hi": [],
                    "pool_speed": [], "pool_shuffled": [],
-                   "pool_anchor_energy": [], "pool_anchor_food": [],
-                   "mp_target": [], "mp_leak_clean": []} for g in AG} for d in a.drifts}
+                   "pool_anchor_energy": [], "pool_anchor_food": [], "pool_ceiling_drag": [],
+                   "mp_target": [], "mp_leak_clean": [], "xeval_return": []} for g in AG} for d in a.drifts}
     eng_log = {d: [] for d in a.drifts}
 
     def checkpoint():
@@ -138,6 +139,15 @@ def main():
             print(f"   engagement: trained={eng['trained_return']:+.3f} "
                   f"random={eng['random_return']:+.3f} scripted={eng['scripted_return']:+.3f} "
                   f"engaged={eng['engaged']}", flush=True)
+            # Manipulation check: cross-evaluate THIS survival agent at every drift (same
+            # world seeds, only the drag regime differs). A return drop off the trained
+            # drift proves the artifact is survival-relevant -> a chance identity probe is
+            # then genuinely informative, not "the drag never mattered".
+            xev = {f"{ed:.2f}": survival_return(sa, sn, P, ed, max_steps=a.max_steps,
+                                                ray_steps=a.ray_steps, device=dev) for ed in a.drifts}
+            res[d]["survival"]["xeval_return"].append(xev)
+            print("   manip-check (survival return by eval drift): "
+                  + "  ".join(f"@{k}={v:+.3f}" for k, v in xev.items()), flush=True)
             for g in AG:
                 pool, mp = evaluate_agent(agents[g][0], agents[g][1], d, a, dev, s)
                 res[d][g]["pool_target"].append(pool["target"])
@@ -147,12 +157,14 @@ def main():
                 res[d][g]["pool_shuffled"].append(pool["shuffled"])
                 res[d][g]["pool_anchor_energy"].append(pool.get("anchor_energy"))
                 res[d][g]["pool_anchor_food"].append(pool.get("anchor_food"))
+                res[d][g]["pool_ceiling_drag"].append(pool.get("ceiling_drag"))
                 res[d][g]["mp_target"].append(mp["target"])
                 res[d][g]["mp_leak_clean"].append(bool(mp["leakage_clean"]))
                 print(f"   {g:10s} pool_target={pool['target']:.3f} "
                       f"[{pool.get('target_lo', float('nan')):.3f},{pool.get('target_hi', float('nan')):.3f}] "
                       f"ceiling(E={pool.get('anchor_energy', float('nan')):.3f} "
-                      f"food={pool.get('anchor_food', float('nan')):.3f}) "
+                      f"food={pool.get('anchor_food', float('nan')):.3f} "
+                      f"drag={pool.get('ceiling_drag', float('nan')):.3f}) "
                       f"speed+={pool['speed']:.3f} mp_target={mp['target']:.3f} "
                       f"leak_clean={mp['leakage_clean']}(dev={mp['leakage_max_dev']:.3f})", flush=True)
             checkpoint()  # incremental save: long runs survive a mid-run crash
@@ -171,8 +183,31 @@ def main():
             print(f"  {g:10s} PRIMARY pool target = {t.mean():.3f}+/-{t.std():.3f}   "
                   f"speed(+ctrl) = {sp.mean():.3f}   "
                   f"mp_target = {np.mean(res[d][g]['mp_target']):.3f}")
+            cd = np.array(res[d][g]["pool_ceiling_drag"], float)
             print(f"             across-seed 90% CI = [{lo:.3f},{hi:.3f}]   "
-                  f"ceiling(energy={np.nanmean(ce):.3f} food={np.nanmean(cf):.3f})")
+                  f"ceiling(energy={np.nanmean(ce):.3f} food={np.nanmean(cf):.3f} "
+                  f"drag={np.nanmean(cd):.3f})")
+
+    # ---- manipulation check: is the L2 artifact survival-relevant? ----
+    if len(a.drifts) > 1:
+        print("\nManipulation check - survival TRUE return, train_drift x eval_drift "
+              "(same world seeds, only drag differs):")
+        for td in a.drifts:
+            xe = res[td]["survival"]["xeval_return"]  # list over seeds of {eval_drift: ret}
+            row = {f"{ed:.2f}": np.mean([s[f"{ed:.2f}"] for s in xe]) for ed in a.drifts}
+            print(f"  train@{td:.2f}: " + "  ".join(f"eval@{k}={v:+.3f}" for k, v in row.items()))
+        dmax = max(a.drifts)
+        if 0.0 in a.drifts and dmax > 0.0:
+            r_aa = np.mean([s["0.00"] for s in res[0.0]["survival"]["xeval_return"]])
+            r_ad = np.mean([s[f"{dmax:.2f}"] for s in res[0.0]["survival"]["xeval_return"]])
+            r_dd = np.mean([s[f"{dmax:.2f}"] for s in res[dmax]["survival"]["xeval_return"]])
+            drop = r_aa - r_ad           # drift-0 policy loses this much when drag shifts
+            recover = r_dd - r_ad        # training under drift recovers this much
+            relevant = drop > 0.05 or recover > 0.05
+            print(f"  drift-0 policy loses {drop:+.3f} return under eval@{dmax:.2f}; "
+                  f"drift-trained recovers {recover:+.3f}")
+            print(f"  -> artifact survival-relevant: {relevant}  "
+                  f"({'null is informative' if relevant else 'WARNING: drag may not matter; null is weak'})")
 
     # ---- L0 equivalence gate on the survival agent (drift=0 must be at chance) ----
     if 0.0 in a.drifts:
@@ -193,11 +228,14 @@ def main():
     untr_t = np.array(res[dmax]["untrained"]["pool_target"])
     _, sm_lo, sm_hi = mean_ci(surv_t, level=0.90)
     surv_ceil = np.nanmean(np.array(res[dmax]["survival"]["pool_anchor_energy"], float))
+    surv_ceil_drag = np.nanmean(np.array(res[dmax]["survival"]["pool_ceiling_drag"], float))
     print(f"\nAt strongest drift={dmax:.2f}: survival pooled target |dev|="
           f"{abs(surv_t.mean()-0.5):.3f}  predictor |dev|={abs(pred_t.mean()-0.5):.3f}  "
           f"untrained |dev|={abs(untr_t.mean()-0.5):.3f}")
     print(f"  survival target = {surv_t.mean():.3f} (90% CI [{sm_lo:.3f},{sm_hi:.3f}])  "
-          f"ceiling(energy) = {surv_ceil:.3f}")
+          f"ceiling(energy={surv_ceil:.3f} drag={surv_ceil_drag:.3f})")
+    print(f"  dissociation: drag-ceiling {surv_ceil_drag:.3f} vs identity-target {surv_t.mean():.3f}"
+          f"{' (tracks dynamics, no persistent identity)' if surv_ceil_drag - surv_t.mean() > 0.1 else ''}")
     # Pre-registered primary: survival >= 0.65 AND beats predictor and untrained by >= 0.05.
     h_b2 = (surv_t.mean() >= 0.65 and surv_t.mean() >= pred_t.mean() + 0.05
             and surv_t.mean() >= untr_t.mean() + 0.05)

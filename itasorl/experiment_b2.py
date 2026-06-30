@@ -334,6 +334,19 @@ def engagement_metric(agent, norm, params, drift_sigma, *, n_eps: int = 64, max_
     }
 
 
+def survival_return(agent, norm, params, drift_sigma, *, n_eps: int = 64, max_steps: int = 80,
+                    ray_steps: int = 5, device: str | None = None, seed_base: int = 920_000) -> float:
+    """Mean TRUE (deterministic) return of a frozen agent in a world at `drift_sigma`.
+    Used for the manipulation check: cross-evaluating an agent at a drift it was NOT
+    trained on. A fixed seed_base keeps the authentic world layout identical across eval
+    drifts, so the only difference is the drag regime - if return drops, the artifact is
+    survival-relevant (and a chance world-identity probe is then genuinely informative)."""
+    device = device or default_device()
+    b = collect_episodes_ac(agent, norm, params, drift_sigma, n_eps, max_steps, device,
+                            seed_base, ray_steps, deterministic=True, update_norm=False)
+    return float(b["ret"].mean())
+
+
 # ---------------------------------------------------------------------------
 # Matched-pair recurrent readout - the keystone confound control with a recurrent
 # agent. Shared authentic prefix, snapshot world + agent state, then branch
@@ -562,14 +575,14 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
     recurrent state is linearly readable, so a chance world-identity AUROC is genuine
     absence of encoding, not a dead probe. (They are NOT the world label: energy/food
     vary inside authentic and surrogate alike.)"""
-    Hs, spd, energy, food = [], [], [], []
+    Hs, spd, energy, food, drag = [], [], [], [], []
     for i in range(n_eps):
         w = make_world(params, drift_sigma, ray_steps)
         w.reset(_seeds(seed_base + i))
         h = agent.initial_state(1, device)
         prev = torch.zeros(1, agent.act_dim, device=device)
         obs = w.observe().astype(np.float64)
-        Hrow, sp, en, fd, died = [], [], [], [], False
+        Hrow, sp, en, fd, dg, died = [], [], [], [], [], False
         for _ in range(steps):
             obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
             _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
@@ -578,6 +591,7 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             sp.append(float(np.linalg.norm(w.vel)))
             en.append(float(w.E / w.Emax))
             fd.append(-_food_potential(w))           # >=0 distance to nearest pellet
+            dg.append(float(w._drift_w))             # instantaneous drag-drift state (0 in authentic)
             obs = r.obs.astype(np.float64)
             prev = env_act
             if r.terminated:
@@ -588,9 +602,10 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             spd.append(float(np.mean(sp)))
             energy.append(float(np.mean(en)))
             food.append(float(np.mean(fd)))
+            drag.append(float(np.mean(dg)))
     H = np.stack(Hs) if Hs else np.zeros((0, steps, agent.hidden), np.float32)
     if return_anchors:
-        return H, np.asarray(spd), np.asarray(energy), np.asarray(food)
+        return H, np.asarray(spd), np.asarray(energy), np.asarray(food), np.asarray(drag)
     return H, np.asarray(spd)
 
 
@@ -610,14 +625,15 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
     Reports the headline `target` with a bootstrap CI, plus anchor CEILINGS (energy,
     food-distance) that show the recurrent state is readable."""
     device = device or default_device()
-    Ha, spa, ena, fda = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 800_000,
-                                     ray_steps, return_anchors=True)
-    Hs, sps, ens, fds = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device,
-                                     850_000, ray_steps, return_anchors=True)
+    Ha, spa, ena, fda, dra = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 800_000,
+                                          ray_steps, return_anchors=True)
+    Hs, sps, ens, fds, drs = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device,
+                                          850_000, ray_steps, return_anchors=True)
     if len(Ha) < 5 or len(Hs) < 5:
         return {"target": float("nan"), "target_lo": float("nan"), "target_hi": float("nan"),
                 "shuffled": float("nan"), "speed": float("nan"),
                 "anchor_energy": float("nan"), "anchor_food": float("nan"),
+                "ceiling_drag": float("nan"),
                 "n": len(Ha) + len(Hs), "too_few_survivors": True}
     H = np.concatenate([Ha, Hs])
     X = episode_features(H)                          # reuse Exp B's feature builder verbatim
@@ -627,12 +643,22 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
     fd = np.concatenate([fda, fds])
     rng = np.random.default_rng(seed)
     tgt, t_lo, t_hi = _auroc_with_ci(X, y, seed=seed)
+    # Drag-tracking ceiling: decode high- vs low-drift-drag episodes from h_t WITHIN the
+    # surrogate pool only (all surrogate, so this is NOT the world label). High here +
+    # chance target = the interesting null (the state tracks the dynamics moment-to-moment
+    # but forms no persistent world-identity direction). Chance here = the agent isn't
+    # tracking drag at all, so a chance target would be uninformative.
+    if len(Hs) >= 10 and float(np.ptp(drs)) > 1e-6:
+        ceiling_drag = probe_auroc(episode_features(Hs), (drs > np.median(drs)).astype(int))
+    else:
+        ceiling_drag = float("nan")
     return {
         "target": tgt, "target_lo": t_lo, "target_hi": t_hi,
         "shuffled": probe_auroc(X, rng.permutation(y)),
         "speed": probe_auroc(X, (spd > np.median(spd)).astype(int)),
         "anchor_energy": probe_auroc(X, (en > np.median(en)).astype(int)),
         "anchor_food": probe_auroc(X, (fd > np.median(fd)).astype(int)),
+        "ceiling_drag": ceiling_drag,
         "n": len(y), "n_auth": len(Ha), "n_surr": len(Hs), "too_few_survivors": False,
     }
 
@@ -681,12 +707,12 @@ if __name__ == "__main__":
     print(f"   engagement: trained={eng['trained_return']:+.3f} random={eng['random_return']:+.3f} "
           f"scripted={eng['scripted_return']:+.3f}  engaged={eng['engaged']}")
     print("   PRIMARY pooled readout - target AUROC (~0.5 = no persistent encoding, Exp B frame):")
-    print("     (ceiling = energy/food anchors; high anchor + chance target = readable state, no identity)")
+    print("     (ceiling = energy/food/drag; high drag-ceiling + chance target = tracks dynamics, no identity)")
     for name, r in (("untrained ", p_untr), ("predictor ", p_pred), ("survival  ", p_surv)):
         print(f"     {name}: target={r['target']:.3f} [{r.get('target_lo', float('nan')):.3f},"
               f"{r.get('target_hi', float('nan')):.3f}]  ceiling(energy={r.get('anchor_energy', float('nan')):.3f} "
-              f"food={r.get('anchor_food', float('nan')):.3f})  speed(+)={r['speed']:.3f}  "
-              f"shuffled={r['shuffled']:.3f}  (n={r['n']})")
+              f"food={r.get('anchor_food', float('nan')):.3f} drag={r.get('ceiling_drag', float('nan')):.3f})  "
+              f"speed(+)={r['speed']:.3f}  shuffled={r['shuffled']:.3f}  (n={r['n']})")
     print("   SECONDARY matched-pair readout - target AUROC (|dev from 0.5| = detectability):")
     for name, r in (("untrained ", r_untr), ("predictor ", r_pred), ("survival  ", r_surv)):
         print(f"     {name}: target={r['target']:.3f}  speed(+)={r['speed']:.3f}  "
