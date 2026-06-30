@@ -5,6 +5,10 @@ organism can tell that its world is a generative **surrogate** rather than the
 authentic base dynamics of its computational substrate, using only substrate
 seams, with detection **read out, not rewarded**.*
 
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb)
+
+**Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb). Enable a GPU runtime, then run all cells (clones the repo and runs `python scripts/run_e2e.py`).
+
 ---
 
 ## The theme in one line
@@ -127,7 +131,8 @@ objective-engagement and nonlinear-probe checks. See
 |   |-- PREREGISTRATION.md      B-v2 pre-registration
 |   `-- figures/                result figures (.png)
 |-- artifacts/expB2/            published B-v2 JSON/PNG (committed)
-|-- results/runs/               ephemeral e2e bundles (gitignored)
+|-- fullruns/                   e2e run bundles (gitignored; default output)
+|-- results/LATEST_RUN.txt      pointer to latest fullruns folder
 |-- notebooks/colab_gpu.ipynb   Colab end-to-end runner
 |-- tests/                      pytest regression suite
 `-- ralph/                      autonomous-loop tooling
@@ -187,9 +192,9 @@ Run the test suite:
 pytest -q
 ```
 
-**Google Colab (GPU):** open [`notebooks/colab_gpu.ipynb`](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/expB2-survival-coupling/notebooks/colab_gpu.ipynb), enable GPU runtime, run all cells. It clones the repo and runs `python scripts/run_e2e.py`.
+**Google Colab (GPU):** [Open in Colab](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb) (same notebook as the badge at the top). Enable a GPU runtime, run all cells.
 
-**Local Jupyter / VS Code:** open `notebooks/colab_gpu.ipynb` from this repo — it auto-detects local mode (no Drive/download cells).
+**Local Jupyter / VS Code:** open [`notebooks/colab_gpu.ipynb`](notebooks/colab_gpu.ipynb) from this repo; it auto-detects local mode (no Drive/download cells).
 
 ---
 
