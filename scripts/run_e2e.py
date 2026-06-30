@@ -11,6 +11,8 @@ Usage (from repo root):
     python scripts/run_e2e.py              # full suite + recorded results
     python scripts/run_e2e.py --quick      # all experiments; B-v2 at reduced scale
     python scripts/run_e2e.py --results-dir results/runs/my_run
+    python scripts/run_e2e.py --resume     # continue latest interrupted run
+    python scripts/run_e2e.py --resume fullruns/06292026_143022
     python scripts/run_e2e.py --no-zip     # skip zip bundle
 """
 
@@ -26,7 +28,7 @@ SCRIPTS = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from itasorl.results_io import RunRecorder  # noqa: E402
+from itasorl.results_io import LATEST_RUN_PTR, RunRecorder, read_latest_run_dir  # noqa: E402
 
 
 def _script(name: str) -> str:
@@ -66,6 +68,10 @@ def parse_args() -> argparse.Namespace:
                     help="Run only pytest or only the experiment scripts.")
     ap.add_argument("--results-dir", type=Path, default=None,
                     help="Directory for this run's recorded output (default: fullruns/<MMDDYYYY>/).")
+    ap.add_argument(
+        "--resume", nargs="?", const="latest", default=None,
+        help="Continue an interrupted run. Optional PATH, or omit value to use results/LATEST_RUN.txt.",
+    )
     ap.add_argument("--no-zip", action="store_true", help="Do not create bundle.zip.")
     ap.add_argument("--b2-seeds", type=int, nargs="+", default=None,
                     help="Override Experiment B-v2 seeds (e.g. 0 1 2 ... 15 to power the null).")
@@ -103,15 +109,44 @@ def expand_skip(raw: list[str]) -> set[str]:
     return out
 
 
+def resolve_resume_dir(resume: str | None, results_dir: Path | None) -> Path | None:
+    if resume is None:
+        return None
+    if resume == "latest":
+        run_dir = read_latest_run_dir()
+        if run_dir is None:
+            raise FileNotFoundError(
+                f"--resume requested but {LATEST_RUN_PTR} does not point at a run directory."
+            )
+        return run_dir
+    path = Path(resume)
+    if not path.is_dir():
+        raise FileNotFoundError(f"--resume path not found: {path}")
+    return path.resolve()
+
+
 def main() -> None:
     args = parse_args()
     skip = expand_skip(args.skip)
     (ROOT / "docs" / "figures").mkdir(parents=True, exist_ok=True)
 
-    recorder = RunRecorder.create(quick=args.quick, out_dir=args.results_dir)
-    b2_out = recorder.run_dir / "artifacts"
+    resume_dir = resolve_resume_dir(args.resume, args.results_dir)
+    if resume_dir is not None:
+        if args.results_dir is not None and resume_dir.resolve() != args.results_dir.resolve():
+            print(
+                f"Warning: --results-dir ({args.results_dir}) differs from resume dir ({resume_dir}); "
+                "using resume dir.",
+                flush=True,
+            )
+        recorder = RunRecorder.resume(resume_dir)
+        quick = recorder.quick
+        print(f"ITASORL end-to-end RESUME  (root={ROOT}, quick={quick})", flush=True)
+    else:
+        recorder = RunRecorder.create(quick=args.quick, out_dir=args.results_dir)
+        quick = args.quick
+        print(f"ITASORL end-to-end  (root={ROOT}, quick={quick})", flush=True)
 
-    print(f"ITASORL end-to-end  (root={ROOT}, quick={args.quick})", flush=True)
+    b2_out = recorder.run_dir / "artifacts"
     print(f"Recording results -> {recorder.run_dir}", flush=True)
     if skip:
         print(f"Skipping: {', '.join(sorted(skip))}", flush=True)
@@ -119,14 +154,20 @@ def main() -> None:
     t0 = time.perf_counter()
 
     if args.only != "experiments" and "pytest" not in skip:
-        recorder.run_step("pytest", [sys.executable, "-m", "pytest", "-q"], cwd=ROOT)
+        if recorder.step_is_done("pytest"):
+            print("\n--- resume skip pytest (already ok) ---", flush=True)
+        else:
+            recorder.run_step("pytest", [sys.executable, "-m", "pytest", "-q"], cwd=ROOT)
 
     if args.only != "pytest":
         b2_extra = build_b2_extra(args)
-        for name, cmd, extra in experiment_steps(quick=args.quick, b2_out=b2_out, b2_extra=b2_extra):
+        for name, cmd, extra in experiment_steps(quick=quick, b2_out=b2_out, b2_extra=b2_extra):
             if name in skip:
                 print(f"\n--- skip {name} ---", flush=True)
                 recorder.note_step(name, status="skipped")
+                continue
+            if recorder.step_is_done(name):
+                print(f"\n--- resume skip {name} (already ok) ---", flush=True)
                 continue
             recorder.run_step(name, cmd, cwd=ROOT, extra_artifacts=extra)
 

@@ -261,19 +261,22 @@ class RunRecorder:
     _mirror_dir: Path | None = field(default=None, repr=False)
 
     @classmethod
+    def _mirror_from_env(cls) -> Path | None:
+        mirror_raw = os.environ.get("ITASORL_DRIVE_SYNC", "").strip()
+        return Path(mirror_raw) if mirror_raw else None
+
+    @classmethod
     def create(cls, *, quick: bool, out_dir: Path | None = None) -> RunRecorder:
         run_id = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         run_dir = out_dir or default_run_dir()
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / "steps").mkdir(exist_ok=True)
         (run_dir / "artifacts").mkdir(exist_ok=True)
-        mirror_raw = os.environ.get("ITASORL_DRIVE_SYNC", "").strip()
-        mirror_dir = Path(mirror_raw) if mirror_raw else None
         rec = cls(
             quick=quick,
             run_dir=run_dir,
             _run_started=time.perf_counter(),
-            _mirror_dir=mirror_dir,
+            _mirror_dir=cls._mirror_from_env(),
         )
         rec.manifest = {
             "run_id": run_id,
@@ -290,6 +293,45 @@ class RunRecorder:
         LATEST_RUN_PTR.write_text(str(run_dir.resolve()), encoding="utf-8")
         rec._sync_mirror()
         return rec
+
+    @classmethod
+    def resume(cls, run_dir: Path, *, mirror_dir: Path | None = None) -> RunRecorder:
+        """Continue an interrupted run; steps with status ``ok`` are skipped."""
+        run_dir = run_dir.resolve()
+        manifest_path = run_dir / "manifest.json"
+        if not manifest_path.is_file():
+            raise FileNotFoundError(f"No manifest.json in {run_dir}; cannot resume.")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        (run_dir / "steps").mkdir(exist_ok=True)
+        (run_dir / "artifacts").mkdir(exist_ok=True)
+        if not (run_dir / "combined.log").is_file():
+            (run_dir / "combined.log").write_text("", encoding="utf-8")
+        rec = cls(
+            quick=bool(manifest.get("quick", False)),
+            run_dir=run_dir,
+            _run_started=time.perf_counter(),
+            _mirror_dir=mirror_dir if mirror_dir is not None else cls._mirror_from_env(),
+        )
+        rec.manifest = manifest
+        manifest.setdefault("steps", {})
+        manifest["resumed_at_utc"] = datetime.now(timezone.utc).isoformat()
+        manifest["git_commit"] = _git_head()
+        manifest["environment"] = _device_info()
+        rec._write_manifest()
+        done = [n for n, s in manifest["steps"].items() if s.get("status") == "ok"]
+        rec._append_combined(
+            f"\n{'=' * 72}\nRESUME at {manifest['resumed_at_utc']}\n"
+            f"Skipping completed steps: {', '.join(done) or '(none)'}\n{'=' * 72}\n"
+        )
+        rec._write_status(current_step=None, step_status="resuming", force=True)
+        LATEST_RUN_PTR.parent.mkdir(parents=True, exist_ok=True)
+        LATEST_RUN_PTR.write_text(str(run_dir), encoding="utf-8")
+        rec._sync_mirror(full=True)
+        return rec
+
+    def step_is_done(self, name: str) -> bool:
+        step = self.manifest.get("steps", {}).get(name)
+        return bool(step and step.get("status") == "ok")
 
     def _combined_path(self) -> Path:
         return self.run_dir / "combined.log"
@@ -335,15 +377,20 @@ class RunRecorder:
         self._status_path().write_text(json.dumps(payload, indent=2), encoding="utf-8")
         self._sync_mirror()
 
-    def _sync_mirror(self) -> None:
+    def _sync_mirror(self, *, full: bool = False) -> None:
         if self._mirror_dir is None:
             return
         dest_root = self._mirror_dir / self.run_dir.name
         dest_root.mkdir(parents=True, exist_ok=True)
-        for name in ("combined.log", "status.json", "manifest.json"):
+        for name in ("combined.log", "status.json", "manifest.json", "SUMMARY.md", "bundle.zip"):
             src = self.run_dir / name
             if src.is_file():
                 shutil.copy2(src, dest_root / name)
+        if full:
+            for sub in ("steps", "artifacts"):
+                src_dir = self.run_dir / sub
+                if src_dir.is_dir():
+                    shutil.copytree(src_dir, dest_root / sub, dirs_exist_ok=True)
 
     def note_step(self, name: str, *, status: str) -> None:
         """Record a skipped or external step in manifest + status."""
@@ -426,6 +473,7 @@ class RunRecorder:
             last_line=log_parts[-1] if log_parts else "",
             force=True,
         )
+        self._sync_mirror(full=True)
         if proc.returncode != 0:
             raise subprocess.CalledProcessError(proc.returncode, cmd, log)
 
@@ -455,7 +503,7 @@ class RunRecorder:
         self._write_status(current_step=None, step_status="finished", force=True)
         LATEST_RUN_PTR.parent.mkdir(parents=True, exist_ok=True)
         LATEST_RUN_PTR.write_text(str(self.run_dir.resolve()), encoding="utf-8")
-        self._sync_mirror()
+        self._sync_mirror(full=True)
         if self._mirror_dir is not None:
             dest_root = self._mirror_dir / self.run_dir.name
             dest_root.mkdir(parents=True, exist_ok=True)

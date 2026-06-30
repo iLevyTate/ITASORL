@@ -28,7 +28,8 @@ fullruns/MMDDYYYY/
 python scripts/watch_run.py --follow
 ```
 
-On Google Colab, set `ITASORL_DRIVE_SYNC` before running (see `notebooks/colab_gpu.ipynb`)
-to mirror `combined.log`, `status.json`, and `manifest.json` to Drive while the run
-is active. After the run, the notebook copies the full folder and `bundle.zip` to Drive
-and triggers a browser download.
+On Google Colab (see `notebooks/colab_gpu.ipynb`):
+
+- Results are written directly to Google Drive (`--results-dir`) so a VM crash does not lose completed steps.
+- `ITASORL_DRIVE_SYNC` mirrors `combined.log`, `status.json`, `manifest.json`, and per-step outputs after each step.
+- If Colab disconnects, set `RESUME_RUN_DIR` in the notebook and run `python scripts/run_e2e.py --resume <drive_run_folder>` to skip steps already marked `ok` in `manifest.json`.
