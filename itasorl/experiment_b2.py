@@ -143,6 +143,7 @@ def collect_episodes_ac(agent: RecurrentActorCritic, norm: RunningNorm, params, 
     seq_env = [[] for _ in range(n_eps)]      # env action applied (decoder conditioning)
     seq_rew = [[] for _ in range(n_eps)]      # TRAINING reward (true + shaping)
     seq_true = [[] for _ in range(n_eps)]     # TRUE reward only (for engagement/return)
+    seq_drift = [[] for _ in range(n_eps)]    # per-step drag-drift state (sysid-aux target)
     speeds = [[] for _ in range(n_eps)]
     terminated = np.zeros(n_eps, bool)
 
@@ -170,6 +171,7 @@ def collect_episodes_ac(agent: RecurrentActorCritic, norm: RunningNorm, params, 
                 phi_prev[i] = phi_new
             seq_rew[i].append(shaped)
             seq_true[i].append(r.reward)
+            seq_drift[i].append(float(envs[i]._drift_w))   # drag-drift used for this step
             speeds[i].append(float(np.linalg.norm(envs[i].vel)))
             obs[i] = r.obs
             if r.terminated:
@@ -198,6 +200,9 @@ def collect_episodes_ac(agent: RecurrentActorCritic, norm: RunningNorm, params, 
     rew = np.zeros((n_eps, Tmax), np.float32)        # shaped reward -> GAE target
     for i, s in enumerate(seq_rew):
         rew[i, : len(s)] = np.asarray(s, np.float32)
+    drift = np.zeros((n_eps, Tmax), np.float32)      # per-step drag-drift -> sysid-aux target
+    for i, s in enumerate(seq_drift):
+        drift[i, : len(s)] = np.asarray(s, np.float32)
     true_ret = np.array([float(np.sum(s)) for s in seq_true])  # TRUE return -> engagement
 
     batch = {
@@ -206,6 +211,7 @@ def collect_episodes_ac(agent: RecurrentActorCritic, norm: RunningNorm, params, 
         "raw": torch.as_tensor(pad(seq_raw, Adim), device=device),
         "env_act": torch.as_tensor(pad(seq_env, Adim), device=device),
         "reward": torch.as_tensor(rew, device=device),
+        "drift_w": torch.as_tensor(drift, device=device),
         "mask": torch.as_tensor(mask, device=device),
         "terminated": torch.as_tensor(terminated.astype(np.float32), device=device),
         "lengths": lengths,
@@ -245,13 +251,19 @@ def train_actor_critic(drift_sigma: float, params=None, *, n_eps: int = 16, upda
                        lr: float = 3e-4, gamma: float = 0.99, lam: float = 0.95,
                        ent_coef: float = 0.01, vf_coef: float = 0.5, wm_coef: float = 1.0,
                        shaping_coef: float = 0.5, max_steps: int = 80, ray_steps: int = 5,
-                       seed: int = 0, device: str | None = None, log_every: int = 0):
+                       seed: int = 0, device: str | None = None, log_every: int = 0,
+                       sysid_aux: bool = False, sysid_coef: float = 1.0):
+    """Train the survival actor-critic. sysid_aux adds a CEILING-control auxiliary loss
+    that regresses h_t onto the scalar drag-drift - a positive control that deliberately
+    breaks readout-not-reward to measure whether the trunk CAN linearly encode world
+    identity. Run it separately from the headline; never fold its target into the H_B2 verdict."""
     device = device or default_device()
     torch.manual_seed(seed)
     np.random.seed(seed)
     probe = make_world(params, drift_sigma, ray_steps)
     obs_dim, act_dim = probe.obs_spec.size, probe.action_spec.size
-    agent = RecurrentActorCritic(obs_dim, act_dim, embed, hidden, world_model).to(device)
+    agent = RecurrentActorCritic(obs_dim, act_dim, embed, hidden, world_model,
+                                 sysid_aux=sysid_aux).to(device)
     opt = torch.optim.Adam(agent.parameters(), lr=lr)
     norm = RunningNorm(obs_dim)
     history = []
@@ -275,6 +287,10 @@ def train_actor_critic(drift_sigma: float, params=None, *, n_eps: int = 16, upda
             pred = agent.predict_next(states, batch["env_act"])  # predict obs_{t+1} from (h_t, a_t)
             wm = (((pred[:, :-1] - batch["obs"][:, 1:]) ** 2) * m[:, 1:].unsqueeze(-1)).sum() / (m[:, 1:].sum() * obs_dim + 1e-6)
             loss = loss + wm_coef * wm
+        if sysid_aux:  # CEILING control: supervise h_t -> drag-drift (breaks readout-not-reward)
+            sid_pred = agent.predict_sysid(states)
+            sid = (((sid_pred - batch["drift_w"]) ** 2) * m).sum() / (am + 1e-6)
+            loss = loss + sysid_coef * sid
         opt.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(agent.parameters(), 1.0)

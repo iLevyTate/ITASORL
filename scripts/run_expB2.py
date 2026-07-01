@@ -76,6 +76,12 @@ def cfg():
     ap.add_argument("--dump-states", type=str, default=None,
                     help="Directory to persist raw recurrent states (.npz per agent/cell) so "
                          "probes can be recomputed offline with scripts/reanalyze_expB2_states.py")
+    # Positive-control CEILING (NOT readout-not-reward): supervise the survival trunk's h_t
+    # onto the drag-drift so we can measure whether it CAN linearly encode world identity.
+    ap.add_argument("--sysid-aux", action="store_true",
+                    help="Add a system-ID auxiliary head to the survival agent (CEILING control; "
+                         "breaks readout-not-reward - run and report separately from the headline).")
+    ap.add_argument("--sysid-coef", type=float, default=1.0, help="weight of the sysid-aux loss")
     # Stage-2 objective-pressure overrides (scarcity). Default None keeps the frozen
     # SURVIVAL_METAB/SURVIVAL_FOOD; setting these sweeps how hard survival bites.
     ap.add_argument("--basal_e", type=float, default=None, help="override survival basal energy burn")
@@ -128,7 +134,9 @@ def run_cell(task: dict) -> dict:
                                                 ray_steps=k["ray_steps"], seed=s, device=dev)}
     sa, sn, _ = train_actor_critic(d, P, n_eps=k["n_eps"], updates=k["updates"], hidden=k["hidden"],
                                    max_steps=k["max_steps"], ray_steps=k["ray_steps"], seed=s,
-                                   device=dev, shaping_coef=k["shaping_coef"])
+                                   device=dev, shaping_coef=k["shaping_coef"],
+                                   sysid_aux=k.get("sysid_aux", False),
+                                   sysid_coef=k.get("sysid_coef", 1.0))
     agents["survival"] = (sa, sn)
     eng = engagement_metric(sa, sn, P, d, n_eps=64, max_steps=k["max_steps"],
                             ray_steps=k["ray_steps"], device=dev)
@@ -203,7 +211,11 @@ def main():
     results_path = os.path.join(a.out_dir, "expB2_results.json")
     print(f"Experiment B-v2 full run  (device={dev}, drifts={a.drifts}, seeds={a.seeds}, "
           f"updates={a.updates}, workers={a.workers})")
-    print(f"  survival metabolism={b2.SURVIVAL_METAB}  food={b2.SURVIVAL_FOOD}\n")
+    print(f"  survival metabolism={b2.SURVIVAL_METAB}  food={b2.SURVIVAL_FOOD}")
+    if a.sysid_aux:
+        print("  *** SYSID-AUX ON: survival trunk is supervised on drag (CEILING control, "
+              "NOT readout-not-reward). Its target is a capacity ceiling, not H_B2 evidence. ***")
+    print()
     # results[drift][agent][metric] = list over seeds
     res = {d: {g: {"pool_target": [], "pool_target_lo": [], "pool_target_hi": [],
                    "pool_target_var": [], "pool_target_full": [],
@@ -221,7 +233,8 @@ def main():
     # One picklable knob dict per (drift, seed) cell; cells are independent.
     base = {k: getattr(a, k) for k in ("updates", "n_eps", "max_steps", "hidden", "ray_steps",
                                        "shaping_coef", "pool_n", "pool_steps", "mp_pairs", "mp_prefix",
-                                       "mp_branch", "basal_e", "n_pellets", "reach", "dump_states")}
+                                       "mp_branch", "basal_e", "n_pellets", "reach", "dump_states",
+                                       "sysid_aux", "sysid_coef")}
     base.update(drifts=a.drifts, device=dev)
     tasks = [{**base, "drift": d, "seed": s} for d in a.drifts for s in a.seeds]
     done = 0

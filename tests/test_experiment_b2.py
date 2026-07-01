@@ -252,3 +252,36 @@ def test_volatility_signature_needs_dispersion_features():
     assert var_auc > 0.85, f"dispersion probe should separate volatility, got {var_auc:.3f}"
     assert var_auc - level_auc > 0.20                  # the readout gap is the finding
     assert full_auc > 0.85                             # level ++ var retains the signal
+
+
+# ---- sysid-aux positive-control head (PR2) ----
+def test_sysid_head_absent_by_default():
+    """The ceiling control must be opt-in: a default agent has no sysid head, so the
+    headline readout-not-reward runs are never accidentally supervised on drag."""
+    od, ad = 10, 5
+    torch.manual_seed(0)
+    plain = RecurrentActorCritic(od, ad, embed=16, hidden=8)
+    assert not plain.sysid_aux and not hasattr(plain, "sysid_head")
+    ceil = RecurrentActorCritic(od, ad, embed=16, hidden=8, sysid_aux=True)
+    assert ceil.sysid_aux and hasattr(ceil, "sysid_head")
+
+
+def test_predict_sysid_shape():
+    """predict_sysid maps recurrent states (B,T,H) -> a per-step scalar (B,T)."""
+    od, ad = 10, 5
+    torch.manual_seed(0)
+    agent = RecurrentActorCritic(od, ad, embed=16, hidden=8, sysid_aux=True)
+    states = torch.zeros(3, 6, 8)
+    out = agent.predict_sysid(states)
+    assert out.shape == (3, 6)
+
+
+def test_collect_pool_batch_exposes_drift_target():
+    """collect_episodes_ac must expose a per-step drift_w target aligned with the mask,
+    so the sysid-aux loss regresses h_t onto the drag the agent actually experienced."""
+    from itasorl.experiment_b2 import collect_episodes_ac
+    agent, norm = _agent_norm()
+    b = collect_episodes_ac(agent, norm, P, 0.45, 4, 6, "cpu", 4321, RS)
+    assert "drift_w" in b
+    assert b["drift_w"].shape == b["mask"].shape
+    assert torch.isfinite(b["drift_w"]).all()

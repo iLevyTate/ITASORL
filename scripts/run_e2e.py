@@ -81,6 +81,9 @@ def parse_args() -> argparse.Namespace:
                     help="Persist B-v2 recurrent states to this dir (forwarded to run_expB2.py "
                          "--dump-states) for offline variance/selectivity re-probing with "
                          "scripts/reanalyze_expB2_states.py.")
+    ap.add_argument("--b2-sysid-aux", action="store_true",
+                    help="Run B-v2 with the system-ID CEILING control (forwards --sysid-aux). "
+                         "Breaks readout-not-reward; report separately from the headline.")
     return ap.parse_args()
 
 
@@ -94,6 +97,8 @@ def build_b2_extra(args: argparse.Namespace) -> list[str]:
         extra += ["--hidden", str(args.b2_hidden)]
     if args.b2_dump_states is not None:
         extra += ["--dump-states", args.b2_dump_states]
+    if args.b2_sysid_aux:
+        extra += ["--sysid-aux"]
     return extra
 
 
