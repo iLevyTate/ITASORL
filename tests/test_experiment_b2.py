@@ -203,3 +203,52 @@ def test_tost_equivalence_has_teeth():
     high = equivalence_test([0.80, 0.82, 0.79, 0.81, 0.78])
     assert near.equivalent is True
     assert high.equivalent is False
+
+
+# ---- variance-signature probe features (PR1) ----
+from itasorl.experiment_b import (  # noqa: E402
+    episode_features,
+    episode_features_full,
+    episode_features_var,
+    probe_auroc,
+)
+
+
+def test_episode_feature_builder_shapes():
+    """var doubles hidden (std ++ jerk); full is level ++ var (4x hidden)."""
+    H = np.random.default_rng(0).normal(size=(7, 5, 6)).astype(np.float32)
+    assert episode_features(H).shape == (7, 12)
+    assert episode_features_var(H).shape == (7, 12)
+    assert episode_features_full(H).shape == (7, 24)
+
+
+def test_episode_features_var_single_step_is_finite():
+    """steps==1 has no step-to-step delta; the jerk block must be zeros, not a crash."""
+    H = np.random.default_rng(1).normal(size=(4, 1, 3)).astype(np.float32)
+    Xv = episode_features_var(H)
+    assert Xv.shape == (4, 6)
+    assert np.isfinite(Xv).all()
+    assert np.allclose(Xv[:, 3:], 0.0)                 # the mean|delta| half is zero
+
+
+def test_volatility_signature_needs_dispersion_features():
+    """The load-bearing PR1 claim: when two classes share the same per-episode LEVEL
+    but differ only in within-episode VOLATILITY, the level probe [mean h, final h]
+    is near chance while the dispersion probe separates them almost perfectly. This is
+    exactly the authentic (constant drag) vs surrogate (drifting drag) contrast, and it
+    proves the new features measure what we say they do."""
+    rng = np.random.default_rng(0)
+    n, steps, hid = 60, 24, 4
+    lvl0 = rng.normal(size=(n, 1, hid))
+    lvl1 = rng.normal(size=(n, 1, hid))                # SAME level distribution as class 0
+    H0 = np.repeat(lvl0, steps, axis=1) + rng.normal(scale=1e-3, size=(n, steps, hid))  # ~constant
+    H1 = np.repeat(lvl1, steps, axis=1) + rng.normal(scale=1.0, size=(n, steps, hid))   # volatile
+    H = np.concatenate([H0, H1]).astype(np.float32)
+    y = np.concatenate([np.zeros(n), np.ones(n)]).astype(int)
+    level_auc = probe_auroc(episode_features(H), y)
+    var_auc = probe_auroc(episode_features_var(H), y)
+    full_auc = probe_auroc(episode_features_full(H), y)
+    assert level_auc < 0.70, f"level probe should be near chance, got {level_auc:.3f}"
+    assert var_auc > 0.85, f"dispersion probe should separate volatility, got {var_auc:.3f}"
+    assert var_auc - level_auc > 0.20                  # the readout gap is the finding
+    assert full_auc > 0.85                             # level ++ var retains the signal

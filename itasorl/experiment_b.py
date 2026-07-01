@@ -107,8 +107,32 @@ def states_reservoir(eps, hidden: int = 128, seed: int = 0) -> np.ndarray:
 
 
 def episode_features(H: np.ndarray) -> np.ndarray:
-    """Per-episode probe input: mean and final recurrent state."""
+    """Per-episode probe input: mean and final recurrent state (LEVEL features)."""
     return np.concatenate([H.mean(1), H[:, -1]], axis=-1)
+
+
+def episode_features_var(H: np.ndarray) -> np.ndarray:
+    """Per-episode DISPERSION features: [std over steps, mean |step-to-step delta|].
+
+    The authentic and surrogate worlds share a drag LEVEL but differ in drag
+    VOLATILITY (authentic drag is constant; the surrogate's drifts via an AR(1)
+    wander). A persistent linear direction over the level features `episode_features`
+    cannot express a volatility signature, so this builder exposes it: if a reactive
+    agent tracks a fluctuating drag its recurrent state swings more per episode in the
+    surrogate. H is (n_eps, steps, hidden)."""
+    std_h = H.std(axis=1)
+    if H.shape[1] >= 2:
+        jerk = np.abs(np.diff(H, axis=1)).mean(axis=1)
+    else:
+        jerk = np.zeros_like(std_h)
+    return np.concatenate([std_h, jerk], axis=-1)
+
+
+def episode_features_full(H: np.ndarray) -> np.ndarray:
+    """LEVEL ++ DISPERSION features: episode_features concatenated with
+    episode_features_var. The most permissive readout the pre-registered pipeline
+    admits without changing the estimator."""
+    return np.concatenate([episode_features(H), episode_features_var(H)], axis=-1)
 
 
 def probe_auroc(X: np.ndarray, y: np.ndarray) -> float:

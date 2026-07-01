@@ -73,6 +73,9 @@ def cfg():
     ap.add_argument("--mp_branch", type=int, default=24)
     ap.add_argument("--out-dir", type=str, default=".",
                     help="Directory for expB2_results.json and expB2_survival.png")
+    ap.add_argument("--dump-states", type=str, default=None,
+                    help="Directory to persist raw recurrent states (.npz per agent/cell) so "
+                         "probes can be recomputed offline with scripts/reanalyze_expB2_states.py")
     # Stage-2 objective-pressure overrides (scarcity). Default None keeps the frozen
     # SURVIVAL_METAB/SURVIVAL_FOOD; setting these sweeps how hard survival bites.
     ap.add_argument("--basal_e", type=float, default=None, help="override survival basal energy burn")
@@ -91,9 +94,12 @@ def cfg():
     return a
 
 
-def evaluate_agent(agent, norm, drift, a, dev, seed):
+def evaluate_agent(agent, norm, drift, a, dev, seed, agent_name=""):
+    dump_path = None
+    if getattr(a, "dump_states", None):
+        dump_path = os.path.join(a.dump_states, f"states_d{drift:.2f}_s{seed}_{agent_name}.npz")
     pool = pooled_readout(agent, norm, P, drift, n_eps=a.pool_n, steps=a.pool_steps,
-                          ray_steps=a.ray_steps, device=dev, seed=seed)
+                          ray_steps=a.ray_steps, device=dev, seed=seed, dump_path=dump_path)
     mp = readout(agent, norm, P, drift, n_pairs=a.mp_pairs, prefix_steps=a.mp_prefix,
                  branch_steps=a.mp_branch, ray_steps=a.ray_steps, device=dev, seed=seed)
     return pool, mp
@@ -131,7 +137,7 @@ def run_cell(task: dict) -> dict:
     a_ns = argparse.Namespace(**k)               # evaluate_agent reads attrs off a namespace
     out = {"drift": d, "seed": s, "eng": eng, "xeval": xev, "agents": {}}
     for g in AG:
-        pool, mp = evaluate_agent(agents[g][0], agents[g][1], d, a_ns, dev, s)
+        pool, mp = evaluate_agent(agents[g][0], agents[g][1], d, a_ns, dev, s, g)
         out["agents"][g] = {"pool": pool, "mp": mp}
     return out
 
@@ -145,6 +151,11 @@ def record_cell(res: dict, eng_log: dict, cell: dict) -> None:
         res[d][g]["pool_target"].append(pool["target"])
         res[d][g]["pool_target_lo"].append(pool.get("target_lo"))
         res[d][g]["pool_target_hi"].append(pool.get("target_hi"))
+        res[d][g]["pool_target_var"].append(pool.get("target_var"))
+        res[d][g]["pool_target_full"].append(pool.get("target_full"))
+        res[d][g]["pool_selectivity"].append(pool.get("selectivity"))
+        res[d][g]["pool_selectivity_var"].append(pool.get("selectivity_var"))
+        res[d][g]["pool_selectivity_full"].append(pool.get("selectivity_full"))
         res[d][g]["pool_speed"].append(pool["speed"])
         res[d][g]["pool_shuffled"].append(pool["shuffled"])
         res[d][g]["pool_anchor_energy"].append(pool.get("anchor_energy"))
@@ -164,6 +175,11 @@ def print_cell(cell: dict) -> None:
         pool, mp = cell["agents"][g]["pool"], cell["agents"][g]["mp"]
         print(f"   {g:10s} pool_target={pool['target']:.3f} "
               f"[{pool.get('target_lo', float('nan')):.3f},{pool.get('target_hi', float('nan')):.3f}] "
+              f"var={pool.get('target_var', float('nan')):.3f} "
+              f"full={pool.get('target_full', float('nan')):.3f} "
+              f"sel(L={pool.get('selectivity', float('nan')):+.3f} "
+              f"V={pool.get('selectivity_var', float('nan')):+.3f} "
+              f"F={pool.get('selectivity_full', float('nan')):+.3f}) "
               f"ceiling(E={pool.get('anchor_energy', float('nan')):.3f} "
               f"food={pool.get('anchor_food', float('nan')):.3f} "
               f"drag={pool.get('ceiling_drag', float('nan')):.3f}) "
@@ -190,6 +206,8 @@ def main():
     print(f"  survival metabolism={b2.SURVIVAL_METAB}  food={b2.SURVIVAL_FOOD}\n")
     # results[drift][agent][metric] = list over seeds
     res = {d: {g: {"pool_target": [], "pool_target_lo": [], "pool_target_hi": [],
+                   "pool_target_var": [], "pool_target_full": [],
+                   "pool_selectivity": [], "pool_selectivity_var": [], "pool_selectivity_full": [],
                    "pool_speed": [], "pool_shuffled": [],
                    "pool_anchor_energy": [], "pool_anchor_food": [], "pool_ceiling_drag": [],
                    "mp_target": [], "mp_leak_clean": [], "xeval_return": []} for g in AG} for d in a.drifts}
@@ -203,7 +221,7 @@ def main():
     # One picklable knob dict per (drift, seed) cell; cells are independent.
     base = {k: getattr(a, k) for k in ("updates", "n_eps", "max_steps", "hidden", "ray_steps",
                                        "shaping_coef", "pool_n", "pool_steps", "mp_pairs", "mp_prefix",
-                                       "mp_branch", "basal_e", "n_pellets", "reach")}
+                                       "mp_branch", "basal_e", "n_pellets", "reach", "dump_states")}
     base.update(drifts=a.drifts, device=dev)
     tasks = [{**base, "drift": d, "seed": s} for d in a.drifts for s in a.seeds]
     done = 0
@@ -243,6 +261,14 @@ def main():
             print(f"             across-seed 90% CI = [{lo:.3f},{hi:.3f}]   "
                   f"ceiling(energy={np.nanmean(ce):.3f} food={np.nanmean(cf):.3f} "
                   f"drag={np.nanmean(cd):.3f})")
+            tv = np.array(res[d][g]["pool_target_var"], float)
+            tf = np.array(res[d][g]["pool_target_full"], float)
+            sl = np.array(res[d][g]["pool_selectivity"], float)
+            slv = np.array(res[d][g]["pool_selectivity_var"], float)
+            slf = np.array(res[d][g]["pool_selectivity_full"], float)
+            print(f"             volatility readout: target_var={np.nanmean(tv):.3f} "
+                  f"target_full={np.nanmean(tf):.3f}   selectivity(L={np.nanmean(sl):+.3f} "
+                  f"V={np.nanmean(slv):+.3f} F={np.nanmean(slf):+.3f})")
 
     # ---- manipulation check: is the L2 artifact survival-relevant? ----
     if len(a.drifts) > 1:
@@ -297,6 +323,14 @@ def main():
             and surv_t.mean() >= untr_t.mean() + 0.05)
     print(f"  primary H_B2 (survival-induced encoding) {'MET' if h_b2 else 'NOT met'}  "
           f"-> {'encoding induced' if h_b2 else 'strengthened negative (state readable, identity not encoded)'}")
+    # Secondary: does the world-identity signal live in a VOLATILITY signature the LEVEL
+    # probe throws away? target_var/full crossing 0.65 while the level target stays ~0.5
+    # means the null was partly an operationalization artifact, not absent encoding.
+    surv_tv = np.nanmean(np.array(res[dmax]["survival"]["pool_target_var"], float))
+    surv_tf = np.nanmean(np.array(res[dmax]["survival"]["pool_target_full"], float))
+    vol_hit = max(surv_tv, surv_tf) >= 0.65
+    print(f"  volatility check: survival target_var={surv_tv:.3f} target_full={surv_tf:.3f} "
+          f"(bar 0.65) -> {'VOLATILITY-ENCODED (level probe was mis-specified)' if vol_hit else 'no volatility encoding either'}")
 
     checkpoint()
     print(f"saved {results_path}")

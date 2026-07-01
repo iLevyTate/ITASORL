@@ -25,12 +25,15 @@ Pipeline (all knobs in run_expB2.py):
 
 from __future__ import annotations
 
+import os
+
 import numpy as np
 import torch
 
 from .agent_ac import RecurrentActorCritic
 from .experiment_a import grouped_auroc
-from .experiment_b import episode_features, probe_auroc, scripted_policy
+from .experiment_b import (episode_features, episode_features_full, episode_features_var,
+                           probe_auroc, scripted_policy)
 from .patch_of_earth import PatchOfEarthV0
 from .stats import auroc_ci
 from .world import SeedBundle, WorldParams
@@ -620,29 +623,55 @@ def _auroc_with_ci(X, y, seed: int = 0) -> tuple[float, float, float]:
 
 
 def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray_steps=5,
-                   device=None, seed=0) -> dict:
+                   device=None, seed=0, dump_path=None) -> dict:
     """Experiment-B-style probe: decode world identity across independent episodes.
-    Reports the headline `target` with a bootstrap CI, plus anchor CEILINGS (energy,
-    food-distance) that show the recurrent state is readable."""
+    Reports the headline `target` (LEVEL features) with a bootstrap CI, plus two
+    additive readouts that probe a VOLATILITY signature - `target_var` (dispersion
+    features) and `target_full` (level ++ dispersion) - and per-probe `selectivity`
+    (target minus a shuffled-label baseline on the SAME feature set, which cancels the
+    overfitting bias a wider feature set incurs at n~220). Also reports anchor CEILINGS
+    (energy, food-distance) that show the recurrent state is readable. If `dump_path` is
+    set, persists the raw recurrent states so probes can be recomputed offline (no GPU)."""
     device = device or default_device()
     Ha, spa, ena, fda, dra = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 800_000,
                                           ray_steps, return_anchors=True)
     Hs, sps, ens, fds, drs = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device,
                                           850_000, ray_steps, return_anchors=True)
+    if dump_path is not None:
+        d = os.path.dirname(dump_path)
+        if d:
+            os.makedirs(d, exist_ok=True)
+        np.savez_compressed(dump_path, Ha=Ha, Hs=Hs, spa=spa, sps=sps, ena=ena, ens=ens,
+                            fda=fda, fds=fds, dra=dra, drs=drs,
+                            drift_sigma=np.float64(drift_sigma), steps=np.int64(steps))
+    nan = float("nan")
     if len(Ha) < 5 or len(Hs) < 5:
-        return {"target": float("nan"), "target_lo": float("nan"), "target_hi": float("nan"),
-                "shuffled": float("nan"), "speed": float("nan"),
-                "anchor_energy": float("nan"), "anchor_food": float("nan"),
-                "ceiling_drag": float("nan"),
+        return {"target": nan, "target_lo": nan, "target_hi": nan,
+                "target_var": nan, "target_var_lo": nan, "target_var_hi": nan,
+                "target_full": nan, "target_full_lo": nan, "target_full_hi": nan,
+                "shuffled": nan, "shuffled_var": nan, "shuffled_full": nan,
+                "selectivity": nan, "selectivity_var": nan, "selectivity_full": nan,
+                "speed": nan, "anchor_energy": nan, "anchor_food": nan, "ceiling_drag": nan,
                 "n": len(Ha) + len(Hs), "too_few_survivors": True}
     H = np.concatenate([Ha, Hs])
     X = episode_features(H)                          # reuse Exp B's feature builder verbatim
+    Xv = episode_features_var(H)                     # dispersion (volatility signature)
+    Xf = episode_features_full(H)                    # level ++ dispersion
     y = np.concatenate([np.zeros(len(Ha)), np.ones(len(Hs))]).astype(int)
     spd = np.concatenate([spa, sps])
     en = np.concatenate([ena, ens])
     fd = np.concatenate([fda, fds])
     rng = np.random.default_rng(seed)
     tgt, t_lo, t_hi = _auroc_with_ci(X, y, seed=seed)
+    tgt_v, tv_lo, tv_hi = _auroc_with_ci(Xv, y, seed=seed)
+    tgt_f, tf_lo, tf_hi = _auroc_with_ci(Xf, y, seed=seed)
+    # One shared label permutation across feature sets so selectivity gaps reflect
+    # feature-set overfitting bias, not permutation noise. selectivity = target - shuffled
+    # is the estimand that survives the L0>0.5 probe-bias offset seen in some seeds.
+    y_perm = rng.permutation(y)
+    shuf = probe_auroc(X, y_perm)
+    shuf_v = probe_auroc(Xv, y_perm)
+    shuf_f = probe_auroc(Xf, y_perm)
     # Drag-tracking ceiling: decode high- vs low-drift-drag episodes from h_t WITHIN the
     # surrogate pool only (all surrogate, so this is NOT the world label). High here +
     # chance target = the interesting null (the state tracks the dynamics moment-to-moment
@@ -654,7 +683,11 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
         ceiling_drag = float("nan")
     return {
         "target": tgt, "target_lo": t_lo, "target_hi": t_hi,
-        "shuffled": probe_auroc(X, rng.permutation(y)),
+        "target_var": tgt_v, "target_var_lo": tv_lo, "target_var_hi": tv_hi,
+        "target_full": tgt_f, "target_full_lo": tf_lo, "target_full_hi": tf_hi,
+        "shuffled": shuf, "shuffled_var": shuf_v, "shuffled_full": shuf_f,
+        "selectivity": tgt - shuf, "selectivity_var": tgt_v - shuf_v,
+        "selectivity_full": tgt_f - shuf_f,
         "speed": probe_auroc(X, (spd > np.median(spd)).astype(int)),
         "anchor_energy": probe_auroc(X, (en > np.median(en)).astype(int)),
         "anchor_food": probe_auroc(X, (fd > np.median(fd)).astype(int)),
