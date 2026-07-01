@@ -77,6 +77,10 @@ def parse_args() -> argparse.Namespace:
                     help="Override Experiment B-v2 seeds (e.g. 0 1 2 ... 15 to power the null).")
     ap.add_argument("--b2-updates", type=int, default=None, help="Override B-v2 training updates.")
     ap.add_argument("--b2-hidden", type=int, default=None, help="Override B-v2 recurrent hidden size.")
+    ap.add_argument("--b2-dump-states", type=str, default=None,
+                    help="Persist B-v2 recurrent states to this dir (forwarded to run_expB2.py "
+                         "--dump-states) for offline variance/selectivity re-probing with "
+                         "scripts/reanalyze_expB2_states.py.")
     return ap.parse_args()
 
 
@@ -88,6 +92,8 @@ def build_b2_extra(args: argparse.Namespace) -> list[str]:
         extra += ["--updates", str(args.b2_updates)]
     if args.b2_hidden is not None:
         extra += ["--hidden", str(args.b2_hidden)]
+    if args.b2_dump_states is not None:
+        extra += ["--dump-states", args.b2_dump_states]
     return extra
 
 
