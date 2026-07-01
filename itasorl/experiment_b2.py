@@ -60,10 +60,15 @@ SURVIVAL_FOOD = {"n_pellets": 24, "reach": 0.08, "pellet_r": 0.03}
 # lifetime saturates at this food density. Frozen from the de-risk (see engagement_metric).
 ENGAGE_MARGIN = 0.15
 LIFE_TOL = 2.0
+# Surrogate coupling mode for every world the B-v2/B-v3 pipeline builds. "ar1" is the
+# pre-registered B-v2 volatility surrogate; "regime" is the B-v3 per-episode constant
+# drag offset (identifiable + policy-relevant). Patched in place by run_expB2.py --drift-mode
+# (parent AND each spawned worker), mirroring the SURVIVAL_* scarcity overrides.
+DRIFT_MODE = "ar1"
 
 
 def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int) -> PatchOfEarthV0:
-    w = PatchOfEarthV0(params or WorldParams(), drift_sigma=drift_sigma)
+    w = PatchOfEarthV0(params or WorldParams(), drift_sigma=drift_sigma, drift_mode=DRIFT_MODE)
     w.ray_steps = ray_steps
     for k, v in {**SURVIVAL_METAB, **SURVIVAL_FOOD}.items():  # override before reset()
         setattr(w, k, v)

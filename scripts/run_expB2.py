@@ -87,6 +87,10 @@ def cfg():
     ap.add_argument("--basal_e", type=float, default=None, help="override survival basal energy burn")
     ap.add_argument("--n_pellets", type=int, default=None, help="override pellet count (scarcity)")
     ap.add_argument("--reach", type=float, default=None, help="override eat reach radius")
+    # B-v3 coupling: "ar1" = the pre-registered volatility surrogate; "regime" = a per-episode
+    # CONSTANT drag offset (identifiable + policy-relevant), the "make it work as intended" arm.
+    ap.add_argument("--drift-mode", choices=("ar1", "regime"), default="ar1",
+                    help="surrogate coupling mode for B-v2/B-v3 (default ar1)")
     # Speedup: the run is CPU-bound (serial physics, tiny nets), and (drift,seed) cells are
     # independent. --workers N runs N cells at once across CPU cores. Set N ~ vCPU count.
     ap.add_argument("--workers", type=int, default=1, help="parallel worker processes over cells")
@@ -127,6 +131,8 @@ def run_cell(task: dict) -> dict:
         b2.SURVIVAL_FOOD["n_pellets"] = k["n_pellets"]
     if k.get("reach") is not None:
         b2.SURVIVAL_FOOD["reach"] = k["reach"]
+    if k.get("drift_mode"):
+        b2.DRIFT_MODE = k["drift_mode"]
 
     agents = {"untrained": untrained_agent(P, d, k["ray_steps"], k["hidden"], 64, True, dev, seed=s),
               "predictor": train_predictor_only(d, P, n_eps=k["n_eps"], updates=k["updates"],
@@ -207,11 +213,15 @@ def main():
         b2.SURVIVAL_FOOD["n_pellets"] = a.n_pellets
     if a.reach is not None:
         b2.SURVIVAL_FOOD["reach"] = a.reach
+    b2.DRIFT_MODE = a.drift_mode
     os.makedirs(a.out_dir, exist_ok=True)
     results_path = os.path.join(a.out_dir, "expB2_results.json")
     print(f"Experiment B-v2 full run  (device={dev}, drifts={a.drifts}, seeds={a.seeds}, "
           f"updates={a.updates}, workers={a.workers})")
-    print(f"  survival metabolism={b2.SURVIVAL_METAB}  food={b2.SURVIVAL_FOOD}")
+    print(f"  survival metabolism={b2.SURVIVAL_METAB}  food={b2.SURVIVAL_FOOD}  drift_mode={b2.DRIFT_MODE}")
+    if a.drift_mode == "regime":
+        print("  drift_mode=regime: surrogate = per-episode CONSTANT drag offset "
+              "(B-v3 identifiable + policy-relevant coupling; see docs/PREREGISTRATION_Bv3.md)")
     if a.sysid_aux:
         print("  *** SYSID-AUX ON: survival trunk is supervised on drag (CEILING control, "
               "NOT readout-not-reward). Its target is a capacity ceiling, not H_B2 evidence. ***")
@@ -234,7 +244,7 @@ def main():
     base = {k: getattr(a, k) for k in ("updates", "n_eps", "max_steps", "hidden", "ray_steps",
                                        "shaping_coef", "pool_n", "pool_steps", "mp_pairs", "mp_prefix",
                                        "mp_branch", "basal_e", "n_pellets", "reach", "dump_states",
-                                       "sysid_aux", "sysid_coef")}
+                                       "sysid_aux", "sysid_coef", "drift_mode")}
     base.update(drifts=a.drifts, device=dev)
     tasks = [{**base, "drift": d, "seed": s} for d in a.drifts for s in a.seeds]
     done = 0

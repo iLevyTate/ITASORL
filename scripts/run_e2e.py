@@ -84,6 +84,9 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--b2-sysid-aux", action="store_true",
                     help="Run B-v2 with the system-ID CEILING control (forwards --sysid-aux). "
                          "Breaks readout-not-reward; report separately from the headline.")
+    ap.add_argument("--b2-drift-mode", choices=("ar1", "regime"), default=None,
+                    help="B-v2/B-v3 surrogate coupling (forwards --drift-mode): ar1 volatility "
+                         "vs regime per-episode constant offset.")
     return ap.parse_args()
 
 
@@ -99,6 +102,8 @@ def build_b2_extra(args: argparse.Namespace) -> list[str]:
         extra += ["--dump-states", args.b2_dump_states]
     if args.b2_sysid_aux:
         extra += ["--sysid-aux"]
+    if args.b2_drift_mode is not None:
+        extra += ["--drift-mode", args.b2_drift_mode]
     return extra
 
 
