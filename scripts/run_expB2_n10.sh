@@ -47,6 +47,7 @@ echo "Running n=10 extension pinned to HEAD=${COMMIT}"
 trap 'git checkout -- artifacts/expB2/expB2_results.json artifacts/expB2/expB2_survival.png 2>/dev/null || true' EXIT
 
 python scripts/run_expB2.py --out-dir "$ARTIFACTS" --seeds 0 1 2 3 4 5 6 7 8 9 \
+  --dump-states "$ARTIFACTS/states_n10_${COMMIT}" \
   2>&1 | tee "$LOGS/expB2_run_n10_${COMMIT}.log"
 
 mv -f "$ARTIFACTS/expB2_results.json" "$ARTIFACTS/expB2_results_n10_${COMMIT}.json"

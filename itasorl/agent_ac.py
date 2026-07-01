@@ -36,7 +36,7 @@ N_CONT = 2  # thrust, turn
 
 class RecurrentActorCritic(nn.Module):
     def __init__(self, obs_dim: int, act_dim: int, embed: int = 64, hidden: int = 128,
-                 world_model: bool = True) -> None:
+                 world_model: bool = True, sysid_aux: bool = False) -> None:
         super().__init__()
         self.obs_dim, self.act_dim, self.hidden = obs_dim, act_dim, hidden
         self.n_cont = N_CONT
@@ -56,6 +56,12 @@ class RecurrentActorCritic(nn.Module):
             self.decoder = nn.Sequential(
                 nn.Linear(hidden + act_dim, embed), nn.ReLU(), nn.Linear(embed, obs_dim)
             )
+        # System-ID auxiliary CEILING control (NOT readout-not-reward): a LINEAR map from
+        # h_t to the scalar drag-drift, so training with it measures the trunk's capacity to
+        # make world identity linearly decodable - the ceiling the frozen linear probe reads.
+        self.sysid_aux = bool(sysid_aux)
+        if self.sysid_aux:
+            self.sysid_head = nn.Linear(hidden, 1)
 
     # --- recurrent core -----------------------------------------------------
     def initial_state(self, batch: int, device) -> torch.Tensor:
@@ -130,6 +136,11 @@ class RecurrentActorCritic(nn.Module):
     def predict_next(self, states: torch.Tensor, env_act_seq: torch.Tensor) -> torch.Tensor:
         """Decoder auxiliary: predict obs_{t+1} from (h_t, env_act_t). (B,T,O)."""
         return self.decoder(torch.cat([states, env_act_seq], dim=-1))
+
+    def predict_sysid(self, states: torch.Tensor) -> torch.Tensor:
+        """System-ID CEILING control: predict the scalar drag-drift from h_t. (B,T).
+        Only defined when the agent was built with sysid_aux=True."""
+        return self.sysid_head(states).squeeze(-1)
 
     def world_model_loss(self, obs_seq: torch.Tensor, act_in_seq: torch.Tensor,
                          env_act_seq: torch.Tensor, mask: torch.Tensor, h0: torch.Tensor):

@@ -43,11 +43,21 @@ def first_config_obs_spec() -> ObsSpec:
 
 class PatchOfEarthV0(PatchOfEarth):
     def __init__(self, params: WorldParams | None = None, n_rays: int = 24, n_pellets: int = 12,
-                 drift_sigma: float = 0.0) -> None:
+                 drift_sigma: float = 0.0, drift_mode: str = "ar1") -> None:
         super().__init__(params or WorldParams(), obs_spec=first_config_obs_spec(), action_spec=DEFAULT_ACTION_SPEC)
-        # L2 rollout drift (world_spec sec. 10): if >0, the drag coefficient follows a
-        # slow AR(1) random walk. drift_sigma=0 reproduces the exact authentic world.
+        # L2 rollout drift (world_spec sec. 10): if drift_sigma>0, the drag coefficient
+        # deviates from the authentic constant. Two modes:
+        #   "ar1"    - slow AR(1) random walk within each episode (the B-v2 surrogate; the
+        #              worlds differ in drag VOLATILITY at a shared central level).
+        #   "regime" - a per-episode CONSTANT drag offset drawn from a band away from zero
+        #              (the B-v3 surrogate; identifiable from one trajectory and policy-
+        #              relevant, so survival has a reason to encode it).
+        # drift_sigma=0 reproduces the exact authentic world in BOTH modes.
         self.drift_sigma = float(drift_sigma)
+        self.drift_mode = str(drift_mode)
+        # regime band: per-episode offset ~ drift_sigma * U(regime_lo, regime_hi), so it is
+        # centered on drift_sigma and bounded away from 0 (a clear, persistent regime shift).
+        self.regime_lo, self.regime_hi = 0.5, 1.5
         self._drift_w = 0.0
         # --- tunable constants (world_spec sec. 13) ---
         self.n_rays = n_rays
@@ -133,6 +143,10 @@ class PatchOfEarthV0(PatchOfEarth):
         self._drift_w = 0.0
         if self.drift_sigma > 0.0:  # dedicated, deterministic drift stream (L2)
             self._rng["drift"] = np.random.default_rng(int(self._rng["world"].integers(0, 2**31)))
+            if self.drift_mode == "regime":  # per-episode CONSTANT offset, fixed for the episode
+                self._drift_w = float(np.clip(
+                    self.drift_sigma * self._rng["drift"].uniform(self.regime_lo, self.regime_hi),
+                    -0.8, 8.0))
 
     # --- transition stages --------------------------------------------------
     def _integrate_motion(self, action: np.ndarray) -> None:
@@ -144,8 +158,9 @@ class PatchOfEarthV0(PatchOfEarth):
         a = thrust * self.thrust_scale * d - self.params.gravity * np.array([gx, gy])
         wet = self._wetness(self.pos[0], self.pos[1])
         drag = self.params.k_land * (1.0 - wet) + self.params.k_water * wet
-        if self.drift_sigma > 0.0:  # L2: slow AR(1) wander of the drag coefficient
-            self._drift_w = float(np.clip(0.95 * self._drift_w + self._rng["drift"].normal(0.0, self.drift_sigma), -0.8, 8.0))
+        if self.drift_sigma > 0.0:  # L2 surrogate: perturb the drag coefficient
+            if self.drift_mode == "ar1":  # slow AR(1) wander (regime: _drift_w stays constant)
+                self._drift_w = float(np.clip(0.95 * self._drift_w + self._rng["drift"].normal(0.0, self.drift_sigma), -0.8, 8.0))
             drag = drag * (1.0 + self._drift_w)
         self.vel = (1.0 - drag * self.params.dt) * self.vel + a * self.params.dt
         self.pos = self.pos + self.vel * self.params.dt

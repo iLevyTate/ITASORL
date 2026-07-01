@@ -1,0 +1,214 @@
+{
+  "0.0": {
+    "untrained": {
+      "pool_target": [
+        0.4156263367725819
+      ],
+      "pool_target_lo": [
+        0.3382623966942149
+      ],
+      "pool_target_hi": [
+        0.4892582644628099
+      ],
+      "pool_speed": [
+        0.7837325034198864
+      ],
+      "pool_shuffled": [
+        0.5456342142705779
+      ],
+      "pool_anchor_energy": [
+        0.7680220387926339
+      ],
+      "pool_anchor_food": [
+        0.6777733464095022
+      ],
+      "pool_ceiling_drag": [
+        NaN
+      ],
+      "mp_target": [
+        0.13438714063714063
+      ],
+      "mp_leak_clean": [
+        true
+      ],
+      "xeval_return": []
+    },
+    "predictor": {
+      "pool_target": [
+        0.3937349212052769
+      ],
+      "pool_target_lo": [
+        0.3180950413223141
+      ],
+      "pool_target_hi": [
+        0.47281404958677686
+      ],
+      "pool_speed": [
+        0.9230198713059125
+      ],
+      "pool_shuffled": [
+        0.5205581775492842
+      ],
+      "pool_anchor_energy": [
+        0.6352113386867392
+      ],
+      "pool_anchor_food": [
+        0.8468904598452653
+      ],
+      "pool_ceiling_drag": [
+        NaN
+      ],
+      "mp_target": [
+        0.12320804195804196
+      ],
+      "mp_leak_clean": [
+        true
+      ],
+      "xeval_return": []
+    },
+    "survival": {
+      "pool_target": [
+        0.5740482179217357
+      ],
+      "pool_target_lo": [
+        0.4974214876033058
+      ],
+      "pool_target_hi": [
+        0.6454586776859504
+      ],
+      "pool_speed": [
+        0.9542330845255502
+      ],
+      "pool_shuffled": [
+        0.5410146079217225
+      ],
+      "pool_anchor_energy": [
+        0.7948893974065598
+      ],
+      "pool_anchor_food": [
+        0.8256604172068599
+      ],
+      "pool_ceiling_drag": [
+        NaN
+      ],
+      "mp_target": [
+        0.12320804195804196
+      ],
+      "mp_leak_clean": [
+        true
+      ],
+      "xeval_return": [
+        {
+          "0.00": 0.2347767994978499,
+          "0.45": -0.16833662173217473
+        }
+      ]
+    }
+  },
+  "0.45": {
+    "untrained": {
+      "pool_target": [
+        0.40650462844138724
+      ],
+      "pool_target_lo": [
+        0.3343780991735537
+      ],
+      "pool_target_hi": [
+        0.49157438016528926
+      ],
+      "pool_speed": [
+        0.834476828520365
+      ],
+      "pool_shuffled": [
+        0.5724628155112346
+      ],
+      "pool_anchor_energy": [
+        0.8050258571264763
+      ],
+      "pool_anchor_food": [
+        0.6534220248004313
+      ],
+      "pool_ceiling_drag": [
+        0.5370543345543345
+      ],
+      "mp_target": [
+        0.2812839937839938
+      ],
+      "mp_leak_clean": [
+        true
+      ],
+      "xeval_return": []
+    },
+    "predictor": {
+      "pool_target": [
+        0.4321680954092021
+      ],
+      "pool_target_lo": [
+        0.3537747933884298
+      ],
+      "pool_target_hi": [
+        0.5086033057851239
+      ],
+      "pool_speed": [
+        0.9348164879869685
+      ],
+      "pool_shuffled": [
+        0.5281998008579036
+      ],
+      "pool_anchor_energy": [
+        0.7799642960707553
+      ],
+      "pool_anchor_food": [
+        0.8414035812672175
+      ],
+      "pool_ceiling_drag": [
+        0.6370787545787546
+      ],
+      "mp_target": [
+        0.3007187257187257
+      ],
+      "mp_leak_clean": [
+        true
+      ],
+      "xeval_return": []
+    },
+    "survival": {
+      "pool_target": [
+        0.6054591653405883
+      ],
+      "pool_target_lo": [
+        0.5293223140495869
+      ],
+      "pool_target_hi": [
+        0.6787623966942148
+      ],
+      "pool_speed": [
+        0.937001546159155
+      ],
+      "pool_shuffled": [
+        0.5789907901716203
+      ],
+      "pool_anchor_energy": [
+        0.7917261904761905
+      ],
+      "pool_anchor_food": [
+        0.8680909914923853
+      ],
+      "pool_ceiling_drag": [
+        0.7522619047619047
+      ],
+      "mp_target": [
+        0.363548951048951
+      ],
+      "mp_leak_clean": [
+        true
+      ],
+      "xeval_return": [
+        {
+          "0.00": -0.05790054014587423,
+          "0.45": -0.26628082982736156
+        }
+      ]
+    }
+  }
+}

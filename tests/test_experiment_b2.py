@@ -252,3 +252,74 @@ def test_volatility_signature_needs_dispersion_features():
     assert var_auc > 0.85, f"dispersion probe should separate volatility, got {var_auc:.3f}"
     assert var_auc - level_auc > 0.20                  # the readout gap is the finding
     assert full_auc > 0.85                             # level ++ var retains the signal
+
+
+# ---- sysid-aux positive-control head (PR2) ----
+def test_sysid_head_absent_by_default():
+    """The ceiling control must be opt-in: a default agent has no sysid head, so the
+    headline readout-not-reward runs are never accidentally supervised on drag."""
+    od, ad = 10, 5
+    torch.manual_seed(0)
+    plain = RecurrentActorCritic(od, ad, embed=16, hidden=8)
+    assert not plain.sysid_aux and not hasattr(plain, "sysid_head")
+    ceil = RecurrentActorCritic(od, ad, embed=16, hidden=8, sysid_aux=True)
+    assert ceil.sysid_aux and hasattr(ceil, "sysid_head")
+
+
+def test_predict_sysid_shape():
+    """predict_sysid maps recurrent states (B,T,H) -> a per-step scalar (B,T)."""
+    od, ad = 10, 5
+    torch.manual_seed(0)
+    agent = RecurrentActorCritic(od, ad, embed=16, hidden=8, sysid_aux=True)
+    states = torch.zeros(3, 6, 8)
+    out = agent.predict_sysid(states)
+    assert out.shape == (3, 6)
+
+
+def test_collect_pool_batch_exposes_drift_target():
+    """collect_episodes_ac must expose a per-step drift_w target aligned with the mask,
+    so the sysid-aux loss regresses h_t onto the drag the agent actually experienced."""
+    from itasorl.experiment_b2 import collect_episodes_ac
+    agent, norm = _agent_norm()
+    b = collect_episodes_ac(agent, norm, P, 0.45, 4, 6, "cpu", 4321, RS)
+    assert "drift_w" in b
+    assert b["drift_w"].shape == b["mask"].shape
+    assert torch.isfinite(b["drift_w"]).all()
+
+
+# ---- B-v3 per-episode drag-regime coupling (PR3) ----
+def _drift_trace(mode, drift_sigma, steps=30, seed=7):
+    """Run one episode with a fixed action and return the per-step _drift_w trace."""
+    from itasorl.patch_of_earth import PatchOfEarthV0
+    from itasorl.world import SeedBundle
+    w = PatchOfEarthV0(P, drift_sigma=drift_sigma, drift_mode=mode)
+    w.ray_steps = RS
+    w.reset(SeedBundle(world=seed, weather=seed + 1, ecology=seed + 2))
+    trace = []
+    for _ in range(steps):
+        w.step(np.array([0.8, 0.1, 0.0, 0.0, 0.0], np.float32))
+        trace.append(float(w._drift_w))
+    return np.array(trace)
+
+
+def test_regime_mode_is_constant_within_episode():
+    """regime surrogate holds a SINGLE per-episode drag offset (identifiable), unlike the
+    ar1 surrogate which wanders step-to-step."""
+    regime = _drift_trace("regime", 0.45)
+    ar1 = _drift_trace("ar1", 0.45)
+    assert np.ptp(regime) < 1e-9 and regime[0] != 0.0          # constant, non-zero regime
+    assert np.ptp(ar1) > 1e-6                                   # ar1 genuinely varies
+
+
+def test_regime_offset_in_expected_band():
+    """The per-episode offset is drift_sigma * U(0.5, 1.5): centered on drift_sigma and
+    bounded away from 0, a clear persistent regime shift."""
+    vals = [_drift_trace("regime", 0.45, steps=1, seed=s)[0] for s in range(40)]
+    vals = np.array(vals)
+    assert (vals >= 0.45 * 0.5 - 1e-6).all() and (vals <= 0.45 * 1.5 + 1e-6).all()
+    assert vals.std() > 0.0                                     # varies across episodes
+
+
+def test_regime_mode_authentic_is_unperturbed():
+    """drift_sigma=0 must reproduce the exact authentic world in regime mode too (L0)."""
+    assert np.allclose(_drift_trace("regime", 0.0), 0.0)
