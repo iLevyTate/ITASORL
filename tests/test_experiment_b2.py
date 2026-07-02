@@ -351,3 +351,25 @@ def test_matched_pair_L0_bit_identical_regime_mode(monkeypatch):
     assert len(auth) >= 1
     for a, s in zip(auth, surr):
         assert np.array_equal(a["H"], s["H"]), "L0 branches diverged under regime mode"
+
+
+def test_summary_parses_strongest_drift_cell():
+    """The run summary must report the strongest (test) drift cell, not the drift-0
+    control. Regression for the 07022026 headline that said 'at chance' (0.52, the
+    L0 control) for a run whose test-drift survival target was 0.633."""
+    from itasorl.results_io import parse_step_metrics
+    log = (
+        "drift=0.00 block\n"
+        "survival   PRIMARY pool target = 0.520+/-0.040   speed(+ctrl) = 0.961\n"
+        "predictor  PRIMARY pool target = 0.537+/-0.070   speed(+ctrl) = 0.903\n"
+        "drift=0.45 block\n"
+        "survival   PRIMARY pool target = 0.633+/-0.057   speed(+ctrl) = 0.959\n"
+        "predictor  PRIMARY pool target = 0.536+/-0.059   speed(+ctrl) = 0.911\n"
+        "At strongest drift=0.45: survival pooled target |dev|=0.133\n"
+    )
+    m = parse_step_metrics("expB2", log)
+    assert m["survival_pool_target_mean"] == 0.633
+    assert m["survival_pool_target_std"] == 0.057
+    assert m["predictor_pool_target_mean"] == 0.536
+    assert m["organism_encodes_world"] == "weak"
+    assert m["survival_deviation_from_chance"] == 0.133

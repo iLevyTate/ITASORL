@@ -201,16 +201,20 @@ def parse_step_metrics(name: str, log: str) -> dict[str, Any]:
 
     if name == "expB2":
         # Structured JSON copied separately; parse headline numbers from log.
-        surv = re.search(
+        # Per-agent lines print once per drift block in ascending drift order, so the
+        # LAST match is the strongest (test) drift - the cell the headline verdict and
+        # the "At strongest drift" |dev| line refer to. re.search would return the
+        # drift-0 control cell and understate the result.
+        surv = re.findall(
             r"survival\s+PRIMARY pool target = ([\d.]+)\+/-([\d.]+)", log,
         )
-        pred = re.search(r"predictor\s+PRIMARY pool target = ([\d.]+)\+/-", log)
+        pred = re.findall(r"predictor\s+PRIMARY pool target = ([\d.]+)\+/-", log)
         if surv:
-            m["survival_pool_target_mean"] = float(surv.group(1))
-            m["survival_pool_target_std"] = float(surv.group(2))
+            m["survival_pool_target_mean"] = float(surv[-1][0])
+            m["survival_pool_target_std"] = float(surv[-1][1])
             m["organism_encodes_world"] = _encodes(m["survival_pool_target_mean"], threshold=0.65)
         if pred:
-            m["predictor_pool_target_mean"] = float(pred.group(1))
+            m["predictor_pool_target_mean"] = float(pred[-1])
         dev = re.search(r"survival pooled target \|dev\|=([\d.]+)", log)
         if dev:
             m["survival_deviation_from_chance"] = float(dev.group(1))
