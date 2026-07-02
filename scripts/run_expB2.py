@@ -342,10 +342,20 @@ def main():
     print(f"  dissociation: drag-ceiling {surv_ceil_drag:.3f} vs identity-target {surv_t.mean():.3f}"
           f"{' (tracks dynamics, no persistent identity)' if surv_ceil_drag - surv_t.mean() > 0.1 else ''}")
     # Pre-registered primary: survival >= 0.65 AND beats predictor and untrained by >= 0.05.
-    h_b2 = (surv_t.mean() >= 0.65 and surv_t.mean() >= pred_t.mean() + 0.05
-            and surv_t.mean() >= untr_t.mean() + 0.05)
-    print(f"  primary H_B2 (survival-induced encoding) {'MET' if h_b2 else 'NOT met'}  "
-          f"-> {'encoding induced' if h_b2 else 'strengthened negative (state readable, identity not encoded)'}")
+    # Three zones per PREREGISTRATION_Bv3.md section 8: a result that clears both baseline
+    # margins but misses the 0.65 bar is NOT a strengthened negative - it is the
+    # underpowered intermediate zone the prereg adjudicates with the n=10 power extension.
+    beats_baselines = (surv_t.mean() >= pred_t.mean() + 0.05
+                       and surv_t.mean() >= untr_t.mean() + 0.05)
+    h_b2 = surv_t.mean() >= 0.65 and beats_baselines
+    if h_b2:
+        zone = "MET  -> encoding induced (conditional on gates)"
+    elif beats_baselines:
+        zone = ("NOT met  -> intermediate zone: beats both baselines by >= 0.05 but misses "
+                "the 0.65 bar; adjudicate with the pre-registered n=10 power extension")
+    else:
+        zone = "NOT met  -> strengthened negative (state readable, identity not encoded)"
+    print(f"  primary H_B2 (survival-induced encoding) {zone}")
     # Secondary: does the world-identity signal live in a VOLATILITY signature the LEVEL
     # probe throws away? target_var/full crossing 0.65 while the level target stays ~0.5
     # means the null was partly an operationalization artifact, not absent encoding.
