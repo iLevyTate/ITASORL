@@ -323,3 +323,31 @@ def test_regime_offset_in_expected_band():
 def test_regime_mode_authentic_is_unperturbed():
     """drift_sigma=0 must reproduce the exact authentic world in regime mode too (L0)."""
     assert np.allclose(_drift_trace("regime", 0.0), 0.0)
+
+
+def test_matched_pair_L2_diverges_regime_mode(monkeypatch):
+    """Regime mode: the surrogate branch must carry its per-episode drag offset past the
+    snapshot restore, so matched-pair branches genuinely diverge. Regression for the
+    B-v3 degeneracy where set_state clobbered the reset-drawn offset with the prefix's
+    0.0 and mp_target collapsed to exactly 0.5 in every cell (fullruns/07022026)."""
+    import itasorl.experiment_b2 as b2
+    monkeypatch.setattr(b2, "DRIFT_MODE", "regime")
+    agent, norm = _agent_norm()
+    auth, surr = matched_pair_recurrent_rollout(agent, norm, P, 0.5, n_pairs=3, prefix_steps=4,
+                                                branch_steps=6, ray_steps=RS, device="cpu")
+    assert len(auth) >= 1
+    assert any(not np.allclose(a["H"], s["H"]) for a, s in zip(auth, surr)), \
+        "regime-mode matched-pair branches are identical - the drag offset was lost"
+
+
+def test_matched_pair_L0_bit_identical_regime_mode(monkeypatch):
+    """Regime mode keystone control: with drift OFF the branches must remain identical
+    to the bit, exactly as in ar1 mode - the fix must not manufacture signal at L0."""
+    import itasorl.experiment_b2 as b2
+    monkeypatch.setattr(b2, "DRIFT_MODE", "regime")
+    agent, norm = _agent_norm()
+    auth, surr = matched_pair_recurrent_rollout(agent, norm, P, 0.0, n_pairs=3, prefix_steps=4,
+                                                branch_steps=6, ray_steps=RS, device="cpu")
+    assert len(auth) >= 1
+    for a, s in zip(auth, surr):
+        assert np.array_equal(a["H"], s["H"]), "L0 branches diverged under regime mode"

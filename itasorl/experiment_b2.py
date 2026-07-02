@@ -432,10 +432,16 @@ def matched_pair_recurrent_rollout(agent, norm, params, drift_sigma, *, n_pairs:
         aw.set_state(snapshot)
         Ha, spa, rea, alivea = _run_branch(agent, norm, aw, h_branch, prev_branch, branch_steps, device)
 
-        # surrogate branch: drift world restored to the SAME snapshot (drift activates here)
+        # surrogate branch: drift world restored to the SAME snapshot (drift activates here).
+        # Keep the surrogate's own reset-drawn drift_w: the snapshot comes from the
+        # drift-free prefix world (drift_w=0.0), and in regime mode step() never redraws,
+        # so a plain set_state would silently disable the drag offset for the whole branch
+        # (mp_target collapsed to exactly 0.5). Under ar1 the reset value is 0.0, so this
+        # merge is a bit-for-bit no-op there.
         sw = make_world(params, drift_sigma, ray_steps)
         sw.reset(seeds)
-        sw.set_state(snapshot)
+        regime_w = float(sw.get_state()["drift_w"])
+        sw.set_state({**snapshot, "drift_w": regime_w})
         Hs, sps, res, alives = _run_branch(agent, norm, sw, h_branch, prev_branch, branch_steps, device)
 
         # Truncate BOTH branches of the pair to equal length so episode length /
