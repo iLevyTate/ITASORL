@@ -1,3 +1,5 @@
+<img width="508" height="286" alt="Simulation_software_real_fake_202607022052" src="https://github.com/user-attachments/assets/cea0fce6-5acc-4e5b-af3d-ebfbb5c0919d" />
+
 # ITASORL
 
 *A tabula-rasa artificial-life system that asks whether a from-scratch digital
