@@ -211,6 +211,16 @@ banner on a forced unmount.
 - Auto-resume keys on `bundle.zip` absence; a run that failed terminally (as
   opposed to disconnecting) is also offered for resume, which is the desired
   behavior after fixing the underlying error.
+- `bundle.zip` zips the whole run dir, so states now ride along: roughly
+  1 MB per agent per cell (110 eps x 24 steps x 96 hidden float32), about
+  40-60 MB for bv3_regime_n10. Accepted; the bundle becomes self-contained
+  for offline reanalysis. A side benefit of states living in the run dir:
+  the Drive-to-local resume copy restores states from before the crash,
+  which are lost entirely today.
+- An unfinished run recorded before this change carries an old explicit
+  states path in `b2_flags.json`; auto-resume flags the mismatch and hard
+  stops. The `RESUME_RUN_DIR` override still resumes it. No compatibility
+  shim.
 
 ## Files touched
 
