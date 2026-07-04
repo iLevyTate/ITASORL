@@ -263,6 +263,7 @@ class RunRecorder:
     _run_started: float = field(default=0.0, repr=False)
     _status_last_write: float = field(default=0.0, repr=False)
     _mirror_dir: Path | None = field(default=None, repr=False)
+    _mirror_degraded: bool = field(default=False, repr=False)
 
     @classmethod
     def _mirror_from_env(cls) -> Path | None:
@@ -385,6 +386,26 @@ class RunRecorder:
     def _sync_mirror(self, *, full: bool = False) -> None:
         if self._mirror_dir is None:
             return
+        self._mirror_attempt(lambda: self._sync_mirror_files(full=full))
+
+    def _mirror_attempt(self, fn) -> None:
+        """Mirror I/O must never kill the run: degrade loudly, retry next call."""
+        try:
+            fn()
+        except OSError as exc:
+            if not self._mirror_degraded:
+                print(
+                    f"\nWARNING: Drive mirror unreachable ({exc}); the run "
+                    "continues on local disk and mirroring keeps retrying.",
+                    flush=True,
+                )
+            self._mirror_degraded = True
+            return
+        if self._mirror_degraded:
+            print("\nDrive mirror recovered; syncing resumed.", flush=True)
+        self._mirror_degraded = False
+
+    def _sync_mirror_files(self, *, full: bool) -> None:
         dest_root = self._mirror_dir / self.run_dir.name
         dest_root.mkdir(parents=True, exist_ok=True)
         for name in ("combined.log", "status.json", "manifest.json", "SUMMARY.md", "bundle.zip"):
@@ -509,13 +530,6 @@ class RunRecorder:
         LATEST_RUN_PTR.parent.mkdir(parents=True, exist_ok=True)
         LATEST_RUN_PTR.write_text(str(self.run_dir.resolve()), encoding="utf-8")
         self._sync_mirror(full=True)
-        if self._mirror_dir is not None:
-            dest_root = self._mirror_dir / self.run_dir.name
-            dest_root.mkdir(parents=True, exist_ok=True)
-            for name in ("SUMMARY.md", "bundle.zip"):
-                src = self.run_dir / name
-                if src.is_file():
-                    shutil.copy2(src, dest_root / name)
 
         print(f"\n{'=' * 72}", flush=True)
         print(f"Results recorded -> {self.run_dir}", flush=True)
