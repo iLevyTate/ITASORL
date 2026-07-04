@@ -111,6 +111,8 @@ def test_main_launches_mapped_command(monkeypatch, tmp_path):
 
 
 def test_main_resume_requires_latest_pointer(monkeypatch):
+    monkeypatch.setattr(run_local, "check_cuda", lambda allow_cpu: None)
+    monkeypatch.setattr(run_local, "check_ram", lambda min_free_gb: None)
     monkeypatch.setattr(run_local, "read_latest_run_dir", lambda: None)
     monkeypatch.setattr(sys, "argv", ["run_local.py", "b2_only", "--resume"])
     with pytest.raises(SystemExit):
@@ -134,7 +136,7 @@ def test_main_resume_warns_on_profile_mismatch(monkeypatch, tmp_path, capsys):
     with pytest.raises(SystemExit) as exc:
         run_local.main()
     assert exc.value.code == 0
-    assert "bv3_regime" in capsys.readouterr().out  # warning names recorded profile
+    assert "recorded as profile 'bv3_regime'" in capsys.readouterr().out
 
 
 def test_build_cmd_rejects_unknown_run_mode():
@@ -152,5 +154,5 @@ def test_profiles_values_match_notebook_table():
     block = src[src.index("_PROFILES = {"):]
     block = block[:block.index("\n}") + 2]
     ns = {}
-    exec(block, {"dict": dict, "list": list, "range": range}, ns)  # noqa: S102
+    exec(block, {"dict": dict, "list": list, "range": range}, ns)
     assert ns["_PROFILES"] == run_local.PROFILES

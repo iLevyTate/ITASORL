@@ -23,7 +23,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from itasorl.results_io import default_run_dir, read_latest_run_dir  # noqa: E402
+from itasorl.results_io import default_run_dir, read_latest_run_dir
 
 SCRIPTS = Path(__file__).resolve().parent
 
@@ -154,6 +154,9 @@ def main() -> None:
     if not a.profile:
         ap.error("profile is required (or use --list)")
 
+    check_cuda(a.allow_cpu)
+    check_ram(a.min_free_gb)
+
     if a.resume:
         run_dir = read_latest_run_dir()
         if run_dir is None:
@@ -165,16 +168,15 @@ def main() -> None:
             recorded = profile_file.read_text(encoding="utf-8").strip()
             if recorded != a.profile:
                 print(f"WARNING: resuming run recorded as profile "
-                      f"'{recorded}' with profile '{a.profile}'. The expB2 "
-                      "config fingerprint is the real gate; proceeding.",
+                      f"'{recorded}' with profile '{a.profile}'. Cell mixing "
+                      "is gated by the expB2 config fingerprint, but step "
+                      "selection (--only/--skip) is not; proceeding.",
                       flush=True)
     else:
         run_dir = Path(default_run_dir())
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / PROFILE_FILE).write_text(a.profile + "\n", encoding="utf-8")
 
-    check_cuda(a.allow_cpu)
-    check_ram(a.min_free_gb)
     cmd = build_cmd(PROFILES[a.profile], run_dir, resume=a.resume)
     print("Launching: " + " ".join(cmd), flush=True)
     raise SystemExit(subprocess.run(cmd).returncode)
