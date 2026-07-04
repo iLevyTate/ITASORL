@@ -91,7 +91,7 @@ def parse_args() -> argparse.Namespace:
     return ap.parse_args()
 
 
-def build_b2_extra(args: argparse.Namespace) -> list[str]:
+def build_b2_extra(args: argparse.Namespace, *, resume: bool = False) -> list[str]:
     extra: list[str] = []
     if args.b2_seeds is not None:
         extra += ["--seeds", *[str(s) for s in args.b2_seeds]]
@@ -105,6 +105,8 @@ def build_b2_extra(args: argparse.Namespace) -> list[str]:
         extra += ["--sysid-aux"]
     if args.b2_drift_mode is not None:
         extra += ["--drift-mode", args.b2_drift_mode]
+    if resume:
+        extra += ["--resume"]
     return extra
 
 
@@ -180,7 +182,7 @@ def main() -> None:
         skip |= {s for s, _, _ in experiment_steps(quick=quick, b2_out=b2_out) if s != "expB2"}
 
     if args.only != "pytest":
-        b2_extra = build_b2_extra(args)
+        b2_extra = build_b2_extra(args, resume=resume_dir is not None)
         for name, cmd, extra in experiment_steps(quick=quick, b2_out=b2_out, b2_extra=b2_extra):
             if name in skip:
                 print(f"\n--- skip {name} ---", flush=True)

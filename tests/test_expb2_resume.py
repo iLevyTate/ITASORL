@@ -12,6 +12,7 @@ if str(ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(ROOT / "scripts"))
 
 import run_expB2  # noqa: E402
+import run_e2e  # noqa: E402
 
 
 BASE = dict(updates=300, n_eps=16, max_steps=80, hidden=96, ray_steps=5,
@@ -173,3 +174,29 @@ def test_resume_with_more_seeds_runs_only_new_seeds(tmp_path, monkeypatch):
     assert ran == [(0.0, 2), (0.45, 2)]
     res = json.loads((tmp_path / "expB2_results.json").read_text())
     assert len(res["0.45"]["survival"]["pool_target"]) == 3
+
+
+# ---------------------------------------------------------------------------
+# Task 3: run_e2e.build_b2_extra plumbing tests
+# ---------------------------------------------------------------------------
+
+
+def _e2e_args(**over):
+    defaults = dict(b2_seeds=None, b2_updates=None, b2_hidden=None,
+                    b2_dump_states=None, b2_sysid_aux=False, b2_drift_mode=None)
+    defaults.update(over)
+    import argparse
+    return argparse.Namespace(**defaults)
+
+
+def test_build_b2_extra_emits_resume_only_in_resume_mode():
+    assert "--resume" not in run_e2e.build_b2_extra(_e2e_args())
+    assert "--resume" in run_e2e.build_b2_extra(_e2e_args(), resume=True)
+
+
+def test_build_b2_extra_keeps_other_flags_with_resume():
+    extra = run_e2e.build_b2_extra(
+        _e2e_args(b2_drift_mode="regime", b2_seeds=[0, 1]), resume=True)
+    assert extra[-1] == "--resume"
+    assert ["--drift-mode", "regime"] == extra[extra.index("--drift-mode"):
+                                              extra.index("--drift-mode") + 2]
