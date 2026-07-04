@@ -25,3 +25,8 @@ Preflights: CUDA must be visible (override with `--allow-cpu`) and at least 4 GB
   If the latest-run pointer is lost or moved, resume a specific run directly:
   `python scripts/run_local.py <profile> --resume fullruns/<dir>` (or
   `python scripts/run_e2e.py --resume fullruns/<dir> --only expb2`).
+
+- `--b2-dump-states auto` places recurrent-state dumps under
+  `<run_dir>/artifacts/states` so they are mirrored to Drive, included in
+  `bundle.zip`, and survive resume on a different machine. The Colab notebook
+  always uses `auto`; `run_local.py` keeps its explicit `<run_dir>/states`.

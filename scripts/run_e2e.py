@@ -82,7 +82,8 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--b2-dump-states", type=str, default=None,
                     help="Persist B-v2 recurrent states to this dir (forwarded to run_expB2.py "
                          "--dump-states) for offline variance/selectivity re-probing with "
-                         "scripts/reanalyze_expB2_states.py.")
+                         "scripts/reanalyze_expB2_states.py. Pass 'auto' to place them under "
+                         "<run_dir>/artifacts/states (mirrored, bundled, resume-safe).")
     ap.add_argument("--b2-sysid-aux", action="store_true",
                     help="Run B-v2 with the system-ID CEILING control (forwards --sysid-aux). "
                          "Breaks readout-not-reward; report separately from the headline.")
@@ -131,6 +132,20 @@ def resolve_b2_extra(args: argparse.Namespace, *, resume: bool, run_dir: Path) -
     if resume:
         extra = [*extra, "--resume"]
     return extra
+
+
+DUMP_STATES_AUTO = "auto"
+
+
+def resolve_dump_states(extra: list[str], run_dir: Path) -> list[str]:
+    """Resolve the 'auto' dump-states sentinel against the active run dir.
+    b2_flags.json keeps the raw sentinel so a resume on a different path
+    (new VM, fullruns/_resume_local copy) re-resolves correctly."""
+    out = list(extra)
+    for i, tok in enumerate(out[:-1]):
+        if tok == "--dump-states" and out[i + 1] == DUMP_STATES_AUTO:
+            out[i + 1] = str(run_dir / "artifacts" / "states")
+    return out
 
 
 def expand_skip(raw: list[str]) -> set[str]:
@@ -207,6 +222,7 @@ def main() -> None:
     if args.only != "pytest":
         b2_extra = resolve_b2_extra(args, resume=resume_dir is not None,
                                     run_dir=recorder.run_dir)
+        b2_extra = resolve_dump_states(b2_extra, recorder.run_dir)
         for name, cmd, extra in experiment_steps(quick=quick, b2_out=b2_out, b2_extra=b2_extra):
             if name in skip:
                 print(f"\n--- skip {name} ---", flush=True)
