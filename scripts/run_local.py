@@ -19,6 +19,7 @@ from __future__ import annotations
 import _bootstrap  # noqa: F401
 
 import argparse
+import json
 import subprocess
 import sys
 from pathlib import Path
@@ -71,6 +72,18 @@ def build_cmd(profile: dict, run_dir: Path, *, resume: bool) -> list[str]:
 
 
 PROFILE_FILE = "local_profile.txt"
+
+
+def unfinished_with_cells(run_dir: Path) -> bool:
+    """True if run_dir holds expB2 cell checkpoints but never finalized."""
+    if not any((run_dir / "artifacts" / "cells").glob("cell_d*_s*.json")):
+        return False
+    try:
+        manifest = json.loads((run_dir / "manifest.json").read_text(
+            encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return True
+    return "finished_at_utc" not in manifest
 
 
 def check_cuda(allow_cpu: bool) -> None:
@@ -126,8 +139,10 @@ def main() -> None:
         description="Run a Colab RUN_PROFILE locally with resume support.")
     ap.add_argument("profile", nargs="?", choices=sorted(PROFILES),
                     help="run profile (see --list)")
-    ap.add_argument("--resume", action="store_true",
-                    help="continue the latest interrupted run")
+    ap.add_argument("--resume", nargs="?", const="latest", default=None,
+                    metavar="RUN_DIR",
+                    help="continue an interrupted run (latest by default, or "
+                         "an explicit fullruns/<dir>)")
     ap.add_argument("--list", action="store_true",
                     help="list profiles and exit")
     ap.add_argument("--allow-cpu", action="store_true",
@@ -157,11 +172,17 @@ def main() -> None:
     check_cuda(a.allow_cpu)
     check_ram(a.min_free_gb)
 
-    if a.resume:
-        run_dir = read_latest_run_dir()
-        if run_dir is None:
-            raise SystemExit("--resume: no latest-run pointer found; "
-                             "start a fresh run first.")
+    if a.resume is not None:
+        if a.resume == "latest":
+            run_dir = read_latest_run_dir()
+            if run_dir is None:
+                raise SystemExit("--resume: no latest-run pointer found; "
+                                 "start a fresh run first or pass an explicit "
+                                 "run directory: --resume fullruns/<dir>")
+        else:
+            run_dir = Path(a.resume)
+            if not run_dir.is_dir():
+                raise SystemExit(f"--resume: run directory not found: {run_dir}")
         run_dir = Path(run_dir)
         profile_file = run_dir / PROFILE_FILE
         if profile_file.is_file():
@@ -172,12 +193,21 @@ def main() -> None:
                       "is gated by the expB2 config fingerprint, but step "
                       "selection (--only/--skip) is not; proceeding.",
                       flush=True)
+        else:
+            print(f"WARNING: no recorded profile in {run_dir}; proceeding.",
+                  flush=True)
     else:
+        prev = read_latest_run_dir()
+        if prev is not None and unfinished_with_cells(Path(prev)):
+            raise SystemExit(
+                f"An unfinished run with checkpointed cells exists at {prev}.\n"
+                f"Continue it:  python scripts/run_local.py {a.profile} --resume\n"
+                "Or start fresh anyway by deleting that run directory.")
         run_dir = Path(default_run_dir())
         run_dir.mkdir(parents=True, exist_ok=True)
         (run_dir / PROFILE_FILE).write_text(a.profile + "\n", encoding="utf-8")
 
-    cmd = build_cmd(PROFILES[a.profile], run_dir, resume=a.resume)
+    cmd = build_cmd(PROFILES[a.profile], run_dir, resume=a.resume is not None)
     print("Launching: " + " ".join(cmd), flush=True)
     raise SystemExit(subprocess.run(cmd).returncode)
 

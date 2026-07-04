@@ -351,9 +351,10 @@ class RunRecorder:
             fh.write(text)
 
     def _write_manifest(self) -> None:
-        self._manifest_path().write_text(
-            json.dumps(self.manifest, indent=2), encoding="utf-8",
-        )
+        path = self._manifest_path()
+        tmp = path.with_name(path.name + ".tmp")
+        tmp.write_text(json.dumps(self.manifest, indent=2), encoding="utf-8")
+        os.replace(tmp, path)
 
     def _write_status(
         self,

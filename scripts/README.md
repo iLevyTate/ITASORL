@@ -21,3 +21,7 @@ python scripts/run_local.py bv3_regime_n10 --resume  # after any interruption
 ```
 
 Preflights: CUDA must be visible (override with `--allow-cpu`) and at least 4 GB free RAM. For expB2, progress checkpoints are written per (drift, seed) cell under `<run>/artifacts/cells/`.
+
+  If the latest-run pointer is lost or moved, resume a specific run directly:
+  `python scripts/run_local.py <profile> --resume fullruns/<dir>` (or
+  `python scripts/run_e2e.py --resume fullruns/<dir> --only expb2`).

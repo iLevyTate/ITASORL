@@ -91,6 +91,7 @@ def test_main_launches_mapped_command(monkeypatch, tmp_path):
     monkeypatch.setattr(run_local, "check_cuda", lambda allow_cpu: None)
     monkeypatch.setattr(run_local, "check_ram", lambda min_free_gb: None)
     monkeypatch.setattr(run_local, "default_run_dir", lambda: tmp_path / "run")
+    monkeypatch.setattr(run_local, "read_latest_run_dir", lambda: None)
 
     class Ret:
         returncode = 0
@@ -143,6 +144,81 @@ def test_build_cmd_rejects_unknown_run_mode():
     with pytest.raises(ValueError):
         run_local.build_cmd(dict(run_local.PROFILES["full"], run_mode="ful"),
                             RUN_DIR, resume=False)
+
+
+def _stub_launch(monkeypatch, calls):
+    class Ret:
+        returncode = 0
+
+    def fake_run(cmd, **kwargs):
+        calls["cmd"] = cmd
+        return Ret()
+
+    monkeypatch.setattr(run_local, "check_cuda", lambda allow_cpu: None)
+    monkeypatch.setattr(run_local, "check_ram", lambda min_free_gb: None)
+    monkeypatch.setattr(run_local.subprocess, "run", fake_run)
+
+
+def _make_unfinished_run(tmp_path):
+    run_dir = tmp_path / "run"
+    cells = run_dir / "artifacts" / "cells"
+    cells.mkdir(parents=True)
+    (cells / "cell_d0.00_s0.json").write_text("{}", encoding="utf-8")
+    (run_dir / "manifest.json").write_text('{"run_id": "x"}', encoding="utf-8")
+    return run_dir
+
+
+def test_fresh_start_blocked_by_unfinished_run(monkeypatch, tmp_path):
+    calls = {}
+    _stub_launch(monkeypatch, calls)
+    run_dir = _make_unfinished_run(tmp_path)
+    monkeypatch.setattr(run_local, "read_latest_run_dir", lambda: run_dir)
+    monkeypatch.setattr(sys, "argv", ["run_local.py", "b2_seed0"])
+    with pytest.raises(SystemExit) as exc:
+        run_local.main()
+    assert "unfinished run" in str(exc.value)
+    assert "cmd" not in calls
+
+
+def test_fresh_start_proceeds_when_last_run_finished(monkeypatch, tmp_path):
+    calls = {}
+    _stub_launch(monkeypatch, calls)
+    run_dir = _make_unfinished_run(tmp_path)
+    (run_dir / "manifest.json").write_text(
+        '{"run_id": "x", "finished_at_utc": "2026-07-03T00:00:00+00:00"}',
+        encoding="utf-8")
+    monkeypatch.setattr(run_local, "read_latest_run_dir", lambda: run_dir)
+    monkeypatch.setattr(run_local, "default_run_dir",
+                        lambda: tmp_path / "fresh")
+    monkeypatch.setattr(sys, "argv", ["run_local.py", "b2_seed0"])
+    with pytest.raises(SystemExit) as exc:
+        run_local.main()
+    assert exc.value.code == 0
+    assert "--results-dir" in calls["cmd"]
+
+
+def test_resume_accepts_explicit_run_dir(monkeypatch, tmp_path):
+    calls = {}
+    _stub_launch(monkeypatch, calls)
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    monkeypatch.setattr(sys, "argv",
+                        ["run_local.py", "b2_seed0", "--resume", str(run_dir)])
+    with pytest.raises(SystemExit) as exc:
+        run_local.main()
+    assert exc.value.code == 0
+    assert calls["cmd"][calls["cmd"].index("--resume") + 1] == str(run_dir)
+
+
+def test_resume_explicit_dir_missing_errors(monkeypatch, tmp_path):
+    calls = {}
+    _stub_launch(monkeypatch, calls)
+    monkeypatch.setattr(sys, "argv",
+                        ["run_local.py", "b2_seed0", "--resume",
+                         str(tmp_path / "nope")])
+    with pytest.raises(SystemExit):
+        run_local.main()
+    assert "cmd" not in calls
 
 
 def test_profiles_values_match_notebook_table():
