@@ -86,7 +86,11 @@ def test_load_missing_dir_returns_empty(tmp_path):
 
 def _run_main(tmp_path, monkeypatch, extra=(), cell_fn=None):
     """Run run_expB2.main() with a stubbed run_cell (no training, seconds not hours).
-    --quick gives drifts [0.0, 0.45] x seeds [0, 1] = 4 cells."""
+    --quick gives drifts [0.0, 0.45] x seeds [0, 1] = 4 cells.
+
+    NOTE: these tests run the serial (workers=1) path only; with --workers > 1,
+    spawned children re-import the module and would get the REAL run_cell
+    (hours of training), so never add --workers to these tests."""
     monkeypatch.setattr(run_expB2, "run_cell",
                         cell_fn or (lambda t: make_cell(t["drift"], t["seed"])))
     argv = ["run_expB2.py", "--quick", "--out-dir", str(tmp_path), *extra]
@@ -147,3 +151,25 @@ def test_resume_rejects_different_config(tmp_path, monkeypatch):
     with pytest.raises(SystemExit):
         _run_main(tmp_path, monkeypatch,
                   extra=["--resume", "--shaping_coef", "2.0"])
+
+
+def test_resume_with_more_seeds_runs_only_new_seeds(tmp_path, monkeypatch):
+    """The n=10 extension path: resume an n=2 run with --seeds 0 1 2."""
+    ran = []
+
+    def spy(task):
+        ran.append((task["drift"], task["seed"]))
+        return make_cell(task["drift"], task["seed"])
+
+    monkeypatch.setattr(run_expB2, "run_cell", spy)
+    base_argv = ["run_expB2.py", "--out-dir", str(tmp_path),
+                 "--updates", "1", "--n_eps", "1", "--max_steps", "1"]
+    monkeypatch.setattr(sys, "argv", base_argv + ["--seeds", "0", "1"])
+    run_expB2.main()
+    ran.clear()
+    monkeypatch.setattr(sys, "argv",
+                        base_argv + ["--seeds", "0", "1", "2", "--resume"])
+    run_expB2.main()
+    assert ran == [(0.0, 2), (0.45, 2)]
+    res = json.loads((tmp_path / "expB2_results.json").read_text())
+    assert len(res["0.45"]["survival"]["pool_target"]) == 3

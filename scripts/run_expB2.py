@@ -315,7 +315,7 @@ def main():
 
     def checkpoint():
         """Persist results after every cell so a crash in a long run loses at most one cell."""
-        with open(results_path, "w") as f:
+        with open(results_path, "w", encoding="utf-8") as f:
             json.dump({str(d): {g: res[d][g] for g in AG} for d in a.drifts}, f, indent=2, default=float)
 
     # One picklable knob dict per (drift, seed) cell; cells are independent.
@@ -340,10 +340,14 @@ def main():
     for (d, s) in sorted(resumed):
         print(f"resumed from checkpoint: drift={d:.2f} seed={s}", flush=True)
         record_cell(res, eng_log, resumed[(d, s)])
+    tasks = [t for t in tasks if (t["drift"], t["seed"]) not in resumed]
+    extra = sorted(set(resumed) - {(d, s) for d in a.drifts for s in a.seeds})
+    if extra:
+        print(f"  NOTE: {len(extra)} checkpointed cell(s) beyond the requested "
+              f"drifts x seeds grid are included in results: {extra}", flush=True)
     if resumed:
         print(f"Resume: {len(resumed)} cell(s) loaded from {cells_dir}, "
-              f"{len(tasks) - len(resumed)} to run.", flush=True)
-    tasks = [t for t in tasks if (t["drift"], t["seed"]) not in resumed]
+              f"{len(tasks)} to run.", flush=True)
     done = 0
     if a.workers > 1:
         import multiprocessing as mp
@@ -492,6 +496,7 @@ def main():
     os.makedirs(a.out_dir, exist_ok=True)
     fig_path = os.path.join(a.out_dir, "expB2_survival.png")
     plt.savefig(fig_path, dpi=130)
+    plt.close("all")
     print(f"saved {fig_path}")
 
 
