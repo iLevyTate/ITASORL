@@ -11,7 +11,7 @@ Usage (from repo root):
     python scripts/run_e2e.py              # full suite + recorded results
     python scripts/run_e2e.py --quick      # all experiments; B-v2 at reduced scale
     python scripts/run_e2e.py --results-dir results/runs/my_run
-    python scripts/run_e2e.py --resume     # continue latest interrupted run
+    python scripts/run_e2e.py --resume     # continue latest interrupted run (recorded --b2-* flags replay automatically)
     python scripts/run_e2e.py --resume fullruns/06292026_143022
     python scripts/run_e2e.py --only expb2 --b2-drift-mode regime --b2-dump-states runs/bv3
     python scripts/run_e2e.py --no-zip     # skip zip bundle
@@ -20,6 +20,7 @@ Usage (from repo root):
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
@@ -110,6 +111,28 @@ def build_b2_extra(args: argparse.Namespace, *, resume: bool = False) -> list[st
     return extra
 
 
+B2_FLAGS_FILE = "b2_flags.json"
+
+
+def resolve_b2_extra(args: argparse.Namespace, *, resume: bool, run_dir: Path) -> list[str]:
+    """Persist b2 flags on fresh runs; on resume, replay them unless the user
+    passed explicit --b2-* flags. Seeds and dump-states are not covered by the
+    expB2 config fingerprint, so a bare --resume without replay would silently
+    under-run an interrupted n=10 extension."""
+    extra = build_b2_extra(args)
+    flags_path = run_dir / B2_FLAGS_FILE
+    if not resume:
+        flags_path.write_text(json.dumps(extra), encoding="utf-8")
+    elif not extra and flags_path.is_file():
+        extra = json.loads(flags_path.read_text(encoding="utf-8"))
+        if extra:
+            print(f"Resume: replaying recorded B-v2 flags: {' '.join(extra)}",
+                  flush=True)
+    if resume:
+        extra = [*extra, "--resume"]
+    return extra
+
+
 def expand_skip(raw: list[str]) -> set[str]:
     aliases = {
         "pytest": {"pytest"},
@@ -182,7 +205,8 @@ def main() -> None:
         skip |= {s for s, _, _ in experiment_steps(quick=quick, b2_out=b2_out) if s != "expB2"}
 
     if args.only != "pytest":
-        b2_extra = build_b2_extra(args, resume=resume_dir is not None)
+        b2_extra = resolve_b2_extra(args, resume=resume_dir is not None,
+                                    run_dir=recorder.run_dir)
         for name, cmd, extra in experiment_steps(quick=quick, b2_out=b2_out, b2_extra=b2_extra):
             if name in skip:
                 print(f"\n--- skip {name} ---", flush=True)

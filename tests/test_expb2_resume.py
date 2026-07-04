@@ -200,3 +200,38 @@ def test_build_b2_extra_keeps_other_flags_with_resume():
     assert extra[-1] == "--resume"
     assert ["--drift-mode", "regime"] == extra[extra.index("--drift-mode"):
                                               extra.index("--drift-mode") + 2]
+
+
+def test_resolve_b2_extra_records_flags_on_fresh_run(tmp_path):
+    args = _e2e_args(b2_drift_mode="regime", b2_seeds=[0, 1])
+    extra = run_e2e.resolve_b2_extra(args, resume=False, run_dir=tmp_path)
+    assert "--resume" not in extra
+    saved = json.loads((tmp_path / run_e2e.B2_FLAGS_FILE).read_text())
+    assert saved == extra
+
+
+def test_resolve_b2_extra_replays_saved_flags_on_bare_resume(tmp_path):
+    run_e2e.resolve_b2_extra(
+        _e2e_args(b2_drift_mode="regime",
+                  b2_seeds=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
+        resume=False, run_dir=tmp_path)
+    extra = run_e2e.resolve_b2_extra(_e2e_args(), resume=True, run_dir=tmp_path)
+    assert extra[-1] == "--resume"
+    i = extra.index("--seeds")
+    assert extra[i + 1:i + 11] == [str(s) for s in range(10)]
+    assert extra[extra.index("--drift-mode") + 1] == "regime"
+
+
+def test_resolve_b2_extra_explicit_flags_win_on_resume(tmp_path):
+    run_e2e.resolve_b2_extra(_e2e_args(b2_seeds=[0, 1]), resume=False,
+                             run_dir=tmp_path)
+    extra = run_e2e.resolve_b2_extra(
+        _e2e_args(b2_seeds=[0, 1, 2]), resume=True, run_dir=tmp_path)
+    i = extra.index("--seeds")
+    assert extra[i + 1:i + 4] == ["0", "1", "2"]
+    assert extra[-1] == "--resume"
+
+
+def test_resolve_b2_extra_bare_resume_without_recorded_flags(tmp_path):
+    extra = run_e2e.resolve_b2_extra(_e2e_args(), resume=True, run_dir=tmp_path)
+    assert extra == ["--resume"]
