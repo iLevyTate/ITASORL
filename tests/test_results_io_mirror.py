@@ -95,3 +95,17 @@ def test_finalize_mirrors_summary_and_bundle(recorder, tmp_path):
     dest = tmp_path / "mirror" / recorder.run_dir.name
     assert (dest / "SUMMARY.md").is_file()
     assert (dest / "bundle.zip").is_file()
+
+
+def test_ckpt_sync_recopies_updated_source(recorder, tmp_path, monkeypatch):
+    import os as _os
+    monkeypatch.setenv("ITASORL_CKPT_SYNC_SEC", "0")
+    src = _add_cell_file(recorder)
+    recorder._sync_ckpt_mirror()
+    src.write_text('{"v": 2}', encoding="utf-8")
+    t = src.stat().st_mtime + 10
+    _os.utime(src, (t, t))
+    recorder._sync_ckpt_mirror()
+    mirrored = (tmp_path / "mirror" / recorder.run_dir.name
+                / "artifacts" / "cells" / "cell_d0.00_s0.json")
+    assert mirrored.read_text(encoding="utf-8") == '{"v": 2}'

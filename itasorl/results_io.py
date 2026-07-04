@@ -422,10 +422,17 @@ class RunRecorder:
 
     def _sync_ckpt_mirror(self) -> None:
         """Timed incremental mirror of artifacts/ (checkpoint cells, dumped
-        states) so a mid-step VM loss costs at most one interval of work."""
+        states) so a mid-step VM loss costs at most one interval of work.
+        The interval timer advances even when a sync attempt fails, so
+        worst-case data at risk is about two intervals."""
         if self._mirror_dir is None:
             return
-        interval = float(os.environ.get("ITASORL_CKPT_SYNC_SEC", "300"))
+        raw = os.environ.get("ITASORL_CKPT_SYNC_SEC", "300")
+        try:
+            interval = float(raw)
+        except ValueError:
+            print(f"WARNING: bad ITASORL_CKPT_SYNC_SEC={raw!r}; using 300.", flush=True)
+            interval = 300.0
         now = time.perf_counter()
         if (now - self._ckpt_last_sync) < interval:
             return
@@ -438,13 +445,17 @@ class RunRecorder:
             return
         dest_root = self._mirror_dir / self.run_dir.name / "artifacts"
         for src in src_root.rglob("*"):
-            if not src.is_file():
+            if not src.is_file() or src.suffix == ".part":
                 continue
             dest = dest_root / src.relative_to(src_root)
-            if dest.is_file() and dest.stat().st_mtime >= src.stat().st_mtime:
-                continue  # copy2 preserves mtime, so equal means already synced
+            # Tolerance window: DriveFS may truncate mtimes, and a torn copy
+            # must never be frozen by an inflated destination timestamp.
+            if dest.is_file() and dest.stat().st_mtime >= src.stat().st_mtime - 2.0:
+                continue
             dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dest)
+            tmp = dest.with_name(dest.name + ".part")
+            shutil.copy2(src, tmp)
+            os.replace(tmp, dest)
 
     def note_step(self, name: str, *, status: str) -> None:
         """Record a skipped or external step in manifest + status."""
