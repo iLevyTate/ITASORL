@@ -4,17 +4,18 @@ Use this with [`notebooks/colab_gpu.ipynb`](../notebooks/colab_gpu.ipynb). Ralph
 Claude Code loop does not run in Colab; this file maps **research next steps** to
 notebook **RUN_PROFILE** presets you can execute on GPU.
 
-Last updated: **2026-07-01**
+Last updated: **2026-07-04**
 
 ---
 
 ## Before you start
 
-1. **Runtime → Change runtime type → GPU** (T4, L4, A100 all work).
-2. **Mount Drive** when prompted (mirror + resume after disconnect).
-3. Set **`RUN_PROFILE`** in the config cell (not raw `RUN_MODE` unless you know why).
-4. Run cells through **keep-alive**, then the **run** cell. Leave the tab open.
-5. After the run, run the **compare** cell to check vs canonical artifacts.
+1. **File -> Save a copy in Drive** (the guard cell blocks the read-only GitHub copy).
+2. **Runtime -> Change runtime type -> GPU** (T4, L4, A100 all work).
+3. Pick **`RUN_PROFILE`** from the config-cell dropdown. `BRANCH` defaults to `main`;
+   change it only for testing unmerged code.
+4. **Runtime -> Run all**. Leave the tab open (keep-alive cell keeps the session awake).
+5. After the run, the reanalysis and compare cells run automatically.
 
 **Branch:** use `main` unless you need an unmerged fix (check open PRs).
 
@@ -46,9 +47,16 @@ Free Colab often disconnects around **90 min** on GPU.
 | `b2_only` | No | Resume; or run overnight on Pro |
 | `experiments_no_b2` | Yes | Single session |
 
-**Resume:** find `MyDrive/ITASORL_results/<run_folder>/manifest.json`, note steps with
-`"status": "ok"`, set `RESUME_RUN_DIR` in config, `FRESH_RUN = False`, re-run from
-keep-alive through run cell.
+**Resume:** reopen your Drive copy of the notebook and **Runtime -> Run all** again.
+Auto-resume finds the newest unfinished run in `MyDrive/ITASORL_results`, checks it
+matches the selected `RUN_PROFILE`, and continues it. Checkpoints mirror to Drive
+every ~5 min during the run, so at most a few minutes repeat. If the FUSE mount
+itself dies mid-run, the notebook watchdog force-remounts, and (last resort)
+uploads a resume pack via the Drive API so the next Run all still has manifest,
+b2 flags, status, and per-cell checkpoints to pick up from.
+
+To resume a specific folder instead (advanced): paste its path into the
+`RESUME_RUN_DIR` form field and Run all.
 
 ---
 
@@ -86,7 +94,7 @@ Then update `ralph/EXPERIMENT_STATUS.md` and `docs/FINDINGS.md` §9.
 
 | Symptom | Fix |
 |---------|-----|
-| Run died mid expB2 | Resume from Drive folder |
-| `CalledProcessError` on Drive write | Keep `RESULTS_ON_DRIVE = False`; mirror only |
+| Run died mid expB2 | Reopen Drive copy, Run all (auto-resume) |
+| Drive mount died mid-run | Watchdog force-remounts; falls back to Drive API resume pack |
 | CUDA False | Change runtime type, re-run GPU check cell |
 | Numbers differ from 06302026 | Expected (variance); compare per-seed with compare script |
