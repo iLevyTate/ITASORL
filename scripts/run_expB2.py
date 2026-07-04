@@ -28,8 +28,11 @@ from __future__ import annotations
 import _bootstrap  # noqa: F401
 
 import argparse
+import hashlib
 import json
 import os
+import subprocess
+from pathlib import Path
 
 import matplotlib
 import numpy as np
@@ -102,6 +105,69 @@ def cfg():
         a.hidden, a.ray_steps, a.pool_n, a.pool_steps = 64, 4, 40, 16
         a.mp_pairs, a.mp_prefix, a.mp_branch = 25, 12, 16
     return a
+
+
+def config_fingerprint(base: dict) -> str:
+    """Hash of the science-relevant config. Cells from different configs never mix;
+    dump_states is a path, not science, so it is excluded."""
+    fp = {k: v for k, v in base.items() if k != "dump_states"}
+    payload = json.dumps(fp, sort_keys=True, default=float)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def cell_file(cells_dir, drift: float, seed: int) -> Path:
+    return Path(cells_dir) / f"cell_d{drift:.2f}_s{seed}.json"
+
+
+def git_commit_short() -> str:
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short", "HEAD"],
+                             capture_output=True, text=True, check=True)
+        return out.stdout.strip()
+    except Exception:
+        return "unknown"
+
+
+def write_cell_file(cells_dir, fingerprint: str, commit: str, cell: dict) -> Path:
+    """Atomic write: a killed process never leaves a half-written checkpoint."""
+    cells_dir = Path(cells_dir)
+    cells_dir.mkdir(parents=True, exist_ok=True)
+    path = cell_file(cells_dir, cell["drift"], cell["seed"])
+    tmp = path.with_name(path.name + ".tmp")
+    with open(tmp, "w") as f:
+        json.dump({"fingerprint": fingerprint, "git_commit": commit,
+                   "cell": cell}, f, indent=2, default=float)
+    os.replace(tmp, path)
+    return path
+
+
+def load_cell_files(cells_dir, fingerprint: str) -> dict:
+    """Load checkpointed cells keyed by (drift, seed). Hard error on corrupt
+    files or fingerprint mismatch; warning only on git commit drift."""
+    done: dict[tuple[float, int], dict] = {}
+    cells_dir = Path(cells_dir)
+    if not cells_dir.is_dir():
+        return done
+    commit = git_commit_short()
+    for path in sorted(cells_dir.glob("cell_d*_s*.json")):
+        try:
+            with open(path) as f:
+                payload = json.load(f)
+            fp, cell = payload["fingerprint"], payload["cell"]
+        except Exception as exc:
+            raise SystemExit(
+                f"Corrupt checkpoint {path}: {exc}. "
+                "Delete this one file and rerun with --resume.")
+        if fp != fingerprint:
+            raise SystemExit(
+                f"Checkpoint {path} has fingerprint {fp}, current config is "
+                f"{fingerprint}. It belongs to a different experiment config: "
+                "use a fresh --out-dir, or delete the stale cells/ directory.")
+        if payload.get("git_commit", "unknown") != commit:
+            print(f"  WARNING: {path.name} was produced at commit "
+                  f"{payload.get('git_commit')} (now {commit})", flush=True)
+        done[(float(cell["drift"]), int(cell["seed"]))] = cell
+    return done
 
 
 def evaluate_agent(agent, norm, drift, a, dev, seed, agent_name=""):
