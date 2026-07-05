@@ -109,3 +109,14 @@ def test_ckpt_sync_recopies_updated_source(recorder, tmp_path, monkeypatch):
     mirrored = (tmp_path / "mirror" / recorder.run_dir.name
                 / "artifacts" / "cells" / "cell_d0.00_s0.json")
     assert mirrored.read_text(encoding="utf-8") == '{"v": 2}'
+
+
+def test_mirror_includes_profile_and_b2_flags(recorder, tmp_path):
+    """profile.txt + b2_flags.json must reach the mirror, or a fresh VM can
+    never match an unfinished Drive run to its profile for auto-resume."""
+    (recorder.run_dir / "profile.txt").write_text("b2_only\n", encoding="utf-8")
+    (recorder.run_dir / "b2_flags.json").write_text("[]", encoding="utf-8")
+    recorder._sync_mirror()
+    dest = tmp_path / "mirror" / recorder.run_dir.name
+    assert (dest / "profile.txt").is_file()
+    assert (dest / "b2_flags.json").is_file()

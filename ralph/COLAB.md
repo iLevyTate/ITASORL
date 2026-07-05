@@ -4,18 +4,26 @@ Use this with [`notebooks/colab_gpu.ipynb`](../notebooks/colab_gpu.ipynb). Ralph
 Claude Code loop does not run in Colab; this file maps **research next steps** to
 notebook **RUN_PROFILE** presets you can execute on GPU.
 
-Last updated: **2026-07-04**
+Last updated: **2026-07-05**
 
 ---
 
 ## Before you start
 
-1. **File -> Save a copy in Drive** (the guard cell blocks the read-only GitHub copy).
+1. (Optional, only to keep notebook edits) **File -> Save a copy in Drive**.
 2. **Runtime -> Change runtime type -> GPU** (T4, L4, A100 all work).
 3. Pick **`RUN_PROFILE`** from the config-cell dropdown. `BRANCH` defaults to `main`;
-   change it only for testing unmerged code.
+   change it only for testing unmerged code. `USE_DRIVE` (default on) mirrors
+   progress to `MyDrive/ITASORL_results` and enables cross-session resume; untick
+   it to skip the Drive permission popup (a crash then loses progress).
 4. **Runtime -> Run all**. Leave the tab open (keep-alive cell keeps the session awake).
-5. After the run, the reanalysis and compare cells run automatically.
+5. After the run, the reanalysis and compare cells run automatically and
+   `bundle.zip` downloads in your browser.
+
+The notebook is a thin shell: it runs `python scripts/run_e2e.py --profile
+<RUN_PROFILE> --drive-sync ...`; the profile table, checkpointing, Drive
+mirroring, and auto-resume all live in the repo scripts, so a stale saved copy
+of the notebook keeps working after the repo evolves.
 
 **Branch:** use `main` unless you need an unmerged fix (check open PRs).
 
