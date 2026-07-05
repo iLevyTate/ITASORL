@@ -50,10 +50,7 @@ Free Colab often disconnects around **90 min** on GPU.
 **Resume:** reopen your Drive copy of the notebook and **Runtime -> Run all** again.
 Auto-resume finds the newest unfinished run in `MyDrive/ITASORL_results`, checks it
 matches the selected `RUN_PROFILE`, and continues it. Checkpoints mirror to Drive
-every ~5 min during the run, so at most a few minutes repeat. If the FUSE mount
-itself dies mid-run, the notebook watchdog force-remounts, and (last resort)
-uploads a resume pack via the Drive API so the next Run all still has manifest,
-b2 flags, status, and per-cell checkpoints to pick up from.
+every ~5 min during the run, so at most a few minutes repeat.
 
 To resume a specific folder instead (advanced): paste its path into the
 `RESUME_RUN_DIR` form field and Run all.
@@ -95,6 +92,5 @@ Then update `ralph/EXPERIMENT_STATUS.md` and `docs/FINDINGS.md` §9.
 | Symptom | Fix |
 |---------|-----|
 | Run died mid expB2 | Reopen Drive copy, Run all (auto-resume) |
-| Drive mount died mid-run | Watchdog force-remounts; falls back to Drive API resume pack |
 | CUDA False | Change runtime type, re-run GPU check cell |
 | Numbers differ from 06302026 | Expected (variance); compare per-seed with compare script |
