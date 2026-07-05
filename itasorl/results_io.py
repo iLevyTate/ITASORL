@@ -410,7 +410,10 @@ class RunRecorder:
     def _sync_mirror_files(self, *, full: bool) -> None:
         dest_root = self._mirror_dir / self.run_dir.name
         dest_root.mkdir(parents=True, exist_ok=True)
-        for name in ("combined.log", "status.json", "manifest.json", "SUMMARY.md", "bundle.zip"):
+        # profile.txt + b2_flags.json must reach the mirror or a fresh VM can
+        # never match an unfinished Drive run to its profile for auto-resume.
+        for name in ("combined.log", "status.json", "manifest.json", "SUMMARY.md",
+                     "bundle.zip", "profile.txt", "b2_flags.json"):
             src = self.run_dir / name
             if src.is_file():
                 shutil.copy2(src, dest_root / name)

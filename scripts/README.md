@@ -4,10 +4,15 @@ Deterministic reproduction runners. Execute from the **repo root**:
 
 ```bash
 python scripts/run_e2e.py --quick     # pytest + all experiments (recorded)
+python scripts/run_e2e.py --profile bv3_regime   # named preset (see run_e2e.PROFILES)
 python scripts/run_expA.py            # Experiment A, L1
 python scripts/run_expB2.py           # Experiment B-v2 (GPU if available)
 python -m itasorl.experiment_b        # Experiment B smoke test
 ```
+
+`run_e2e.py --profile` is what the Colab notebook runs: the profile table,
+Drive mirroring (`--drive-sync DIR`) and auto-resume of an unfinished run of
+the same profile all live in `run_e2e.py`, so the notebook stays a thin shell.
 
 See the root `README.md` for the full list.
 
@@ -28,5 +33,5 @@ Preflights: CUDA must be visible (override with `--allow-cpu`) and at least 4 GB
 
 - `--b2-dump-states auto` places recurrent-state dumps under
   `<run_dir>/artifacts/states` so they are mirrored to Drive, included in
-  `bundle.zip`, and survive resume on a different machine. The Colab notebook
-  always uses `auto`; `run_local.py` keeps its explicit `<run_dir>/states`.
+  `bundle.zip`, and survive resume on a different machine. All profiles with
+  `dump_states=True` use `auto` (Colab and `run_local.py` alike).
