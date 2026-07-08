@@ -196,3 +196,31 @@ Format per entry:
   ~3.7 hr; PREREG_Bv3 sec.10) to test whether 0.65 is reachable by this trunk.
   Human-gated GPU run; command prepared, not launched.
 - Commit: docs-only (`ralph/EXPERIMENT_STATUS.md` + this entry); `fullruns/` is gitignored.
+
+## 2026-07-07 - sysid-aux CEILING run + verdict-label fix (H_B2 null confirmed)
+- Found: the pre-registered sysid-aux capacity ceiling (profile `bv3_ceiling`,
+  `fullruns/07072026`, T4, 206 min, commit 0e69d3d; `--updates 300 --drift-mode regime
+  --sysid-aux`, n=3) completed. Supervising the survival trunk directly on drag (a capacity
+  control, NOT H_B2 evidence) lifts the pooled target to only **0.622** @ drift 0.45 (90% CI
+  [0.576, 0.667]), barely above the unsupervised n=10 headline (0.610), while the
+  detectability-style matched-pair channel reaches **~0.80** (0.785, 0.771, 0.849);
+  ceiling(drag) 0.556; L0 controls at chance; leakage clean. Reading: identity IS decodable
+  when forced in (matched-pair 0.80), but the pooled persistent-direction readout saturates
+  ~0.62, so the 0.610 headline sits at the pooled probe's architectural ceiling. **Confirms
+  the null** (not a probe-capacity floor a stronger pooled probe would clear); does not
+  license chasing 0.65. L2/pooled line concluded; the "L3 if L2 null holds under scale" gate
+  is now MET.
+- Fix: the summary pipeline mislabeled a sysid-aux survival number as "weak / H_B2 NOT met".
+  Added `_b2_used_sysid_aux()` (reads `b2_flags.json`) in `itasorl/results_io.py`; ceiling
+  runs now stamp `sysid_aux` and relabel the survival verdict "ceiling" in `steps/expB2.json`,
+  and `build_summary` renders a CEILING banner + headline instead of the weak-trace verdict
+  (untrained/predictor controls untouched, numbers unchanged). New regression tests in
+  `tests/test_results_io_ceiling.py`.
+- Verify: `python -m pytest -q` -> 129 passed (3 new ceiling tests); `python -m ruff check .`
+  clean. Re-rendered `fullruns/07072026` SUMMARY: headline flips to CEILING, survival rows ->
+  ceiling, pooled 0.622 unchanged. Numbers match `SUMMARY.md` / `artifacts/expB2_results.json`.
+- Next: L3 generative-fingerprint scope spec in BACKLOG Questions for human sign-off (no
+  coding until approved, Tier-3 rule). Note: run finalize did not fully close (status.json
+  running:true, no bundle.zip); science complete (manifest expB2 ok, exit 0).
+- Commit: this session (`itasorl/results_io.py`, `tests/test_results_io_ceiling.py`,
+  `ralph/EXPERIMENT_STATUS.md`, `ralph/BACKLOG.md`, this entry); `fullruns/` is gitignored.

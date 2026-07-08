@@ -3,7 +3,7 @@
 Ralph reads this **every run** before choosing work. Update it when new
 `fullruns/` appear, canonical artifacts change, or conclusions shift.
 
-Last updated: **2026-07-07** (post B-v3 regime n=10 power extension)
+Last updated: **2026-07-07** (post sysid-aux CEILING run; B-v3 pooled line concluded)
 
 ---
 
@@ -13,7 +13,11 @@ Last updated: **2026-07-07** (post B-v3 regime n=10 power extension)
 Organisms trained only on prediction stay at chance for world identity (~0.51).
 Survival pressure (B-v2) does **not** reach the pre-registered encoding bar (0.65).
 The identifiable, policy-relevant B-v3 regime (per-episode constant drag) lifts the
-survival probe to 0.610 at n=10, still below 0.65.
+survival probe to 0.610 at n=10, still below 0.65. The pre-registered sysid-aux ceiling
+confirms this is near-architectural: even with the survival trunk supervised directly on
+drag, the pooled probe reaches only ~0.62, while the matched-pair detectability channel
+reaches ~0.80. Identity is decodable when forced in; the pooled persistent-direction
+readout simply saturates below the bar.
 
 ---
 
@@ -24,6 +28,7 @@ survival probe to 0.610 at n=10, still below 0.65.
 | `fullruns/06292026` | quick (60 upd, 2 seeds) | `fbae1e5` | L4 | 22 min | **0.473** |
 | `fullruns/06302026` | full (300 upd, 3 seeds) | `4c16be6` | T4 | 238 min | **0.523 ± 0.045** |
 | `fullruns/07062026` | full (300 upd, 10 seeds, regime B-v3) | `820849f` | RTX 4050 | 337 min | **0.610 +/- 0.047** |
+| `fullruns/07072026` | full (300 upd, 3 seeds, regime, sysid-aux CEILING) | `0e69d3d` | T4 | 206 min | **0.622** pooled / **~0.80** matched-pair (capacity ref) |
 
 Exp A and Exp B metrics are **byte-identical** between quick and full runs.
 Long runtime changed B-v2 numerics modestly (+0.05) but **not the verdict**.
@@ -42,7 +47,20 @@ Survival 0.610 (90% CI [0.585, 0.634]) beats untrained 0.500 and predictor 0.513
 decisive. Volatility readout (target_var 0.535, target_full 0.611) also below 0.65. L0
 control equivalent to chance; manipulation check passed. Dissociation: identity target
 0.610 > momentary drag-tracking ceiling 0.487 (not merely reactive drag-tracking).
-Next per PREREG_Bv3 sec.10: report the sysid-aux capacity ceiling (profile `bv3_ceiling`).
+
+Sysid-aux CEILING (07072026, n=3, T4, 206 min, commit 0e69d3d): supervising the survival
+trunk directly on drag (breaks readout-not-reward; a capacity reference, NOT H_B2 evidence)
+lifts the pooled target to only 0.622 @ drift 0.45 (90% CI [0.576, 0.667]), barely above
+the unsupervised n=10 headline (0.610). The pre-registered detectability-style matched-pair
+channel reaches ~0.80 (0.785, 0.771, 0.849); ceiling(drag) 0.556. Reading: world identity
+IS linearly decodable from this trunk when forced in (matched-pair ~0.80), but the pooled
+persistent-direction readout saturates near ~0.62, so the 0.610 headline sits at the pooled
+probe's architectural ceiling. This CONFIRMS the null (not a probe-capacity floor a stronger
+pooled probe would clear) and does not license chasing 0.65. L2/pooled line concluded; the
+pre-registered "L3 if L2 null holds under scale" gate is now met. Next: L3
+generative-fingerprint scope spec for human sign-off (BACKLOG Questions). NOTE: the run
+finalize did not fully close (status.json still running:true, no bundle.zip); the science is
+complete (manifest expB2 ok, exit 0, results.json + png present).
 
 ---
 
@@ -76,9 +94,12 @@ Narrative: `docs/FINDINGS.md` §7 (next steps), §9 (B-v2).
 3. **Reactive vs representational:** Agent may exploit felt drag without encoding
    persistent world identity; held-out / common-garden probe not yet implemented.
    (07062026: identity target 0.610 > drag-tracking ceiling 0.487 is suggestive of a
-   persistent signal, but the held-out probe remains the clean test.)
+   persistent signal, but the held-out probe remains the clean test. 07072026 sysid-aux
+   ceiling: pooled saturates ~0.62 even when supervised while matched-pair reaches ~0.80,
+   consistent with a decodable-but-not-pooled-persistent signal.)
 4. **L3 artifact:** Generative fingerprint (§7.3) not built; highest-interest
-   direction if L2 null holds under scale.
+   direction if L2 null holds under scale. Gate now MET (n=10 null + sysid-aux ceiling
+   confirmation); scope spec pending human sign-off in BACKLOG Questions.
 
 ---
 

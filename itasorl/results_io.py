@@ -235,6 +235,20 @@ def _encodes(auroc: float | None, threshold: float = 0.60) -> str | None:
     return "weak"         # faint trace (B-v2 survival ~0.60)
 
 
+def _b2_used_sysid_aux(run_dir: Path) -> bool:
+    """True when the B-v2 run forwarded --sysid-aux: the survival trunk was
+    supervised on drag (a CEILING/capacity control that deliberately breaks
+    readout-not-reward). Its survival verdict is a capacity reference, NOT H_B2
+    evidence, so the summary must label it as a ceiling rather than a weak trace."""
+    flags_path = run_dir / "b2_flags.json"
+    if not flags_path.is_file():
+        return False
+    try:
+        return "--sysid-aux" in json.loads(flags_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError, ValueError):
+        return False
+
+
 def _load_expb2_json(path: Path) -> dict[str, Any] | None:
     if not path.is_file():
         return None
@@ -520,6 +534,18 @@ class RunRecorder:
             b2_metrics = _load_expb2_json(b2_json)
             if b2_metrics:
                 metrics["agents_by_drift"] = b2_metrics
+            if _b2_used_sysid_aux(self.run_dir):
+                # CEILING run: the survival trunk was supervised on drag, so its
+                # verdict is a capacity reference, not H_B2 evidence. Relabel the
+                # survival verdict so the persisted JSON cannot be misread as a
+                # headline result downstream (e.g. an EXPERIMENT_STATUS refresh).
+                metrics["sysid_aux"] = True
+                if metrics.get("survival_pool_target_mean") is not None:
+                    metrics["organism_encodes_world"] = "ceiling"
+                for cell in metrics.get("agents_by_drift", {}).values():
+                    if "survival" in cell:
+                        cell["survival"]["organism_encodes_world"] = "ceiling"
+            if b2_metrics or metrics.get("sysid_aux"):
                 metrics_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
         status = "ok" if proc.returncode == 0 else "failed"
@@ -653,6 +679,8 @@ def _section(lines: list[str], steps: dict, name: str, fn, run_dir: Path) -> Non
     if not metrics_path.is_file():
         return
     metrics = json.loads(metrics_path.read_text(encoding="utf-8"))
+    if name == "expB2" and _b2_used_sysid_aux(run_dir):
+        metrics["sysid_aux"] = True  # authoritative from b2_flags.json; works on old dirs
     lines.append(f"### {name}")
     lines.append("")
     fn(lines, metrics)
@@ -696,15 +724,26 @@ def _summarize_expB_surprise(lines: list[str], m: dict) -> None:
 
 
 def _summarize_expB2(lines: list[str], m: dict) -> None:
-    lines.append("*Organism under survival pressure (B-v2 pooled probe):*")
+    ceiling = bool(m.get("sysid_aux"))
+    if ceiling:
+        lines.append(
+            "*SYSID-AUX CEILING run: the survival trunk was supervised on drag "
+            "(capacity control). Survival numbers below are a capacity reference, "
+            "NOT H_B2 evidence; untrained/predictor stay unaffected controls.*"
+        )
+    else:
+        lines.append("*Organism under survival pressure (B-v2 pooled probe):*")
     lines.append("")
     agents = m.get("agents_by_drift") or {}
     for drift in sorted(agents, key=float):
         lines.append(f"**drift {drift}**")
         for agent, stats in agents[drift].items():
+            verdict = stats.get("organism_encodes_world", "?")
+            if ceiling and agent == "survival":
+                verdict = "ceiling"
             lines.append(
                 f"- `{agent}`: pool target **{stats['pool_target_mean']:.3f}** "
-                f"→ **{stats.get('organism_encodes_world', '?')}**"
+                f"→ **{verdict}**"
             )
         lines.append("")
 
@@ -718,7 +757,13 @@ def _headline(steps: dict, run_dir: Path) -> str:
             m = json.loads(mp.read_text(encoding="utf-8"))
             surv = m.get("survival_pool_target_mean")
             if surv is not None:
-                if abs(surv - 0.5) < 0.05:
+                if _b2_used_sysid_aux(run_dir):
+                    parts.append(
+                        "Sysid-aux **CEILING** run: with the survival trunk supervised "
+                        f"on drag, the pooled target reaches only ≈ {surv:.2f}, a capacity "
+                        "reference (how far this trunk CAN be pushed), NOT H_B2 evidence."
+                    )
+                elif abs(surv - 0.5) < 0.05:
                     parts.append(
                         "Under survival pressure, the organism's internal state still sits "
                         "**at chance** for world identity."
