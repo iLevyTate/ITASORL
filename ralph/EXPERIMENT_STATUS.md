@@ -97,7 +97,7 @@ Narrative: `docs/FINDINGS.md` §7 (next steps), §9 (B-v2).
    persistent signal, but the held-out probe remains the clean test. 07072026 sysid-aux
    ceiling: pooled saturates ~0.62 even when supervised while matched-pair reaches ~0.80,
    consistent with a decodable-but-not-pooled-persistent signal.)
-4. **L3 artifact:** Generative fingerprint (§7.3) not built; highest-interest
+4. **L3 artifact:** Generative fingerprint (§7.2) not built; highest-interest
    direction if L2 null holds under scale. Gate now MET (n=10 null + sysid-aux ceiling
    confirmation); scope spec pending human sign-off in BACKLOG Questions.
 

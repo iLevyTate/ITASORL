@@ -250,6 +250,30 @@ Format per entry:
 - Commit: this session (`tests/test_experiment_b2.py`, `ralph/NEXT_STEPS.md`,
   `ralph/BACKLOG.md`, this entry).
 
+## 2026-07-08 - FINDINGS sec.7 rewrite: closed vs open levers (human-directed)
+- Found: BACKLOG P3 / NEXT_STEPS Tier 2. FINDINGS sec.7 ("Next steps") listed the
+  survival-coupling lever as item 1 yet closed with "the real Dreamer-style version of
+  the claim", reading like an OPEN lever even though B-v2 (0.523) and the B-v3
+  identifiable-regime + sysid-aux ceiling follow-ups had already returned it negative.
+- Fix: human chose "all three" (ship + inline B-v3 numbers + reorganize). Retitled sec.7
+  "Levers: tested and open" and split into 7.1 Closed levers (survival coupling as a
+  strengthened negative with canonical 0.523 plus inlined B-v3 0.610 @ n=10, 90% CI
+  [0.585, 0.634], and sysid-aux ceiling ~0.62 pooled vs ~0.80 matched-pair; the
+  multi-step objective and probe-class/power items folded in as closed) and 7.2 Open
+  directions (L3 generative fingerprint, held-out/common-garden probe, remaining
+  objective variants). The reorg also makes sec.9's pre-existing "lever from sec.7.1"
+  reference resolve for the first time; fixed the EXPERIMENT_STATUS sec.7.3->7.2 L3
+  pointer to match.
+- Verify: docs-only, no code touched (pytest/ruff unaffected; suite last green at 138).
+  Re-read the rendered sec.7 and confirmed all numbers match EXPERIMENT_STATUS
+  (0.523 canonical B-v2, 0.610 n=10 B-v3, ceiling 0.622/~0.80) and honor the no-long-dash
+  house style. B-v3 artifact remains un-promoted (candidate only); numbers cited with the
+  PREREGISTRATION_Bv3 provenance rather than implying promotion.
+- Next: no in-loop [ready] items remain. Open work is human-gated (L3 scope sign-off) or
+  tracking-only (stale BACKLOG line-13 artifact-comparison helper; script already exists).
+- Commit: this session (`docs/FINDINGS.md`, `ralph/EXPERIMENT_STATUS.md`,
+  `ralph/NEXT_STEPS.md`, `ralph/BACKLOG.md`, this entry).
+
 ## 2026-07-08 - extreme-latent env-action bounds safety test
 - Found: BACKLOG P3 / NEXT_STEPS Tier 2. `agent_ac.to_env_action` squashes the unbounded
   Gaussian policy latent into the world's actuator ranges via sigmoid/tanh, but the only

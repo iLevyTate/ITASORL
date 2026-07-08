@@ -23,7 +23,7 @@ Mark status: `[ready]` Ralph can implement · `[blocked]` needs human · `[done]
 |--------|------|-----------|
 | `[done]` | `collect_pool` / early-death guard tests (2026-07-08): `test_collect_pool_excludes_early_deaths` (harsh E0 forces a mix; only full-length survivors returned, aligned) + `test_pooled_readout_too_few_survivors_guard` (stubbed <5-survivor pool -> all-NaN `too_few_survivors` result, no crash). | Ensures B-v2 pools are not silently biased under harsh metabolism. |
 | `[done]` | Extreme latent → env action bounds test (2026-07-08): `test_agent_ac.py::test_env_action_bounded_for_extreme_latents` feeds raw latents up to +/-1e8 through `to_env_action`; asserts thrust in [0,1], turn in [-1,1], binaries in {0,1}, all finite. | Safety on actor-critic squash. |
-| `[ready]` | Update `docs/FINDINGS.md` §7 item 1 to reference §9 replication (0.523) and retire "attempted" ambiguity if wording still implies open positive. | Docs aligned with canonical artifact. |
+| `[done]` | Rewrote `docs/FINDINGS.md` §7 (2026-07-08): retitled "Levers: tested and open" and split into 7.1 Closed levers (survival coupling now a strengthened negative with B-v2 0.523, B-v3 0.610 @ n=10, sysid-aux ceiling ~0.62 vs matched-pair ~0.80 inlined; multi-step + probe/power folded in) and 7.2 Open directions (L3, held-out probe, remaining variants). Fixed the now-live §7.1 ref in §9 and the §7.3->§7.2 ref in EXPERIMENT_STATUS. | Docs aligned with canonical artifact. |
 
 ---
 
