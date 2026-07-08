@@ -27,8 +27,8 @@ def _notebook_config_source() -> str:
 
 
 NOTEBOOK_PROFILES = {"quick", "full", "bv3_regime", "bv3_regime_n10",
-                     "bv2_ceiling", "bv3_ceiling", "b2_only", "b2_seed0",
-                     "experiments_no_b2"}
+                     "bv2_ceiling", "bv3_ceiling", "bv3_ceiling_n10",
+                     "b2_only", "b2_seed0", "experiments_no_b2"}
 
 
 def test_profiles_match_notebook_table():

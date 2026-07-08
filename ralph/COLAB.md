@@ -29,6 +29,7 @@ Last updated: **2026-07-04**
 | `full` | ~4 hr | Full e2e, B-v2 at 300 updates / 3 seeds | Replicate `fullruns/06302026` |
 | `b2_seed0` | ~75 min | **Only** expB2, seed 0, 300 updates | Diagnose replication gap (Colab seed 0 was 0.586) |
 | `b2_only` | ~3.7 hr | **Only** expB2, 3 seeds, 300 updates | Re-run B-v2 without repeating A/B |
+| `bv3_ceiling_n10` | ~11.5 hr | **Only** expB2, sysid-aux, 10 seeds, 300 updates, regime | Tighten the capacity ceiling (n=3 CI [0.576, 0.667] straddled 0.65) |
 | `experiments_no_b2` | ~15 min | All steps except expB2 | Confirm A/B unchanged; skip long GPU step |
 
 Reference numbers (canonical): survival @ drift 0.45 = **0.523 ± 0.045**; SESOI = **0.65**.
@@ -45,6 +46,7 @@ Free Colab often disconnects around **90 min** on GPU.
 | `full` | Often no | Drive mirror; **resume** after disconnect |
 | `b2_seed0` | Borderline | Keep-alive + resume if needed |
 | `b2_only` | No | Resume; or run overnight on Pro |
+| `bv3_ceiling_n10` | No (~11.5 hr) | Resume across sessions; or run local via `run_local.py bv3_ceiling_n10` |
 | `experiments_no_b2` | Yes | Single session |
 
 **Resume:** reopen your Drive copy of the notebook and **Runtime -> Run all** again.
