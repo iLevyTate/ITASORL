@@ -21,7 +21,7 @@ Mark status: `[ready]` Ralph can implement · `[blocked]` needs human · `[done]
 
 | Status | Item | Rationale |
 |--------|------|-----------|
-| `[ready]` | `collect_pool` / early-death guard tests (BACKLOG P2). | Ensures B-v2 pools are not silently biased under harsh metabolism. |
+| `[done]` | `collect_pool` / early-death guard tests (2026-07-08): `test_collect_pool_excludes_early_deaths` (harsh E0 forces a mix; only full-length survivors returned, aligned) + `test_pooled_readout_too_few_survivors_guard` (stubbed <5-survivor pool -> all-NaN `too_few_survivors` result, no crash). | Ensures B-v2 pools are not silently biased under harsh metabolism. |
 | `[ready]` | Extreme latent → env action bounds test (BACKLOG P3). | Safety on actor-critic squash. |
 | `[ready]` | Update `docs/FINDINGS.md` §7 item 1 to reference §9 replication (0.523) and retire "attempted" ambiguity if wording still implies open positive. | Docs aligned with canonical artifact. |
 

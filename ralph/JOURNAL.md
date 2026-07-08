@@ -249,3 +249,28 @@ Format per entry:
   test (P2), extreme-latent action-bounds test (P3), FINDINGS sec.7 wording (P3).
 - Commit: this session (`tests/test_experiment_b2.py`, `ralph/NEXT_STEPS.md`,
   `ralph/BACKLOG.md`, this entry).
+
+## 2026-07-08 - collect_pool early-death / too_few_survivors guard tests
+- Found: next-highest [ready] item (NEXT_STEPS Tier 2 / BACKLOG P2). Under the harsh B-v2
+  metabolism, `collect_pool` drops episodes that die before `steps`, and `pooled_readout`
+  returns a NaN `too_few_survivors` sentinel when either pool has <5 survivors. Neither the
+  drop-only-full-length invariant nor the guard branch had a test, so a regression could
+  silently dilute the pool or emit a spurious AUROC from a near-empty pool.
+- Fix: added two tests to `tests/test_experiment_b2.py`. (1)
+  `test_collect_pool_excludes_early_deaths` monkeypatches `SURVIVAL_METAB` E0 to 0.2 to force
+  a real MIX (6/10 survive at steps=12), then asserts only full-length survivors are returned
+  (no truncated/padded dead episodes) with H/speed aligned. (2)
+  `test_pooled_readout_too_few_survivors_guard` stubs `collect_pool` to return 3 (<5)
+  survivors and asserts `pooled_readout` returns `too_few_survivors is True` with every core
+  metric NaN and no exception - decoupling the guard branch from the metabolism so it is fast
+  and platform-independent.
+- Verify: pre-flight scratch confirmed the death regime is stable (6/10 survivors across E0
+  0.08-0.2 at steps=12) and the stub triggers the guard with all core keys NaN.
+  `python -m pytest -q` -> 137 passed (was 135; +2); `python -m ruff check .` -> clean.
+- Next: remaining in-loop [ready] items are the extreme-latent action-bounds test (P3,
+  agent_ac.to_env_action) and the FINDINGS sec.7 wording tightening (P3). L3 scope still
+  blocked on human sign-off. Also noticed the "artifact comparison helper" BACKLOG P2 (line
+  13) looks stale - `scripts/compare_expB2_artifacts.py` already exists and NEXT_STEPS marks
+  it [done]; left untouched (out of scope for this atomic change).
+- Commit: this session (`tests/test_experiment_b2.py`, `ralph/NEXT_STEPS.md`,
+  `ralph/BACKLOG.md`, this entry).
