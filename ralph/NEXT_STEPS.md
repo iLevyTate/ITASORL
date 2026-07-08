@@ -22,7 +22,7 @@ Mark status: `[ready]` Ralph can implement · `[blocked]` needs human · `[done]
 | Status | Item | Rationale |
 |--------|------|-----------|
 | `[done]` | `collect_pool` / early-death guard tests (2026-07-08): `test_collect_pool_excludes_early_deaths` (harsh E0 forces a mix; only full-length survivors returned, aligned) + `test_pooled_readout_too_few_survivors_guard` (stubbed <5-survivor pool -> all-NaN `too_few_survivors` result, no crash). | Ensures B-v2 pools are not silently biased under harsh metabolism. |
-| `[ready]` | Extreme latent → env action bounds test (BACKLOG P3). | Safety on actor-critic squash. |
+| `[done]` | Extreme latent → env action bounds test (2026-07-08): `test_agent_ac.py::test_env_action_bounded_for_extreme_latents` feeds raw latents up to +/-1e8 through `to_env_action`; asserts thrust in [0,1], turn in [-1,1], binaries in {0,1}, all finite. | Safety on actor-critic squash. |
 | `[ready]` | Update `docs/FINDINGS.md` §7 item 1 to reference §9 replication (0.523) and retire "attempted" ambiguity if wording still implies open positive. | Docs aligned with canonical artifact. |
 
 ---

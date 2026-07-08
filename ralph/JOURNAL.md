@@ -250,6 +250,25 @@ Format per entry:
 - Commit: this session (`tests/test_experiment_b2.py`, `ralph/NEXT_STEPS.md`,
   `ralph/BACKLOG.md`, this entry).
 
+## 2026-07-08 - extreme-latent env-action bounds safety test
+- Found: BACKLOG P3 / NEXT_STEPS Tier 2. `agent_ac.to_env_action` squashes the unbounded
+  Gaussian policy latent into the world's actuator ranges via sigmoid/tanh, but the only
+  test (`test_act_returns_valid_env_action_and_finite_logp`) exercised TYPICAL obs. Nothing
+  confirmed the bounds hold for pathological latents, and an escaped bound could NaN the
+  physics integrator mid-run.
+- Fix: added `tests/test_agent_ac.py::test_env_action_bounded_for_extreme_latents` - feeds
+  raw latents at magnitudes 50, 1e3, 1e4, 1e8 (both signs on both continuous dims) through
+  `to_env_action` and asserts thrust in [0,1], turn in [-1,1], binaries in {0,1}, all finite.
+- Verify: pre-flight scratch confirmed the squash saturates gracefully at every magnitude up
+  to 1e8 (sigmoid underflows to exactly 0.0, tanh clamps to +/-1.0, binaries pass through),
+  so no clamp() is required. `python -m pytest -q` -> 138 passed (was 137; +1);
+  `python -m ruff check .` -> clean.
+- Next: only P3 doc wording remains in-loop (FINDINGS sec.7 item 1 tightening) plus the stale
+  BACKLOG line-13 "artifact comparison helper" (script already exists) - both left for human
+  review of scientific phrasing / tracking cleanup. L3 scope still blocked on human sign-off.
+- Commit: this session (`tests/test_agent_ac.py`, `ralph/NEXT_STEPS.md`, `ralph/BACKLOG.md`,
+  this entry).
+
 ## 2026-07-08 - collect_pool early-death / too_few_survivors guard tests
 - Found: next-highest [ready] item (NEXT_STEPS Tier 2 / BACKLOG P2). Under the harsh B-v2
   metabolism, `collect_pool` drops episodes that die before `steps`, and `pooled_readout`

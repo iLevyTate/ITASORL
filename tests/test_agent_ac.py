@@ -38,6 +38,23 @@ def test_act_returns_valid_env_action_and_finite_logp():
     assert h2.shape == (B, a.hidden)
 
 
+def test_env_action_bounded_for_extreme_latents():
+    """The sigmoid/tanh squash must keep the env action inside the world's actuator
+    ranges (thrust [0,1], turn [-1,1]) even for pathological raw latents far outside the
+    typical sample range, and stay finite - no NaN/inf from saturation. If an extreme
+    actor output escaped these bounds the physics integrator could silently NaN mid-run.
+    Binaries pass through unchanged, preserving the caller's {0,1} guarantee."""
+    n_bin = ACT - 2
+    for mag in (50.0, 1e3, 1e4, 1e8):
+        raw_c = torch.tensor([[mag, -mag], [-mag, mag]])          # both signs on both dims
+        b = torch.tensor([[1.0] * n_bin, [0.0] * n_bin])
+        env = RecurrentActorCritic.to_env_action(raw_c, b)
+        assert torch.isfinite(env).all(), f"non-finite env action at latent magnitude {mag}"
+        assert (env[:, 0] >= 0).all() and (env[:, 0] <= 1).all(), f"thrust out of [0,1] at {mag}"
+        assert (env[:, 1] >= -1).all() and (env[:, 1] <= 1).all(), f"turn out of [-1,1] at {mag}"
+        assert torch.isin(env[:, 2:], torch.tensor([0.0, 1.0])).all(), f"binaries not in {{0,1}} at {mag}"
+
+
 def test_deterministic_act_is_repeatable():
     a = _agent()
     obs, prev, h = torch.randn(B, OBS), torch.zeros(B, ACT), a.initial_state(B, "cpu")
