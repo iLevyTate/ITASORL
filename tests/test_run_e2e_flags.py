@@ -76,7 +76,7 @@ def test_auto_recorded_raw_and_reresolved_on_resume(tmp_path):
 def test_profile_table_has_expected_entries():
     assert set(run_e2e.PROFILES) == {
         "quick", "full", "bv3_regime", "bv3_regime_n10", "bv2_ceiling",
-        "bv3_ceiling", "b2_only", "b2_seed0", "experiments_no_b2"}
+        "bv3_ceiling", "bv3_ceiling_n10", "b2_only", "b2_seed0", "experiments_no_b2"}
 
 
 @pytest.mark.parametrize("name", sorted(run_e2e.PROFILES))
