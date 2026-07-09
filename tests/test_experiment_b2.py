@@ -22,12 +22,15 @@ from itasorl.experiment_b2 import (  # noqa: E402
     compute_gae,
     leakage_audit_b2,
     matched_pair_recurrent_rollout,
+    pooled_readout,
 )
 from itasorl.stats import equivalence_test  # noqa: E402
 from itasorl.world import WorldParams  # noqa: E402
 
 P = WorldParams(k_land=1.5, k_water=1.5, gravity=0.4)
 RS = 4
+# Every device the box exposes: CPU always, CUDA only when present (skipped in CI).
+DEVICES = ["cpu"] + (["cuda"] if torch.cuda.is_available() else [])
 
 
 def _agent_norm():
@@ -74,6 +77,44 @@ def test_collect_pool_anchors_aligned():
     H, spd, energy, food, drag = out
     k = H.shape[0]
     assert spd.shape == (k,) and energy.shape == (k,) and food.shape == (k,) and drag.shape == (k,)
+
+
+def test_collect_pool_excludes_early_deaths(monkeypatch):
+    """Under harsh metabolism some episodes die before `steps`; those must be DROPPED,
+    never truncated or padded, so the pool holds only full-length survivors. A shorter
+    dead episode leaking in would silently bias the B-v2 readout. Here a lowered starting
+    energy forces a MIX of deaths and survivors."""
+    import itasorl.experiment_b2 as b2
+    monkeypatch.setattr(b2, "SURVIVAL_METAB",
+                        {"E0": 0.2, "basal_E": 0.4, "Hyd0": 8.0, "basal_Hyd": 0.005})
+    agent, norm = _agent_norm()
+    n_eps, steps = 10, 12
+    H, spd = collect_pool(agent, norm, P, 0.45, n_eps, steps, "cpu", 999, RS)
+    assert 0 < H.shape[0] < n_eps, "expected a MIX of early deaths and full-length survivors"
+    assert H.shape[1] == steps and all(row.shape[0] == steps for row in H), \
+        "a non-full-length (dead/truncated) episode leaked into the pool"
+    assert H.shape[0] == spd.shape[0], "H and speeds misaligned after dropping early deaths"
+
+
+def test_pooled_readout_too_few_survivors_guard(monkeypatch):
+    """When fewer than 5 episodes survive in EITHER pool, the readout must return a
+    well-formed all-NaN result flagged `too_few_survivors` - never crash, never emit a
+    spurious AUROC from a handful of episodes. Guards the harsh-metabolism edge where the
+    pool nearly empties. A `collect_pool` stub returns 3 (<5) survivors deterministically."""
+    import itasorl.experiment_b2 as b2
+
+    def _tiny_pool(*args, return_anchors=False, **kw):
+        steps, hid, k = args[5], args[0].hidden, 3           # 3 < 5 -> guard must fire
+        H, s = np.zeros((k, steps, hid), np.float32), np.zeros(k)
+        return (H, s, np.zeros(k), np.zeros(k), np.zeros(k)) if return_anchors else (H, s)
+
+    monkeypatch.setattr(b2, "collect_pool", _tiny_pool)
+    agent, norm = _agent_norm()
+    out = pooled_readout(agent, norm, P, 0.45, n_eps=10, steps=6, ray_steps=RS, device="cpu")
+    assert out["too_few_survivors"] is True
+    for key in ("target", "target_lo", "target_hi", "target_var", "target_full",
+                "selectivity", "speed", "anchor_energy", "ceiling_drag"):
+        assert np.isnan(out[key]), f"{key} must be NaN when the pool is too small"
 
 
 def _ep(label, rsum):
@@ -351,6 +392,38 @@ def test_matched_pair_L0_bit_identical_regime_mode(monkeypatch):
     assert len(auth) >= 1
     for a, s in zip(auth, surr):
         assert np.array_equal(a["H"], s["H"]), "L0 branches diverged under regime mode"
+
+
+@pytest.mark.parametrize("device", DEVICES)
+def test_matched_pair_L0_bit_identical_on_device(device):
+    """The keystone L0 confound control must hold on EVERY device, not just CPU.
+    A GPU kernel that broke branch bit-identity would silently manufacture a
+    world-identity signal on GPU runs only - a confound that could masquerade as
+    a positive result. Guards the CUDA path used by every `fullruns/` GPU run."""
+    agent, norm = _agent_norm()
+    agent = agent.to(device)
+    auth, surr = matched_pair_recurrent_rollout(agent, norm, P, 0.0, n_pairs=3, prefix_steps=4,
+                                                branch_steps=6, ray_steps=RS, device=device)
+    assert len(auth) >= 1
+    for a, s in zip(auth, surr):
+        assert np.array_equal(a["H"], s["H"]), f"L0 branches diverged on {device}"
+
+
+@pytest.mark.parametrize("device", DEVICES)
+def test_readout_states_deterministic_across_runs(device):
+    """Same device + same seeds => bit-identical recurrent states across a repeat
+    run, so every downstream probe AUROC is identical by construction. This is the
+    invariant the replication gap (lab 0.595 vs Colab 0.523) is measured against:
+    within a device the pipeline is deterministic, so any surviving cross-run drift
+    is attributable to device / seed / code differences, not our readout. Cross-DEVICE
+    equality is deliberately NOT asserted (CPU vs CUDA float reductions differ)."""
+    agent, norm = _agent_norm()
+    agent = agent.to(device)
+    H1, s1 = collect_pool(agent, norm, P, 0.45, 6, 6, device, 4242, RS)
+    H2, s2 = collect_pool(agent, norm, P, 0.45, 6, 6, device, 4242, RS)
+    assert H1.shape[0] >= 1, "no survivors - determinism check is vacuous"
+    assert np.array_equal(H1, H2), f"recurrent states not reproducible on {device}"
+    assert np.array_equal(s1, s2), f"speeds not reproducible on {device}"
 
 
 def test_summary_parses_strongest_drift_cell():

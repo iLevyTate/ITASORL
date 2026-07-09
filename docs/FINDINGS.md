@@ -256,24 +256,47 @@ inducing it (if possible) requires something more deliberate.
 
 ---
 
-## 7. Next steps (prioritized by likelihood of changing the result)
+## 7. Levers: tested and open
 
-1. **Survival reward coupled to the dynamics.** *Attempted, see §9 (Experiment
-   B-v2).* Coupling the readout to survival did **not** lift incidental encoding
-   above the pre-registered threshold; the detectability-vs-encoding gap persists.
-   If staying alive requires exploiting drag (e.g., locomotion cost depends on it),
-   representing it becomes *instrumentally necessary*, the real Dreamer-style version
-   of the claim. The probe harness accepted the actor-critic unchanged.
-2. **Strengthen the multi-step objective further.** The open-loop objective was
-   confirmed to engage yet still did not induce encoding (§3.4); remaining variants
-   worth trying are weighting the dynamics-relevant observation dimensions and
-   increasing capacity.
-3. **A more encodable artifact.** L1 (input quantization) would almost certainly
-   be encoded, but invites the "it is just reading input format" critique, which
-   is precisely why **L3 (a generative fingerprint)** is the more interesting
-   target.
-4. **Scale.** More episodes / seeds / epochs. (A nonlinear probe has already been
-   checked (§3.4) and also finds nothing, so probe class is not the bottleneck.)
+Separated so a closed lever is not mistaken for an open one. The
+detectability-vs-encoding gap has survived every lever pulled so far.
+
+### 7.1 Closed levers (tested; the negative held or strengthened)
+
+1. **Survival reward coupled to the dynamics (§9).** This was the strongest lever,
+   and it has now been pulled. Coupling the readout to survival (Experiment B-v2) did
+   **not** lift incidental encoding above the pre-registered 0.65 threshold: the
+   survival agent reaches only **0.523** at drift 0.45 in the authoritative full-scale
+   replication. The genuinely *instrumentally-necessary* (Dreamer-style) refinement, an
+   identifiable per-episode drag the agent must cope with to survive (pre-registered in
+   `docs/PREREGISTRATION_Bv3.md`), lifts the probe to **0.610** at n = 10 (90 % CI
+   [0.585, 0.634]) but still misses 0.65. A pre-registered capacity-ceiling control that
+   supervises the recurrent trunk directly on the drift saturates the pooled
+   persistent-direction readout near **~0.62**, while the matched-pair detectability
+   channel reaches **~0.80**: world identity is decodable when forced in, but the pooled
+   readout sits near its architectural ceiling, below the bar. A **strengthened
+   negative, not an open direction.** The probe harness accepted the actor-critic
+   unchanged.
+2. **A stronger multi-step objective.** The open-loop, longer-horizon objective was
+   confirmed to engage the world model yet still did not induce encoding (§3.4).
+3. **Probe class and sampling power.** A nonlinear probe finds nothing (§3.4) and the
+   readout has been scaled to n = 10 seeds without clearing the bar, so neither the
+   probe family nor sampling power is the bottleneck.
+
+### 7.2 Open directions (untested; could still change the result)
+
+1. **L3, a generative fingerprint.** L1 (input quantization) would almost certainly be
+   encoded but invites the "it is just reading input format" critique, which is exactly
+   why **L3**, a surrogate whose tell comes from a separately *learned* predictive
+   world-model (smoothing/blur, missing fine detail, mode collapse; see the ladder in
+   `docs/ITASORL.md`), is the more interesting target. Structurally a different rung;
+   scope pending human sign-off.
+2. **Held-out / common-garden probe.** Resolves the reactive-vs-representational
+   ambiguity (§9 caveats): whether the recurrent state encodes persistent world identity
+   or merely tracks felt drag moment-to-moment. Design pending.
+3. **Remaining objective variants.** Weighting the dynamics-relevant observation
+   dimensions and increasing capacity, though the capacity-ceiling result above makes a
+   pooled-probe breakthrough from these unlikely.
 
 ---
 
