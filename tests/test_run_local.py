@@ -200,3 +200,36 @@ def test_resume_explicit_dir_missing_errors(monkeypatch, tmp_path):
     with pytest.raises(SystemExit):
         run_local.main()
     assert "cmd" not in calls
+
+
+def test_keep_system_awake_noop_off_windows(monkeypatch):
+    """Off Windows the context manager must be a clean no-op (never touch the
+    Win32 API) - this is the path CI exercises on Linux."""
+    monkeypatch.setattr(run_local.sys, "platform", "linux")
+    with run_local.keep_system_awake():
+        pass  # must not raise
+
+
+def test_keep_system_awake_sets_and_clears_on_windows(monkeypatch):
+    """On Windows: request ES_CONTINUOUS|ES_SYSTEM_REQUIRED on enter and reset to
+    ES_CONTINUOUS on exit, so sleep is suppressed only for the run's duration."""
+    class _Kernel32:
+        def __init__(self):
+            self.states = []
+
+        def SetThreadExecutionState(self, state):
+            self.states.append(state.value)   # ctypes.c_uint -> int
+            return 0
+
+    class _WinDLL:
+        kernel32 = _Kernel32()
+
+    win = _WinDLL()
+    monkeypatch.setattr(run_local.sys, "platform", "win32")
+    monkeypatch.setattr(run_local.ctypes, "windll", win, raising=False)
+    with run_local.keep_system_awake():
+        assert win.kernel32.states == [run_local._ES_CONTINUOUS
+                                       | run_local._ES_SYSTEM_REQUIRED]
+    assert win.kernel32.states == [run_local._ES_CONTINUOUS
+                                   | run_local._ES_SYSTEM_REQUIRED,
+                                   run_local._ES_CONTINUOUS]

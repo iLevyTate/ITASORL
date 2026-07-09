@@ -19,6 +19,8 @@ from __future__ import annotations
 import _bootstrap  # noqa: F401
 
 import argparse
+import contextlib
+import ctypes
 import json
 import subprocess
 import sys
@@ -29,6 +31,38 @@ from itasorl.results_io import default_run_dir, read_latest_run_dir
 SCRIPTS = Path(__file__).resolve().parent
 
 from run_e2e import PROFILES  # noqa: E402  single source of truth
+
+# Windows SetThreadExecutionState flags (winbase.h).
+_ES_CONTINUOUS = 0x80000000
+_ES_SYSTEM_REQUIRED = 0x00000001
+
+
+def _set_sleep_prevention(active: bool) -> bool:
+    """Ask Windows to keep the SYSTEM awake (the display may still sleep, which
+    is fine for a headless GPU run). The request is scoped to this thread, so a
+    crash of run_local can never leave sleep permanently disabled. No-op on
+    non-Windows. Returns True iff a request was issued."""
+    if sys.platform != "win32":
+        return False
+    flags = _ES_CONTINUOUS | (_ES_SYSTEM_REQUIRED if active else 0)
+    ctypes.windll.kernel32.SetThreadExecutionState(ctypes.c_uint(flags))
+    return True
+
+
+@contextlib.contextmanager
+def keep_system_awake():
+    """Suppress OS idle-sleep for the duration of the wrapped run, then restore
+    normal power behavior. Lets a long unattended local run (e.g. the ~6 h
+    bv3_ceiling_n10 sweep) finish without the machine sleeping mid-run."""
+    active = _set_sleep_prevention(True)
+    if active:
+        print("keep-awake: Windows sleep suppressed for this run (the display "
+              "may still turn off).", flush=True)
+    try:
+        yield
+    finally:
+        if active:
+            _set_sleep_prevention(False)
 
 
 def build_cmd(profile_name: str, run_dir: Path, *, resume: bool) -> list[str]:
@@ -184,7 +218,9 @@ def main() -> None:
 
     cmd = build_cmd(a.profile, run_dir, resume=a.resume is not None)
     print("Launching: " + " ".join(cmd), flush=True)
-    raise SystemExit(subprocess.run(cmd).returncode)
+    with keep_system_awake():
+        rc = subprocess.run(cmd).returncode
+    raise SystemExit(rc)
 
 
 if __name__ == "__main__":
