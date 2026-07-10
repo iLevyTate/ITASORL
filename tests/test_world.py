@@ -156,3 +156,47 @@ def test_matched_pair_L1_only_quantizes_observation():
     assert pe.level == Level.L1
     for a, s in zip(pe.authentic, pe.surrogate):
         np.testing.assert_allclose(s.obs, np.round(a.obs / delta) * delta, atol=1e-6)
+
+
+def _l3_rollout(drift_mode, g_motion=None, log=False, steps=10):
+    """Run a fixed authentic-policy rollout; return (obs trajectory, world)."""
+    from itasorl.world import WorldParams
+    w = PatchOfEarthV0(WorldParams(), drift_mode=drift_mode)
+    w.ray_steps = 4
+    w._g_motion = g_motion
+    if log:
+        w._log_motion = []
+    w.reset(SeedBundle(world=1, weather=2, ecology=3))
+    rng = np.random.default_rng(0)
+    traj = []
+    for _ in range(steps):
+        a = np.array([rng.uniform(0, 0.6), rng.uniform(-1, 1), 0.0, 0.0, 0.0], np.float32)
+        traj.append(w.step(a).obs.copy())
+    return np.asarray(traj), w
+
+
+def test_l3_hook_preserves_authentic_when_unset():
+    """The L3 motion hook must be a NO-OP when no G_motion is attached: `l3` mode with
+    `_g_motion=None` is bit-identical to the authentic world (keystone L0 invariant - the
+    edit to _integrate_motion must not perturb authentic dynamics)."""
+    base, _ = _l3_rollout("ar1")               # authentic
+    l3_noG, _ = _l3_rollout("l3", g_motion=None)
+    assert np.array_equal(base, l3_noG), "l3 mode without G_motion diverged from authentic"
+
+
+def test_l3_hook_logs_and_overrides():
+    """`_log_motion` records one (vel, a, drag, vel_next) transition per step; a set
+    `_g_motion` replaces the velocity law and changes the dynamics."""
+    base, _ = _l3_rollout("ar1")
+    _, wlog = _l3_rollout("l3", g_motion=None, log=True)
+    assert len(wlog._log_motion) == 10
+    vel, a, drag, vnext = wlog._log_motion[0]
+    assert vel.shape == (2,) and a.shape == (2,) and vnext.shape == (2,) and isinstance(drag, float)
+
+    called = {}
+    def frozen_g(vel, a, drag):
+        called["hit"] = True
+        return np.zeros(2)                     # freeze velocity -> different trajectory
+    frozen, _ = _l3_rollout("l3", g_motion=frozen_g)
+    assert called.get("hit"), "G_motion was not called in l3 mode"
+    assert not np.array_equal(base, frozen), "G_motion did not change the dynamics"

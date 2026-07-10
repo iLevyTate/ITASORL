@@ -59,6 +59,14 @@ class PatchOfEarthV0(PatchOfEarth):
         # centered on drift_sigma and bounded away from 0 (a clear, persistent regime shift).
         self.regime_lo, self.regime_hi = 0.5, 1.5
         self._drift_w = 0.0
+        # L3 (learned-dynamics surrogate): when drift_mode=="l3" and _g_motion is set, the
+        # velocity-update law is replaced by this learned map (vel, a, drag) -> vel_next.
+        # The rest of the physics and the REAL observation model are unchanged, so obs stay
+        # on the authentic manifold and the sole tell is G's dynamics error.
+        self._g_motion = None
+        # If set to a list, _integrate_motion appends (vel, a, drag, vel_next) motion
+        # transitions - the AUTHENTIC data used to train the L3 surrogate. None = off.
+        self._log_motion = None
         # --- tunable constants (world_spec sec. 13) ---
         self.n_rays = n_rays
         self.fov = np.deg2rad(300.0)
@@ -158,11 +166,19 @@ class PatchOfEarthV0(PatchOfEarth):
         a = thrust * self.thrust_scale * d - self.params.gravity * np.array([gx, gy])
         wet = self._wetness(self.pos[0], self.pos[1])
         drag = self.params.k_land * (1.0 - wet) + self.params.k_water * wet
-        if self.drift_sigma > 0.0:  # L2 surrogate: perturb the drag coefficient
+        if self.drift_sigma > 0.0 and self.drift_mode in ("ar1", "regime"):  # L2: perturb drag
             if self.drift_mode == "ar1":  # slow AR(1) wander (regime: _drift_w stays constant)
                 self._drift_w = float(np.clip(0.95 * self._drift_w + self._rng["drift"].normal(0.0, self.drift_sigma), -0.8, 8.0))
             drag = drag * (1.0 + self._drift_w)
-        self.vel = (1.0 - drag * self.params.dt) * self.vel + a * self.params.dt
+        vel_before = self.vel
+        if self.drift_mode == "l3" and self._g_motion is not None:  # L3: learned velocity law
+            vel_next = np.asarray(self._g_motion(vel_before, a, drag), dtype=float)
+        else:  # authentic (and L2 via the perturbed drag above): arithmetic unchanged
+            vel_next = (1.0 - drag * self.params.dt) * vel_before + a * self.params.dt
+        if self._log_motion is not None:  # capture AUTHENTIC transitions to train the L3 surrogate
+            self._log_motion.append((np.array(vel_before, float), np.array(a, float),
+                                     float(drag), np.array(vel_next, float)))
+        self.vel = vel_next
         self.pos = self.pos + self.vel * self.params.dt
         for i in (0, 1):  # walls: clip and stop the normal velocity component
             if self.pos[i] < 0.0:
