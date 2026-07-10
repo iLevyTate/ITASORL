@@ -49,3 +49,32 @@ def test_setup_l3_surrogate_installs_net(monkeypatch):
     monkeypatch.setattr(b2, "_L3_GMOTION", None)
     b2.setup_l3_surrogate(hidden=4, n_eps=8, steps=8, epochs=10, ray_steps=4, seed=0)
     assert isinstance(b2._L3_GMOTION, GMotion)
+
+
+def test_g_motion_wrong_world_diverges_more():
+    """Regression for the 2026-07-10 floor divergence: a G_motion trained on the WRONG world
+    drives the surrogate trajectory further from authentic (over compounding steps) than a G
+    trained on the deployment world. run_expB2 runs in
+    WorldParams(k_land=1.5, k_water=1.5, gravity=0.4) but originally trained G on bare
+    WorldParams() defaults, inflating G's error and faking a high mechanical floor; it now
+    passes params=P. (Per-step MSE is too weak to catch this - the tell is compounded drift.)"""
+    from itasorl.patch_of_earth import PatchOfEarthV0
+    from itasorl.world import SeedBundle
+    Pexp = WorldParams(k_land=1.5, k_water=1.5, gravity=0.4)
+    g_right = train_g_motion(hidden=8, n_eps=60, steps=25, epochs=150, params=Pexp, ray_steps=4, seed=0)
+    g_wrong = train_g_motion(hidden=8, n_eps=60, steps=25, epochs=150, params=WorldParams(), ray_steps=4, seed=0)
+
+    def obs_traj(g_motion):
+        w = PatchOfEarthV0(Pexp, drift_mode="l3")
+        w.ray_steps = 4
+        w._g_motion = g_motion                              # None -> authentic
+        w.reset(SeedBundle(world=7, weather=8, ecology=9))
+        rng = np.random.default_rng(0)
+        return np.array([w.step(np.array([rng.uniform(0.1, 0.6), rng.uniform(-1, 1), 0, 0, 0],
+                                         np.float32)).obs.copy() for _ in range(20)])
+
+    auth = obs_traj(None)
+    div_right = float(np.abs(auth - obs_traj(g_right)).mean())
+    div_wrong = float(np.abs(auth - obs_traj(g_wrong)).mean())
+    assert div_wrong > div_right, \
+        "G trained on the wrong world should diverge more from authentic than one trained on it"

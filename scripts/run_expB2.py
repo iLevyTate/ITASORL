@@ -209,7 +209,7 @@ def run_cell(task: dict) -> dict:
     if k.get("drift_mode"):
         b2.DRIFT_MODE = k["drift_mode"]
     if k.get("drift_mode") == "l3" and b2._L3_GMOTION is None:  # train G_motion once per worker
-        b2.setup_l3_surrogate(hidden=k.get("l3_hidden", 8), device=dev, seed=0)
+        b2.setup_l3_surrogate(hidden=k.get("l3_hidden", 8), device=dev, seed=0, params=P)  # THIS world
 
     agents = {"untrained": untrained_agent(P, d, k["ray_steps"], k["hidden"], 64, True, dev, seed=s),
               "predictor": train_predictor_only(d, P, n_eps=k["n_eps"], updates=k["updates"],
@@ -315,7 +315,7 @@ def main():
         print(f"  drift_mode=l3: surrogate = LEARNED velocity law G_motion (hidden={a.l3_hidden}), "
               "the dynamics-level L3 rung; obs come from the REAL sensor model so only the "
               "learned dynamics differ (see docs/PREREGISTRATION_L3.md sec.4/sec.12)")
-        b2.setup_l3_surrogate(hidden=a.l3_hidden, device=dev, seed=0)  # train + install once (workers=1)
+        b2.setup_l3_surrogate(hidden=a.l3_hidden, device=dev, seed=0, params=P)  # train on THIS world
     if a.sysid_aux:
         print("  *** SYSID-AUX ON: survival trunk is supervised on drag (CEILING control, "
               "NOT readout-not-reward). Its target is a capacity ceiling, not H_B2 evidence. ***")
