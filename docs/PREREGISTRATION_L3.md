@@ -58,12 +58,27 @@ section 7 oracle check, not as the organism headline.
 
 **Surrogate construction:**
 
-1. Train a small predictive world-model `G` on authentic `PatchOfEarthV0` rollouts
-   (next-state prediction). `G` is then frozen and wrapped as a `World` behind the
-   **byte-identical obs/action spec** (`docs/ITASORL.md` World protocol), so it drops
-   into the existing `make_world` / surrogate selection in `itasorl/experiment_b2.py`
-   exactly where the L2 drift path lives. The authentic world (drift off) is unchanged
-   and byte-identical to B-v2/B-v3 authentic.
+1. **Two-stage construction (C -> B), resolved after a code-level integration review
+   (2026-07-10).** `G` is a small predictive world-model (`RecurrentWorldModel`) trained
+   on authentic `PatchOfEarthV0` rollouts and then frozen. Because `G` predicts
+   OBSERVATIONS while the survival world needs full internal STATE (energy, food, death),
+   "wrap `G` as the World" is realized in two stages:
+   - **Stage 1 - oracle gate (Option A, observation-channel).** Authentic physics is kept
+     intact (survival stays well-defined); an L3-surrogate trajectory is an authentic
+     rollout whose OBSERVATIONS are passed through frozen `G`, so the tell is `G`'s
+     generative reconstruction fingerprint (blur, missing fine detail, mode collapse).
+     This is what the section-7 Experiment-A oracle detects. Cheap; no change to the
+     survival dynamics.
+   - **Stage 2 - organism run (Option B, dynamics-level), CONTINGENT on the gate.** Only
+     if Stage 1's oracle lands in [0.85, 0.95] do we build the dynamics-level surrogate:
+     `G` (trained on logged STATE transitions) drives the world's dynamics, with
+     energy/food/death computed from `G`'s predicted state, plugged into
+     `itasorl/experiment_b2.py::make_world` as the new `l3` drift-mode where the L2 path
+     lives. If `G`'s learned dynamics cannot sustain survival (engagement gate fails),
+     that is logged in section 12 and the organism construction is re-scoped before any
+     multi-seed run - a stated empirical risk, not assumed away.
+   The authentic world (drift off) is unchanged and byte-identical to B-v2/B-v3 authentic
+   in both stages.
 2. **Difficulty is calibrated by outcome, not architecture (decision).** We choose the
    **smallest-capacity** `G` whose Experiment-A oracle detectability (section 7) lands in
    the pre-set band **AUROC in [0.85, 0.95]**: clearly detectable (the fingerprint exists)
