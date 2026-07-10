@@ -211,8 +211,23 @@ Rigor carried from the B-v3 audit (2026-07-10):
 
 ## 12. Deviations from pre-registration
 
-- (none yet - the calibrated `G` capacity and its oracle AUROC will be recorded here before
-  the organism run.)
+- **2026-07-10, milestone-1 empirical finding (Stage-1 oracle calibration, GPU).** The
+  Stage-1 observation-channel construction (Option A: authentic physics, observations passed
+  through frozen `G`) was built and its oracle calibrated on a from-scratch `G` capacity sweep
+  (hidden 8-128; one-step reconstruction AND open-loop imagination; n=200-300 authentic
+  episodes; RTX 4050). Result: the artifact is **trivially detectable (oracle AUROC ~1.0) at
+  every capacity and every imagination horizon**, and a matched sensor-noise / variance floor
+  did NOT restore a calibratable gradient. Reason: a strong privileged oracle separates "real
+  sensor data" from "any neural-net reconstruction of it" via `G`'s systematic per-dimension
+  manifold, not via `G`'s fidelity - so capacity is not a working difficulty knob and the
+  [0.85, 0.95] band is unreachable without deliberately weakening the oracle (which would game
+  the gate). Per the pre-agreed escalation, the Stage-1 obs-channel construction is **RETIRED**
+  and the dynamics-level construction becomes primary: the surrogate's observations are
+  produced by the REAL sensor model applied to `G`'s predicted STATE, so observations live on
+  the authentic manifold and the sole tell is `G`'s dynamics error, which capacity controls.
+  Section 4 Stage 1 is superseded by this entry; the section-7 oracle gate now runs against the
+  dynamics-level surrogate, with capacity re-validated as the difficulty knob before any
+  organism run.
 
 ## 13. How to run (milestones, in order)
 
