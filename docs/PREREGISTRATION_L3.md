@@ -243,6 +243,23 @@ Rigor carried from the B-v3 audit (2026-07-10):
   audit + matched-pair equal-length truncation must be re-checked at the frozen difficulty
   (smaller dynamics error at hidden=8 should shrink the reward leak vs hidden=4). Gate 0 is met;
   the organism run may proceed with these controls reported.
+- **2026-07-10, ORGANISM RUN n=3 (confirmatory) + an unresolved measurement discrepancy.** Ran
+  `run_expB2 --drift-mode l3 --l3-hidden 8` (n=3 seeds, 300 updates, RTX 4050, `fullruns/l3_n3`).
+  At drift 0.45 the pooled target was **survival 0.801 (90% CI [0.760, 0.842]), predictor 0.779,
+  untrained 0.706**; L0 control clean (0.514); manipulation check: artifact survival-relevant.
+  Primary H_B2 NOT met by the SESOI (survival only +0.022 over predictor, < 0.05). TWO problems
+  make this verdict NOT trustworthy yet: (1) **high organism mechanical floor** - the untrained
+  (mechanical) agent already reads 0.706, so there is little headroom to isolate incidental
+  encoding; (2) a **re-calibration sweep** (untrained floor vs oracle AUROC across `G` capacity)
+  shows the tension is structural: larger `G` drops the untrained floor toward chance (hidden 32
+  -> 0.47, 128 -> 0.46) but the oracle signal COLLAPSES below the band (hidden 32 -> 0.70, 128 ->
+  0.63), so a clean-floor-AND-detectable capacity does not robustly exist above hidden=8.
+  UNRESOLVED: an isolated untrained-floor probe at hidden=8 gives **0.548 reproducibly** (identical
+  on CPU and GPU training, so `G` is not the noise source), which CONTRADICTS the full run's 0.706
+  and lies OUTSIDE the run's CI [0.66, 0.80]. The full pipeline and the isolated measurement
+  disagree for an unidentified reason. **The L3 organism verdict is ON HOLD** pending
+  reconciliation of that discrepancy (a focused debugging task, not a re-run); only then is a
+  clean-floor difficulty and a real H_L3 adjudication meaningful.
 
 ## 13. How to run (milestones, in order)
 
