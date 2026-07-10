@@ -260,6 +260,22 @@ Rigor carried from the B-v3 audit (2026-07-10):
   disagree for an unidentified reason. **The L3 organism verdict is ON HOLD** pending
   reconciliation of that discrepancy (a focused debugging task, not a re-run); only then is a
   clean-floor difficulty and a real H_L3 adjudication meaningful.
+- **2026-07-10, DISCREPANCY RESOLVED - a world-params bug; the confound was an artifact.** Root
+  cause of the 0.548-vs-0.706 divergence: `run_expB2` runs in
+  `P = WorldParams(k_land=1.5, k_water=1.5, gravity=0.4)`, but `setup_l3_surrogate` trained
+  `G_motion` on bare `WorldParams()` DEFAULTS - so `G` learned the WRONG world's dynamics and was
+  deployed in another, inflating its systematic error and faking the high mechanical floor.
+  Confirmed on GPU: `G`-trained-on-default read on `P` reproduces the run's 0.734 exactly;
+  `G`-trained-on-`P` drops the untrained floor to 0.483 (chance). Fixed by passing `params=P` at
+  both setup sites (regression test `test_g_motion_wrong_world_diverges_more`). **The n=3 organism
+  result above (untrained 0.706, survival 0.801) is INVALID - a bug artifact - and is retracted.**
+  Re-calibrated GATE 0 on the CORRECT world `P`: at hidden=8 the dumb/untrained floor is ~0.48
+  (chance) at every capacity 8-32, and the oracle lands in-band at **sigma=0.02 -> AUROC 0.928**
+  (leakage clean). So a clean L3 difficulty DOES exist - oracle-detectable fingerprint AND a
+  chance-level organism mechanical floor. Frozen gate 0 (world `P`): **hidden=8, sigma=0.02,
+  oracle 0.928, untrained floor 0.483.** Next: re-run the organism with the fix (`G` on `P`) for
+  a real H_L3 adjudication - this time the mechanical floor is at chance, so survival-specific
+  encoding can be isolated.
 
 ## 13. How to run (milestones, in order)
 
