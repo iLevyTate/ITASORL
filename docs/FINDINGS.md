@@ -270,13 +270,17 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    replication. The genuinely *instrumentally-necessary* (Dreamer-style) refinement, an
    identifiable per-episode drag the agent must cope with to survive (pre-registered in
    `docs/PREREGISTRATION_Bv3.md`), lifts the probe to **0.610** at n = 10 (90 % CI
-   [0.585, 0.634]) but still misses 0.65. A pre-registered capacity-ceiling control that
-   supervises the recurrent trunk directly on the drift saturates the pooled
-   persistent-direction readout near **~0.62**, while the matched-pair detectability
-   channel reaches **~0.80**: world identity is decodable when forced in, but the pooled
-   readout sits near its architectural ceiling, below the bar. A **strengthened
-   negative, not an open direction.** The probe harness accepted the actor-critic
-   unchanged.
+   [0.585, 0.634]) but still misses 0.65. A pre-registered capacity-ceiling control (n = 10)
+   that supervises the recurrent trunk directly on the drift saturates the pooled
+   persistent-direction readout at **0.596** (90 % CI [0.577, 0.616]; a t-based interval
+   [0.573, 0.619] also excludes 0.65, by ~4 SE), while the matched-pair detectability
+   channel reaches **~0.70**: world identity is decodable when forced in, but the pooled
+   readout sits at its architectural ceiling, below the bar. A **strengthened negative,
+   not an open direction.** The probe harness accepted the actor-critic unchanged. (The
+   pooled probe is read as Experiment-B-comparable, not confound-clean - it drops early
+   deaths per world, a survivorship asymmetry the matched-pair channel is designed to
+   avoid; the volatility readouts are secondary/exploratory, not part of the 0.65
+   decision.)
 2. **A stronger multi-step objective.** The open-loop, longer-horizon objective was
    confirmed to engage the world model yet still did not induce encoding (§3.4).
 3. **Probe class and sampling power.** A nonlinear probe finds nothing (§3.4) and the

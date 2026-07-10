@@ -70,9 +70,13 @@ the pre-registered power extension of the ceiling. Pooled target 0.596 @ drift 0
 [0.577, 0.616]), matched-pair 0.702; drag-ceiling 0.503, energy-ceiling 0.774; predictor
 0.513 and untrained 0.500 at chance; L0 controls at chance; leakage clean; engagement and
 speed (0.958) gates passed. The tight n=10 CI [0.577, 0.616] EXCLUDES 0.65 decisively
-(where the n=3 ceiling CI [0.576, 0.667] had straddled it), so this settles the open
+(where the n=3 ceiling CI [0.576, 0.667] had straddled it); a more honest t-based interval
+[0.573, 0.619] (mean 4.3 SE below 0.65) also excludes it, so the claim does not rest on the
+lower-coverage percentile-of-mean bootstrap (2026-07-10 audit finding). This settles the open
 question: even a trunk supervised directly on drag saturates the pooled persistent-direction
-readout at ~0.60, while identity stays decodable-when-forced (matched-pair 0.70). This is the
+readout at ~0.60, while identity stays decodable-when-forced (matched-pair 0.70). Caveat: the
+pooled probe is Exp-B-comparable, not confound-clean (per-world early-death survivorship
+asymmetry; matched-pair is the clean channel), and the volatility readouts are exploratory. This is the
 strongest form of the architectural-ceiling reading and confirms the null is not a
 probe-capacity floor. Run finalized cleanly (bundle.zip present, status finished). NOTE: this
 run rendered on `main`, whose summary pipeline still lacks the CEILING relabel, so its
