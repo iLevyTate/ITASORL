@@ -147,7 +147,7 @@ def grouped_auroc(X: np.ndarray, y: np.ndarray, groups: np.ndarray, n_splits: in
         if return_oof:
             oof_y.append(np.asarray(y[te]))
             oof_p.append(np.asarray(p))
-    auc = float(np.mean(aucs)) if aucs else 0.5
+    auc = float(np.mean(aucs)) if aucs else float("nan")  # NaN, not 0.5: never report the null as measured
     if return_oof:
         yv = np.concatenate(oof_y) if oof_y else np.zeros(0)
         pv = np.concatenate(oof_p) if oof_p else np.zeros(0)

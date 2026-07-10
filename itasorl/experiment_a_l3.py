@@ -123,10 +123,11 @@ def calibrate_l3(*, hiddens=(4, 8, 16, 32, 64), sigma_meas: float, n_pairs: int 
     is the smallest capacity whose oracle AUROC lands in [0.85, 0.95] (prereg gate 0)."""
     from .surrogate_l3 import train_g_motion
     train_kwargs = dict(train_kwargs or {})
+    params = train_kwargs.get("params")   # score pairs on the SAME world G trains on (no train/deploy mismatch)
     out = []
     for h in hiddens:
         g = train_g_motion(hidden=h, seed=seed, **train_kwargs)
-        eps = generate_l3_pairs(g, n_pairs=n_pairs, branch=branch, seed0=3000 + seed)
+        eps = generate_l3_pairs(g, n_pairs=n_pairs, branch=branch, seed0=3000 + seed, params=params)
         res = run_experiment_a_l3(eps, sigma_meas=sigma_meas, seed=seed)
         auc = float(res["oracle_auroc"])
         out.append({"hidden": h, "oracle_auroc": auc,
