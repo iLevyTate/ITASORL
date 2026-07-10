@@ -62,9 +62,24 @@ ENGAGE_MARGIN = 0.15
 LIFE_TOL = 2.0
 # Surrogate coupling mode for every world the B-v2/B-v3 pipeline builds. "ar1" is the
 # pre-registered B-v2 volatility surrogate; "regime" is the B-v3 per-episode constant
-# drag offset (identifiable + policy-relevant). Patched in place by run_expB2.py --drift-mode
-# (parent AND each spawned worker), mirroring the SURVIVAL_* scarcity overrides.
+# drag offset (identifiable + policy-relevant); "l3" is the learned-dynamics surrogate
+# (a trained G_motion replaces the velocity law). Patched in place by run_expB2.py
+# --drift-mode (parent AND each spawned worker), mirroring the SURVIVAL_* scarcity overrides.
 DRIFT_MODE = "ar1"
+# The frozen L3 velocity net, trained ONCE via setup_l3_surrogate() and shared across every
+# surrogate world (drift_sigma>0) when DRIFT_MODE=="l3". Authentic worlds (drift_sigma=0)
+# never receive it, so they stay byte-identical to authentic. None until setup runs.
+_L3_GMOTION = None
+
+
+def setup_l3_surrogate(**train_kwargs) -> None:
+    """Train the shared L3 velocity net (`itasorl.surrogate_l3.train_g_motion`) once and
+    install it, so every subsequent `make_world(..., drift_sigma>0)` in `l3` mode gets it.
+    `hidden` (capacity) is the calibration difficulty knob; pass `device="cuda"` to train
+    on GPU."""
+    global _L3_GMOTION
+    from .surrogate_l3 import train_g_motion
+    _L3_GMOTION = train_g_motion(**train_kwargs)
 
 
 def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int) -> PatchOfEarthV0:
@@ -72,6 +87,8 @@ def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int) -
     w.ray_steps = ray_steps
     for k, v in {**SURVIVAL_METAB, **SURVIVAL_FOOD}.items():  # override before reset()
         setattr(w, k, v)
+    if DRIFT_MODE == "l3" and drift_sigma > 0.0 and _L3_GMOTION is not None:
+        w._g_motion = _L3_GMOTION  # surrogate (drift_sigma>0) uses learned dynamics; authentic does not
     return w
 
 
