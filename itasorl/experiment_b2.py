@@ -616,13 +616,14 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
     """Collect up to n_eps episodes of EXACTLY `steps` length (drop early deaths) with
     the frozen deterministic agent. Returns H (k,steps,Hdim), speeds (k,).
 
-    With return_anchors=True also returns per-episode mean energy and mean
-    nearest-pellet distance - quantities that vary WITHIN both worlds and that a
-    surviving agent must track. They are the readout CEILING: decoding them shows the
-    recurrent state is linearly readable, so a chance world-identity AUROC is genuine
-    absence of encoding, not a dead probe. (They are NOT the world label: energy/food
-    vary inside authentic and surrogate alike.)"""
-    Hs, spd, energy, food, drag = [], [], [], [], []
+    With return_anchors=True also returns per-episode mean energy, mean nearest-pellet
+    distance, mean drag, and the per-episode summed reward. energy/food are the readout
+    CEILING: decoding them shows the recurrent state is linearly readable, so a chance
+    world-identity AUROC is genuine absence of encoding, not a dead probe. (They are NOT
+    the world label: energy/food vary inside authentic and surrogate alike.) reward_sum
+    feeds the pooled leakage audit: L3 dynamics shift movement-cost -> reward, so the
+    headline probe must be shown NOT to be reading 'how much it ate' instead of identity."""
+    Hs, spd, energy, food, drag, reward = [], [], [], [], [], []
     for i in range(n_eps):
         w = make_world(params, drift_sigma, ray_steps)
         w.reset(_seeds(seed_base + i))
@@ -630,6 +631,7 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
         prev = torch.zeros(1, agent.act_dim, device=device)
         obs = w.observe().astype(np.float64)
         Hrow, sp, en, fd, dg, died = [], [], [], [], [], False
+        rw = 0.0
         for _ in range(steps):
             obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
             _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
@@ -639,6 +641,7 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             en.append(float(w.E / w.Emax))
             fd.append(-_food_potential(w))           # >=0 distance to nearest pellet
             dg.append(float(w._drift_w))             # instantaneous drag-drift state (0 in authentic)
+            rw += float(r.reward)                     # summed homeostatic reward (never detection)
             obs = r.obs.astype(np.float64)
             prev = env_act
             if r.terminated:
@@ -650,9 +653,11 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             energy.append(float(np.mean(en)))
             food.append(float(np.mean(fd)))
             drag.append(float(np.mean(dg)))
+            reward.append(rw)
     H = np.stack(Hs) if Hs else np.zeros((0, steps, agent.hidden), np.float32)
     if return_anchors:
-        return H, np.asarray(spd), np.asarray(energy), np.asarray(food), np.asarray(drag)
+        return (H, np.asarray(spd), np.asarray(energy), np.asarray(food),
+                np.asarray(drag), np.asarray(reward))
     return H, np.asarray(spd)
 
 
@@ -667,26 +672,30 @@ def _auroc_with_ci(X, y, seed: int = 0) -> tuple[float, float, float]:
 
 
 def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray_steps=5,
-                   device=None, seed=0, dump_path=None) -> dict:
+                   device=None, seed=0, dump_path=None, leak_margin=0.1) -> dict:
     """Experiment-B-style probe: decode world identity across independent episodes.
     Reports the headline `target` (LEVEL features) with a bootstrap CI, plus two
     additive readouts that probe a VOLATILITY signature - `target_var` (dispersion
     features) and `target_full` (level ++ dispersion) - and per-probe `selectivity`
     (target minus a shuffled-label baseline on the SAME feature set, which cancels the
     overfitting bias a wider feature set incurs at n~220). Also reports anchor CEILINGS
-    (energy, food-distance) that show the recurrent state is readable. If `dump_path` is
-    set, persists the raw recurrent states so probes can be recomputed offline (no GPU)."""
+    (energy, food-distance) that show the recurrent state is readable, a POOLED leakage
+    audit (`pool_reward_leak`/`pool_leak_clean`: world identity must NOT be decodable from
+    summed reward, so the headline reads the artifact not 'how much it ate'), and per-world
+    survivor/death counts (`deaths_auth`/`deaths_surr`) that bound the survivorship
+    asymmetry from dropping early deaths. If `dump_path` is set, persists the raw recurrent
+    states AND per-episode reward so both probes can be recomputed offline (no GPU)."""
     device = device or default_device()
-    Ha, spa, ena, fda, dra = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 800_000,
-                                          ray_steps, return_anchors=True)
-    Hs, sps, ens, fds, drs = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device,
-                                          850_000, ray_steps, return_anchors=True)
+    Ha, spa, ena, fda, dra, rwa = collect_pool(agent, norm, params, 0.0, n_eps, steps, device,
+                                               800_000, ray_steps, return_anchors=True)
+    Hs, sps, ens, fds, drs, rws = collect_pool(agent, norm, params, drift_sigma, n_eps, steps,
+                                               device, 850_000, ray_steps, return_anchors=True)
     if dump_path is not None:
         d = os.path.dirname(dump_path)
         if d:
             os.makedirs(d, exist_ok=True)
         np.savez_compressed(dump_path, Ha=Ha, Hs=Hs, spa=spa, sps=sps, ena=ena, ens=ens,
-                            fda=fda, fds=fds, dra=dra, drs=drs,
+                            fda=fda, fds=fds, dra=dra, drs=drs, ra=rwa, rs=rws,
                             drift_sigma=np.float64(drift_sigma), steps=np.int64(steps))
     nan = float("nan")
     if len(Ha) < 5 or len(Hs) < 5:
@@ -696,6 +705,8 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
                 "shuffled": nan, "shuffled_var": nan, "shuffled_full": nan,
                 "selectivity": nan, "selectivity_var": nan, "selectivity_full": nan,
                 "speed": nan, "anchor_energy": nan, "anchor_food": nan, "ceiling_drag": nan,
+                "pool_reward_leak": nan, "pool_leak_clean": False, "pool_leak_max_dev": nan,
+                "pool_n_eps": n_eps, "deaths_auth": n_eps - len(Ha), "deaths_surr": n_eps - len(Hs),
                 "n": len(Ha) + len(Hs), "too_few_survivors": True}
     H = np.concatenate([Ha, Hs])
     X = episode_features(H)                          # reuse Exp B's feature builder verbatim
@@ -725,6 +736,15 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
         ceiling_drag = probe_auroc(episode_features(Hs), (drs > np.median(drs)).astype(int))
     else:
         ceiling_drag = float("nan")
+    # POOLED leakage audit (the headline endpoint's missing confound gate). Reuse the
+    # matched-pair battery verbatim on the pooled episodes: world identity must NOT be
+    # decodable from summed reward. length/lifetime are constant (=steps for every
+    # full-length survivor), so those channels sit at ~0.5 by construction and reward_sum
+    # is the one live channel. Near-chance here = the pooled target reads the dynamics
+    # artifact, not a reward confound induced by the surrogate.
+    auth_eps = [{"label": 0, "reward_sum": float(r), "length": steps, "lifetime": steps} for r in rwa]
+    surr_eps = [{"label": 1, "reward_sum": float(r), "length": steps, "lifetime": steps} for r in rws]
+    pool_leak = leakage_audit_b2(auth_eps, surr_eps, margin=leak_margin)
     return {
         "target": tgt, "target_lo": t_lo, "target_hi": t_hi,
         "target_var": tgt_v, "target_var_lo": tv_lo, "target_var_hi": tv_hi,
@@ -736,6 +756,9 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
         "anchor_energy": probe_auroc(X, (en > np.median(en)).astype(int)),
         "anchor_food": probe_auroc(X, (fd > np.median(fd)).astype(int)),
         "ceiling_drag": ceiling_drag,
+        "pool_reward_leak": pool_leak["reward_sum"], "pool_leak_clean": bool(pool_leak["clean"]),
+        "pool_leak_max_dev": pool_leak["max_abs_dev"], "pool_leakage": pool_leak,
+        "pool_n_eps": n_eps, "deaths_auth": n_eps - len(Ha), "deaths_surr": n_eps - len(Hs),
         "n": len(y), "n_auth": len(Ha), "n_surr": len(Hs), "too_few_survivors": False,
     }
 

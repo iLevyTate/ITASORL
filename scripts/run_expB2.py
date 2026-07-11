@@ -252,6 +252,10 @@ def record_cell(res: dict, eng_log: dict, cell: dict) -> None:
         res[d][g]["pool_anchor_energy"].append(pool.get("anchor_energy"))
         res[d][g]["pool_anchor_food"].append(pool.get("anchor_food"))
         res[d][g]["pool_ceiling_drag"].append(pool.get("ceiling_drag"))
+        res[d][g]["pool_reward_leak"].append(pool.get("pool_reward_leak"))
+        res[d][g]["pool_leak_clean"].append(bool(pool.get("pool_leak_clean", False)))
+        res[d][g]["pool_deaths_auth"].append(pool.get("deaths_auth"))
+        res[d][g]["pool_deaths_surr"].append(pool.get("deaths_surr"))
         res[d][g]["mp_target"].append(mp["target"])
         res[d][g]["mp_leak_clean"].append(bool(mp["leakage_clean"]))
 
@@ -276,6 +280,11 @@ def print_cell(cell: dict) -> None:
               f"drag={pool.get('ceiling_drag', float('nan')):.3f}) "
               f"speed+={pool['speed']:.3f} mp_target={mp['target']:.3f} "
               f"leak_clean={mp['leakage_clean']}(dev={mp['leakage_max_dev']:.3f})", flush=True)
+        print(f"   {'':10s} pool_leak(reward={pool.get('pool_reward_leak', float('nan')):.3f} "
+              f"clean={pool.get('pool_leak_clean')}) "
+              f"survivors(auth={pool.get('n_auth', '?')} surr={pool.get('n_surr', '?')} "
+              f"/{pool.get('pool_n_eps', '?')}  deaths auth={pool.get('deaths_auth', '?')} "
+              f"surr={pool.get('deaths_surr', '?')})", flush=True)
 
 
 def fresh_results(drifts) -> dict:
@@ -286,6 +295,8 @@ def fresh_results(drifts) -> dict:
                     "pool_speed": [], "pool_shuffled": [],
                     "pool_anchor_energy": [], "pool_anchor_food": [],
                     "pool_ceiling_drag": [],
+                    "pool_reward_leak": [], "pool_leak_clean": [],
+                    "pool_deaths_auth": [], "pool_deaths_surr": [],
                     "mp_target": [], "mp_leak_clean": [], "xeval_return": []}
                 for g in AG} for d in drifts}
 
@@ -416,6 +427,16 @@ def main():
             print(f"             volatility readout: target_var={np.nanmean(tv):.3f} "
                   f"target_full={np.nanmean(tf):.3f}   selectivity(L={np.nanmean(sl):+.3f} "
                   f"V={np.nanmean(slv):+.3f} F={np.nanmean(slf):+.3f})")
+            # POOLED confound controls: reward must NOT decode the world (else the headline
+            # target is reward-mediated), and per-world death counts bound survivorship bias.
+            rl = np.array(res[d][g]["pool_reward_leak"], float)
+            lc = res[d][g]["pool_leak_clean"]
+            da = np.array(res[d][g]["pool_deaths_auth"], float)
+            ds = np.array(res[d][g]["pool_deaths_surr"], float)
+            clean_frac = float(np.mean(lc)) if lc else float("nan")
+            print(f"             pooled confounds: reward_leak={np.nanmean(rl):.3f} "
+                  f"(clean {clean_frac*100:.0f}% of seeds)   "
+                  f"deaths/pool auth={np.nanmean(da):.1f} surr={np.nanmean(ds):.1f}")
 
     # ---- manipulation check: is the L2 artifact survival-relevant? ----
     if len(a.drifts) > 1:
@@ -465,6 +486,16 @@ def main():
           f"ceiling(energy={surv_ceil:.3f} drag={surv_ceil_drag:.3f})")
     print(f"  dissociation: drag-ceiling {surv_ceil_drag:.3f} vs identity-target {surv_t.mean():.3f}"
           f"{' (tracks dynamics, no persistent identity)' if surv_ceil_drag - surv_t.mean() > 0.1 else ''}")
+    # POOLED confound gate on the HEADLINE: the survival target must not be reward-mediated.
+    surv_rl = np.nanmean(np.array(res[dmax]["survival"]["pool_reward_leak"], float))
+    surv_lc = res[dmax]["survival"]["pool_leak_clean"]
+    surv_da = np.nanmean(np.array(res[dmax]["survival"]["pool_deaths_auth"], float))
+    surv_ds = np.nanmean(np.array(res[dmax]["survival"]["pool_deaths_surr"], float))
+    clean_frac = float(np.mean(surv_lc)) if surv_lc else float("nan")
+    print(f"  pooled leakage gate: reward_leak={surv_rl:.3f} (clean {clean_frac*100:.0f}% of seeds) "
+          f"-> {'headline reads the ARTIFACT, not reward' if clean_frac >= 0.5 else 'WARNING: reward confound'}")
+    print(f"  survivorship: mean deaths/pool auth={surv_da:.1f} surr={surv_ds:.1f} "
+          f"(of {a.pool_n}) -> {'no asymmetry' if max(surv_da, surv_ds) < 0.05 * a.pool_n else 'CHECK asymmetry'}")
     # Pre-registered primary: survival >= 0.65 AND beats predictor and untrained by >= 0.05.
     # Three zones per PREREGISTRATION_Bv3.md section 8: a result that clears both baseline
     # margins but misses the 0.65 bar is NOT a strengthened negative - it is the

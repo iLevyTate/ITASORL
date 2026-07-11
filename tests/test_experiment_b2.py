@@ -69,14 +69,15 @@ def test_collect_pool_returns_fixed_length():
 
 
 def test_collect_pool_anchors_aligned():
-    """return_anchors yields per-episode energy/food/drag arrays aligned with H - the
-    ceiling controls the readout depends on."""
+    """return_anchors yields per-episode energy/food/drag/reward arrays aligned with H - the
+    ceiling controls plus the reward channel the pooled leakage audit depends on."""
     agent, norm = _agent_norm()
     out = collect_pool(agent, norm, P, 0.45, 5, 6, "cpu", 222, RS, return_anchors=True)
-    assert len(out) == 5
-    H, spd, energy, food, drag = out
+    assert len(out) == 6
+    H, spd, energy, food, drag, reward = out
     k = H.shape[0]
     assert spd.shape == (k,) and energy.shape == (k,) and food.shape == (k,) and drag.shape == (k,)
+    assert reward.shape == (k,) and np.isfinite(reward).all()
 
 
 def test_collect_pool_excludes_early_deaths(monkeypatch):
@@ -106,15 +107,17 @@ def test_pooled_readout_too_few_survivors_guard(monkeypatch):
     def _tiny_pool(*args, return_anchors=False, **kw):
         steps, hid, k = args[5], args[0].hidden, 3           # 3 < 5 -> guard must fire
         H, s = np.zeros((k, steps, hid), np.float32), np.zeros(k)
-        return (H, s, np.zeros(k), np.zeros(k), np.zeros(k)) if return_anchors else (H, s)
+        z = np.zeros(k)
+        return (H, s, z, z, z, z) if return_anchors else (H, s)
 
     monkeypatch.setattr(b2, "collect_pool", _tiny_pool)
     agent, norm = _agent_norm()
     out = pooled_readout(agent, norm, P, 0.45, n_eps=10, steps=6, ray_steps=RS, device="cpu")
     assert out["too_few_survivors"] is True
     for key in ("target", "target_lo", "target_hi", "target_var", "target_full",
-                "selectivity", "speed", "anchor_energy", "ceiling_drag"):
+                "selectivity", "speed", "anchor_energy", "ceiling_drag", "pool_reward_leak"):
         assert np.isnan(out[key]), f"{key} must be NaN when the pool is too small"
+    assert out["pool_leak_clean"] is False   # cannot certify clean with too few survivors
 
 
 def _ep(label, rsum):
@@ -133,6 +136,53 @@ def test_leakage_audit_passes_when_balanced():
     auth = [_ep(0, float(rng.random())) for _ in range(12)]
     surr = [_ep(1, float(rng.random())) for _ in range(12)]  # same reward dist for both
     assert leakage_audit_b2(auth, surr)["clean"] is True
+
+
+def _stub_pool(reward_auth, reward_surr, seed=0):
+    """Build a collect_pool stub whose two pools (drift 0.0 vs >0) carry prescribed
+    per-episode reward, so we can drive pooled_readout's leakage audit deterministically.
+    H is random noise (target ~ chance); only the reward channel is controlled."""
+    rng = np.random.default_rng(seed)
+
+    def _pool(*args, return_anchors=False, **kw):
+        drift, steps, hid = args[3], args[5], args[0].hidden
+        reward = np.asarray(reward_auth if drift == 0.0 else reward_surr, float)
+        k = len(reward)
+        H = rng.standard_normal((k, steps, hid)).astype(np.float32)
+        z = np.zeros(k)
+        return (H, z, z, z, z, reward) if return_anchors else (H, z)
+    return _pool
+
+
+def test_pooled_readout_flags_reward_confound(monkeypatch):
+    """The headline pooled endpoint must now catch a reward confound: if summed reward
+    perfectly separates the worlds, pool_leak_clean is False and pool_reward_leak is high.
+    This is the control that was missing on the pooled path (only matched-pair had it)."""
+    import itasorl.experiment_b2 as b2
+    k = 20
+    monkeypatch.setattr(b2, "collect_pool",
+                        _stub_pool(np.zeros(k), np.ones(k)))   # reward = world label
+    agent, norm = _agent_norm()
+    out = pooled_readout(agent, norm, P, 0.45, n_eps=k, steps=6, ray_steps=RS, device="cpu")
+    assert out["too_few_survivors"] is False
+    assert out["pool_leak_clean"] is False
+    assert out["pool_reward_leak"] > 0.9
+    assert out["deaths_auth"] == 0 and out["deaths_surr"] == 0   # stub returns all survivors
+    assert out["n_auth"] == k and out["n_surr"] == k
+
+
+def test_pooled_readout_reward_audit_clean_when_balanced(monkeypatch):
+    """When reward carries no world signal (identical values in both pools), the pooled
+    audit certifies clean and reward_leak sits at chance - so a real clean result means the
+    pooled target reads the dynamics artifact, not a reward confound."""
+    import itasorl.experiment_b2 as b2
+    k = 40
+    shared = np.linspace(-1.0, 1.0, k)                          # same reward in both worlds
+    monkeypatch.setattr(b2, "collect_pool", _stub_pool(shared, shared.copy()))
+    agent, norm = _agent_norm()
+    out = pooled_readout(agent, norm, P, 0.45, n_eps=k, steps=6, ray_steps=RS, device="cpu")
+    assert out["pool_leak_clean"] is True
+    assert abs(out["pool_reward_leak"] - 0.5) < 0.1
 
 
 def test_running_norm_matches_numpy_batch_stats():
