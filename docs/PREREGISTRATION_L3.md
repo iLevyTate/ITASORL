@@ -276,6 +276,26 @@ Rigor carried from the B-v3 audit (2026-07-10):
   oracle 0.928, untrained floor 0.483.** Next: re-run the organism with the fix (`G` on `P`) for
   a real H_L3 adjudication - this time the mechanical floor is at chance, so survival-specific
   encoding can be isolated.
+- **2026-07-10, CORRECTED ORGANISM RUN n=3 - a PRELIMINARY POSITIVE (not yet decisive).** Re-ran
+  `run_expB2 --drift-mode l3 --l3-hidden 8` (n=3, 300 updates, RTX 4050, `fullruns/l3_n3_fixed`,
+  commit `eeee512`) with `G` trained on the correct world. At drift 0.45 the pooled target is
+  **untrained 0.482 +/- 0.055** (mechanical floor AT CHANCE - the fix holds; per-seed
+  0.483/0.414/0.549), **predictor 0.573 +/- 0.057**, **survival 0.777 +/- 0.122** (per-seed
+  0.853/0.636/0.841). This is the project's FIRST genuine survival-specific dissociation:
+  survival beats predictor by +0.204 and untrained by +0.295 (both >> the 0.05 SESOI), the
+  shuffled negative control is at chance for every arm (survival 0.556, so it is real signal not
+  probe overfitting), matched-pair 0.906, speed positive control 0.966, engagement 100%,
+  manipulation check survival-relevant. The pipeline verdict prints **H MET (encoding induced,
+  conditional on gates)**. HONEST CAVEATS (do not oversell): the mean 0.777 clears 0.65, but the
+  t-based 90% CI **[0.648, 0.906]** just STRADDLES the bar (the printed percentile bootstrap
+  [0.705, 0.849] excludes it, but that interval under-covers at the boundary - same issue flagged
+  for the ceiling); 1/3 seeds (0.636) is below 0.65; variance is high (sd 0.122); the L0 TOST is
+  underpowered at n=3 (mean 0.514, not shown equivalent); and the dynamics-rung reward-coupling is
+  not yet ruled out for the organism (needs the leakage audit + a held-out probe). VERDICT: a
+  strong, real, encouraging POSITIVE SIGNAL - the first sign that L3 (a learned-dynamics
+  fingerprint) reverses the L2 nulls - but NOT a settled result at n=3. The **n=10 power
+  extension is running** (`fullruns/l3_n10`) to test whether the CI clears 0.65 decisively; the
+  reward/held-out controls remain to be reported before any headline claim.
 
 ## 13. How to run (milestones, in order)
 

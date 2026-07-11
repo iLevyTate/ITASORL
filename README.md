@@ -88,19 +88,30 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 |-----------|-------|
 | World ("A Patch of Earth" v0) | built, verified deterministic, snapshot-exact |
 | Ladder L0 / L1 / L2 | implemented and validated |
+| Ladder L3 (learned-dynamics surrogate) | implemented + oracle-gated |
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
-| Experiment B (incidental detection), first full arc | **done (robust negative result)** |
-| Experiment C (emergence under selection) | not started |
-| Ladder L3 / L4 | not started |
+| Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
+| Experiment B, L3 (learned-dynamics) | **preliminary positive at n=3; n=10 confirmation running** |
+| Experiment C (emergence under selection) / Ladder L4 | not started |
 
 ### Key result
 
-*Detectability does not imply incidental encoding.* An artifact an external oracle
-detects at AUROC ≈ 0.99 leaves essentially no decodable trace in a from-scratch
-agent's representation (≈ 0.5), across three readout channels and surviving
-objective-engagement and nonlinear-probe checks. See
-[`docs/FINDINGS.md`](docs/FINDINGS.md) for the full writeup and figures.
+*For a hand-tuned dynamics artifact (L2), detectability does not imply incidental
+encoding.* An artifact an external oracle detects at AUROC ≈ 0.99 leaves essentially no
+decodable trace in a from-scratch agent's representation (≈ 0.5), across three readout
+channels and surviving objective-engagement, nonlinear-probe, scale (n=10), and
+capacity-ceiling checks.
+
+*But the picture changes at L3.* When the surrogate is a **learned-dynamics fingerprint**
+(a small net replacing the velocity law) rather than a hand-tuned knob, an early result
+shows the **survival** agent — and only the survival agent — encoding it: at a difficulty
+where an untrained net is at chance (≈ 0.48) and a prediction-only agent is near chance
+(≈ 0.57), the survival probe reads ≈ 0.78. This is a **preliminary positive (n = 3)** — the
+first sign that "detectable ≠ learned" can reverse — but it is **not yet decisive** (the
+honest CI straddles the pre-registered 0.65 bar and one seed misses it); an n = 10
+confirmation and reward/held-out controls are pending. See
+[`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---
 
