@@ -7,9 +7,6 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { overflow-y: scroll; }
     body { background: #e8e5f1; display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    #__bundler_boot { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; background: #e8e5f1; z-index: 9999; }
-    #__bundler_loading { font: 12px/1.4 ui-monospace, 'Cascadia Mono', Consolas, monospace; color: #8a84a0; letter-spacing: 0.08em; text-transform: lowercase; }
-    @keyframes bboot-breathe { 0%, 100% { transform: scale(0.985); } 50% { transform: scale(1.015); } }
     #__bundler_placeholder { color: #999; font-size: 14px; }
   </style>
   <noscript>
@@ -20,12 +17,7 @@
   </noscript>
 </head>
 <body>
-  <div id="__bundler_boot">
-  <div id="__bundler_logo" style="width:min(280px, 62vw); animation:bboot-breathe 3.4s ease-in-out infinite; transform-origin:center;">
-  <svg viewBox="0 0 440 350" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto; display:block; overflow:visible;"><defs><linearGradient id="bmk0" x1="0" y1="0" x2="1" y2="0.35"><stop offset="0" stop-color="#c6b5e2"/><stop offset="1" stop-color="#9fd0e2"/></linearGradient><linearGradient id="bmk1" x1="0" y1="0" x2="1" y2="0.35"><stop offset="0" stop-color="#9d89cb"/><stop offset="1" stop-color="#7ea9cf"/></linearGradient><linearGradient id="bmk2" x1="0" y1="0" x2="1" y2="0.35"><stop offset="0" stop-color="#7a66b0"/><stop offset="1" stop-color="#5f82b8"/></linearGradient><linearGradient id="bmk3" x1="0" y1="0" x2="1" y2="0.35"><stop offset="0" stop-color="#564a92"/><stop offset="1" stop-color="#42527e"/></linearGradient><linearGradient id="bmk4" x1="0" y1="0" x2="1" y2="0.35"><stop offset="0" stop-color="#332c5c"/><stop offset="1" stop-color="#2b3457"/></linearGradient><filter id="bmkds" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1e1940" flood-opacity="0.35"/></filter><filter id="bmkglow" x="-80%" y="-80%" width="260%" height="260%"><feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#bfeaf5" flood-opacity="0.9"/></filter></defs><path d="M467.0 175.0L464.9 187.4L460.5 199.4L454.3 210.9L446.7 221.8L438.1 232.1L428.9 241.7L419.5 250.8L410.0 259.5L400.4 267.9L390.7 275.9L380.7 283.6L370.5 291.0L359.7 297.8L348.4 303.9L336.4 309.3L323.9 313.7L310.9 317.1L297.6 319.4L284.2 320.7L270.8 321.1L257.6 320.8L244.8 320.0L232.2 318.9L220.0 317.7L208.0 316.6L196.0 315.6L184.0 314.6L171.8 313.6L159.5 312.4L147.0 310.8L134.6 308.5L122.3 305.4L110.5 301.3L99.5 296.1L89.4 289.8L80.6 282.5L73.0 274.4L66.7 265.7L61.5 256.6L57.2 247.4L53.5 238.3L49.9 229.3L46.1 220.5L41.8 211.8L36.7 203.1L30.9 194.2L24.3 184.9L17.4 175.0L10.5 164.4L4.0 153.1L-1.4 141.1L-5.2 128.5L-7.0 115.6L-6.5 102.7L-3.3 90.1L2.5 78.2L10.7 67.2L21.2 57.4L33.5 49.0L47.3 41.9L62.0 36.2L77.4 31.7L92.9 28.4L108.4 26.1L123.7 24.5L138.7 23.7L153.3 23.5L167.5 23.9L181.3 24.9L194.7 26.6L207.6 29.1L220.0 32.3L231.8 36.2L242.9 40.8L253.3 45.9L263.0 51.4L272.0 57.0L280.5 62.5L288.7 67.6L297.0 72.2L305.7 76.1L315.2 79.4L325.6 82.2L337.2 84.7L350.1 87.1L364.1 89.8L378.9 93.2L394.2 97.5L409.4 103.0L423.8 109.9L437.0 118.2L448.2 127.9L457.1 138.7L463.2 150.3L466.5 162.5Z" fill="url(#bmk0)" filter="url(#bmkds)"/><path d="M412.6 175.0L407.8 184.5L401.8 193.4L395.0 201.8L387.9 209.7L380.8 217.1L373.9 224.1L367.2 231.0L360.8 237.7L354.6 244.3L348.4 250.9L342.0 257.4L335.1 263.7L327.7 269.7L319.7 275.1L310.9 279.9L301.5 283.8L291.6 286.9L281.3 289.1L270.8 290.4L260.3 291.0L249.9 291.0L239.7 290.6L229.8 289.9L220.0 289.1L210.4 288.2L200.8 287.4L191.2 286.5L181.6 285.5L171.9 284.3L162.1 282.7L152.5 280.5L143.1 277.7L134.0 274.1L125.5 269.9L117.7 264.9L110.5 259.4L104.1 253.3L98.2 247.0L92.8 240.5L87.6 233.9L82.4 227.3L77.0 220.6L71.2 213.9L64.9 207.0L58.3 199.8L51.3 192.1L44.4 183.9L37.9 175.0L32.3 165.5L27.9 155.5L25.2 145.1L24.6 134.6L26.2 124.3L30.2 114.4L36.5 105.3L44.9 97.1L55.1 90.1L66.7 84.3L79.2 79.8L92.2 76.5L105.3 74.2L118.2 72.8L130.7 71.9L142.5 71.5L153.7 71.3L164.2 71.2L174.3 71.2L183.9 71.2L193.2 71.2L202.3 71.3L211.2 71.7L220.0 72.3L228.7 73.1L237.2 74.3L245.6 75.7L254.0 77.2L262.4 78.8L270.8 80.4L279.6 81.9L288.7 83.3L298.4 84.6L308.7 85.9L319.8 87.3L331.5 89.1L343.7 91.4L356.2 94.5L368.5 98.5L380.3 103.7L391.1 110.0L400.4 117.4L407.9 125.8L413.3 135.1L416.5 144.9L417.3 155.0L415.9 165.1Z" fill="url(#bmk1)" filter="url(#bmkds)"/><path d="M356.8 175.0L352.5 181.7L347.9 188.0L343.2 193.9L338.8 199.5L334.7 205.0L331.0 210.4L327.6 215.9L324.2 221.4L320.9 227.0L317.3 232.5L313.2 238.0L308.5 243.2L303.1 248.0L297.0 252.3L290.1 255.9L282.7 258.7L274.9 260.7L266.7 262.0L258.6 262.5L250.4 262.6L242.5 262.2L234.8 261.6L227.3 260.9L220.0 260.2L212.8 259.6L205.6 259.1L198.4 258.7L191.1 258.2L183.6 257.6L176.1 256.8L168.5 255.5L160.9 253.9L153.5 251.6L146.4 248.9L139.6 245.7L133.1 242.0L126.9 237.9L121.0 233.5L115.3 228.9L109.6 224.1L104.0 219.1L98.3 213.9L92.5 208.4L86.7 202.5L81.1 196.3L75.9 189.6L71.4 182.5L67.8 175.0L65.5 167.2L64.8 159.3L65.8 151.4L68.6 143.7L73.3 136.6L79.6 130.2L87.4 124.6L96.4 120.0L106.1 116.4L116.3 113.6L126.4 111.7L136.3 110.5L145.6 109.7L154.3 109.0L162.3 108.4L169.6 107.7L176.3 106.6L182.5 105.3L188.6 103.7L194.5 101.8L200.6 99.8L206.8 97.8L213.3 95.9L220.0 94.2L227.0 92.9L234.2 91.9L241.6 91.3L249.2 91.0L257.0 91.1L264.9 91.4L273.1 92.0L281.5 92.9L290.2 94.0L299.2 95.5L308.3 97.4L317.5 99.9L326.5 103.0L335.2 106.9L343.3 111.5L350.4 117.0L356.3 123.2L360.9 130.0L363.9 137.4L365.2 145.0L365.0 152.8L363.4 160.5L360.6 167.9Z" fill="url(#bmk2)" filter="url(#bmkds)"/><path d="M313.4 175.0L310.9 179.6L308.5 184.0L306.4 188.2L304.4 192.4L302.7 196.6L301.1 200.9L299.5 205.2L297.8 209.6L295.7 214.0L293.2 218.3L290.0 222.3L286.2 226.1L281.8 229.3L276.8 232.0L271.3 234.1L265.4 235.6L259.3 236.5L253.2 236.8L247.2 236.8L241.4 236.6L235.8 236.2L230.4 235.9L225.2 235.7L220.0 235.7L214.8 235.9L209.5 236.3L204.1 236.8L198.4 237.2L192.4 237.6L186.3 237.7L180.0 237.5L173.7 236.8L167.4 235.6L161.3 234.0L155.4 231.8L149.7 229.2L144.3 226.1L139.2 222.8L134.4 219.1L129.8 215.2L125.4 211.0L121.2 206.5L117.4 201.8L113.9 196.9L111.0 191.7L108.7 186.3L107.3 180.7L106.9 175.0L107.6 169.3L109.6 163.8L112.7 158.6L117.1 153.7L122.4 149.5L128.6 145.8L135.3 142.8L142.3 140.4L149.3 138.6L156.1 137.2L162.5 136.1L168.2 135.1L173.4 134.0L177.9 132.7L181.9 131.1L185.6 129.1L189.1 126.7L192.6 123.9L196.2 120.9L200.1 117.8L204.5 114.8L209.2 111.9L214.4 109.3L220.0 107.2L225.9 105.6L232.0 104.5L238.3 104.0L244.7 103.9L251.2 104.3L257.6 105.0L264.1 106.1L270.5 107.6L276.9 109.3L283.3 111.4L289.5 113.9L295.5 116.8L301.2 120.1L306.4 123.9L310.9 128.2L314.7 132.9L317.5 137.9L319.4 143.3L320.3 148.8L320.3 154.3L319.4 159.8L317.8 165.1L315.7 170.2Z" fill="url(#bmk3)" filter="url(#bmkds)"/><path d="M282.0 175.0L281.0 178.1L280.1 181.1L279.3 184.1L278.5 187.1L277.8 190.1L276.9 193.2L275.9 196.2L274.6 199.3L272.9 202.2L270.8 205.0L268.1 207.5L265.1 209.7L261.6 211.5L257.8 212.9L253.8 213.9L249.7 214.6L245.6 215.0L241.6 215.1L237.7 215.2L234.0 215.3L230.5 215.5L227.0 216.0L223.5 216.6L220.0 217.5L216.3 218.5L212.4 219.6L208.2 220.8L203.7 221.8L199.0 222.6L194.2 223.0L189.2 223.1L184.3 222.6L179.5 221.7L174.9 220.3L170.6 218.4L166.6 216.2L162.9 213.6L159.6 210.7L156.7 207.6L154.1 204.3L151.8 200.9L149.9 197.4L148.4 193.7L147.3 190.0L146.6 186.2L146.5 182.5L147.0 178.7L148.2 175.0L150.0 171.5L152.4 168.1L155.5 165.1L159.0 162.4L162.8 160.0L166.9 158.0L170.9 156.3L174.8 154.9L178.5 153.6L181.8 152.4L184.6 151.1L187.0 149.6L189.1 147.9L190.9 145.8L192.7 143.5L194.4 140.8L196.3 137.9L198.5 135.0L201.1 132.0L204.1 129.2L207.5 126.6L211.4 124.4L215.6 122.7L220.0 121.5L224.6 120.8L229.3 120.6L234.0 120.9L238.6 121.6L243.1 122.6L247.4 123.9L251.7 125.4L255.9 127.1L259.9 128.9L263.8 131.0L267.6 133.2L271.2 135.5L274.5 138.2L277.5 141.0L280.0 144.1L282.1 147.4L283.6 150.8L284.6 154.4L285.0 158.0L285.0 161.6L284.6 165.1L283.9 168.5L283.0 171.8Z" fill="url(#bmk4)" filter="url(#bmkds)"/><path d="M253.1 177.0L252.8 178.6L252.4 180.1L252.0 181.6L251.7 183.2L251.2 184.7L250.6 186.2L249.9 187.7L249.0 189.2L247.9 190.5L246.5 191.8L245.0 192.9L243.2 193.8L241.3 194.6L239.3 195.2L237.2 195.7L235.2 196.0L233.2 196.3L231.2 196.7L229.4 197.0L227.6 197.5L225.8 198.0L223.9 198.7L222.0 199.6L220.0 200.5L217.8 201.4L215.4 202.3L212.8 203.1L210.1 203.7L207.3 204.1L204.5 204.2L201.6 204.0L198.9 203.5L196.3 202.7L194.0 201.6L191.9 200.3L190.1 198.7L188.5 197.0L187.2 195.2L186.2 193.4L185.4 191.5L184.8 189.6L184.3 187.7L184.1 185.8L184.1 184.0L184.2 182.2L184.6 180.4L185.2 178.7L186.1 177.0L187.2 175.4L188.5 174.0L189.9 172.7L191.4 171.5L193.0 170.4L194.6 169.4L196.1 168.4L197.4 167.5L198.6 166.6L199.5 165.6L200.4 164.5L201.1 163.3L201.7 161.9L202.3 160.3L203.1 158.6L204.0 156.9L205.2 155.2L206.6 153.5L208.3 151.9L210.2 150.6L212.4 149.5L214.9 148.6L217.4 148.1L220.0 148.0L222.6 148.1L225.2 148.4L227.7 149.0L230.1 149.7L232.4 150.5L234.6 151.4L236.7 152.4L238.8 153.4L240.8 154.4L242.8 155.5L244.7 156.6L246.5 157.8L248.2 159.1L249.7 160.5L251.1 161.9L252.2 163.5L253.0 165.2L253.6 166.9L253.9 168.6L254.0 170.4L254.0 172.1L253.7 173.8L253.5 175.4Z" fill="#daf1f8" filter="url(#bmkglow)"/></svg>
-  </div>
-  <div id="__bundler_loading">unpacking&hellip;</div>
-</div>
+  
 
   <script>
     
@@ -61,7 +53,6 @@ document.addEventListener('DOMContentLoaded', async function() {
       (e.filename ? ' (' + e.filename.slice(0, 60) + ':' + e.lineno + ')' : '');
   }, true);
 
-  let overlay = null;
   try {
     const manifestEl = document.querySelector('script[type="__bundler/manifest"]');
     const templateEl = document.querySelector('script[type="__bundler/template"]');
@@ -164,24 +155,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     // DOMParser/replaceWith are inert per spec — re-create each with
     // createElement so they execute, awaiting onload for src scripts to
     // preserve ordering (React before ReactDOM before Babel before text/babel).
-    const bootLogo = document.getElementById('__bundler_logo');
-    const bootLogoClone = bootLogo ? bootLogo.cloneNode(true) : null;
     const doc = new DOMParser().parseFromString(template, 'text/html');
     // Inline on the incoming root so it applies before any stylesheet parses:
     // keeps the scrollbar gutter and background constant across the swap.
     doc.documentElement.style.overflowY = 'scroll';
     doc.documentElement.style.background = '#e8e5f1';
     document.documentElement.replaceWith(doc.documentElement);
-    // Seamless handoff: cover the fresh document with the same boot visual,
-    // then fade once fonts and the hero mark are actually in.
-    overlay = document.createElement('div');
-    overlay.id = '__bundler_overlay';
-    overlay.setAttribute('style', 'position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;background:#e8e5f1;opacity:1;transition:opacity .55s ease;pointer-events:none;');
-    const bootKeyframes = document.createElement('style');
-    bootKeyframes.textContent = '@keyframes bboot-breathe{0%,100%{transform:scale(.985)}50%{transform:scale(1.015)}}';
-    overlay.appendChild(bootKeyframes);
-    if (bootLogoClone) overlay.appendChild(bootLogoClone);
-    (document.body || document.documentElement).appendChild(overlay);
     const dead = Array.from(document.scripts);
     for (const old of dead) {
       const s = document.createElement('script');
@@ -205,42 +184,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
       window.Babel.transformScriptTags();
     }
-    // Sequenced settle so nothing reflows after the fade: React mount, then a
-    // layout pass (which is what actually requests fonts), then the fonts
-    // themselves, then image decode. Every stage is capped - the overlay can
-    // never stick.
-    const capped = function(p, ms){ return Promise.race([p, new Promise(function(r){ setTimeout(r, ms); })]); };
-    await new Promise(function(r){
-      const t0 = Date.now();
-      (function poll(){
-        // #lg is the gradient drawChart() creates on mount - React has painted.
-        if (document.getElementById('lg') || Date.now() - t0 > 2500) return r();
-        setTimeout(poll, 80);
-      })();
-    });
-    await new Promise(function(r){ requestAnimationFrame(function(){ requestAnimationFrame(r); }); });
-    if (document.fonts) {
-      const faces = [
-        "400 16px 'Hanken Grotesk'", "500 16px 'Hanken Grotesk'", "600 16px 'Hanken Grotesk'",
-        "400 12px 'IBM Plex Mono'", "500 12px 'IBM Plex Mono'",
-        "400 16px 'Space Grotesk'", "500 16px 'Space Grotesk'", "600 40px 'Space Grotesk'", "700 16px 'Space Grotesk'"
-      ];
-      await capped(
-        Promise.all(faces.map(function(f){ return document.fonts.load(f).catch(function(){}); }))
-          .then(function(){ return document.fonts.ready; }),
-        3000);
-    }
-    await capped(Promise.all(Array.from(document.images).map(function(im){
-      return (im.decode ? im.decode() : Promise.resolve()).catch(function(){});
-    })), 1500);
-    await new Promise(function(r){ requestAnimationFrame(function(){ requestAnimationFrame(r); }); });
-    if (overlay) {
-      const ov = overlay; overlay = null;
-      ov.style.opacity = '0';
-      setTimeout(function(){ ov.remove(); }, 700);
-    }
   } catch (err) {
-    if (overlay) { overlay.remove(); overlay = null; }
     setStatus('Error unpacking: ' + err.message);
     console.error('Bundle unpack error:', err);
   }
