@@ -35,3 +35,40 @@ Preflights: CUDA must be visible (override with `--allow-cpu`) and at least 4 GB
   `<run_dir>/artifacts/states` so they are mirrored to Drive, included in
   `bundle.zip`, and survive resume on a different machine. All profiles with
   `dump_states=True` use `auto` (Colab and `run_local.py` alike).
+
+## audit_behavior_mediation.py
+
+Offline (no GPU) behavior-mediation audit of a pooled-states dump: can
+behavior alone decode the world, and how much world-signal survives the
+in-fold behavior controls? Old dumps get the per-episode-mean control; dumps
+written after the trace extension (keys `bta`/`bts`) also get the strictly
+stronger per-timestep control.
+
+```bash
+python scripts/audit_behavior_mediation.py fullruns/l3_n10_audited/states \
+    --json fullruns/l3_n10_audited/behavior_audit.json
+```
+
+## L3 owed runs (human-launched, GPU)
+
+Both pre-registered follow-ups need fresh dumps because the audited n=10 run
+predates the trace extension (no `bta`/`bts`, no checkpoints):
+
+```bash
+# hidden=8 re-run: per-timestep behavior control at the HEADLINE capacity
+python scripts/run_expB2.py --drift-mode l3 --l3-hidden 8 \
+    --seeds 0 1 2 3 4 5 6 7 8 9 \
+    --out-dir fullruns/l3_h8_traces --dump-states fullruns/l3_h8_traces/states
+
+# hidden=4: pre-registered second in-band capacity (PREREGISTRATION_L3.md sec.11)
+python scripts/run_expB2.py --drift-mode l3 --l3-hidden 4 \
+    --seeds 0 1 2 3 4 5 6 7 8 9 \
+    --out-dir fullruns/l3_h4_traces --dump-states fullruns/l3_h4_traces/states
+```
+
+Then run `audit_behavior_mediation.py` on each `states/` directory. Decision
+rule (fixed in advance, see
+`docs/superpowers/specs/2026-07-12-l3-behavior-audit-design.md`): survival
+`resid_trace` mean >= 0.65 strengthens the behavior-independent claim;
+[0.60, 0.65) weakens it to a below-bar trace; < 0.60 means the L3 signal is
+largely behavior-mediated.

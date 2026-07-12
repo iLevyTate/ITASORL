@@ -9,6 +9,7 @@ Canonical committed outputs from pre-registered confirmatory runs (not ephemeral
 | `expB2_survival.png` | Figure matching the canonical JSON |
 | `expB2_results_confirmatory_n3.json` | Archived initial lab confirmatory run (pre-rigor-hardening; survival @ drift 0.45 ≈ 0.595) |
 | `expB2_survival_confirmatory_n3.png` | Figure for the archived initial run |
+| `behavior_audit_l3_n10.json` | Behavior-mediation audit of the L3 n=10 dumps (`fullruns/l3_n10_audited/states`) via `scripts/audit_behavior_mediation.py`. Reproduces the published survival d=0.45 numbers exactly: target 0.752, behavior-only 0.689/0.705, in-fold controlled 0.676 linear / 0.659 quadratic. Old-format dumps, so per-episode control only; the per-timestep control needs the trace-extended dumps of the owed re-runs. |
 
 New runs write to `fullruns/<MMDDYYYY>/artifacts/` or here when promoted manually.
 Promote a run by copying `expB2_results.json` and `expB2_survival.png` from the run

@@ -73,11 +73,40 @@ def test_collect_pool_anchors_aligned():
     ceiling controls plus the reward channel the pooled leakage audit depends on."""
     agent, norm = _agent_norm()
     out = collect_pool(agent, norm, P, 0.45, 5, 6, "cpu", 222, RS, return_anchors=True)
-    assert len(out) == 6
-    H, spd, energy, food, drag, reward = out
+    assert len(out) == 7
+    H, spd, energy, food, drag, reward, traces = out
     k = H.shape[0]
     assert spd.shape == (k,) and energy.shape == (k,) and food.shape == (k,) and drag.shape == (k,)
     assert reward.shape == (k,) and np.isfinite(reward).all()
+
+
+def test_collect_pool_traces_match_anchor_means():
+    """The per-timestep behavior traces (speed/energy/food/drag) must be the very
+    accumulators whose means are the anchors - the behavior-mediation audit's
+    per-timestep control depends on this alignment with H."""
+    agent, norm = _agent_norm()
+    out = collect_pool(agent, norm, P, 0.45, 5, 6, "cpu", 222, RS, return_anchors=True)
+    H, spd, energy, food, drag, reward, traces = out
+    k, steps = H.shape[0], H.shape[1]
+    assert traces.shape == (k, steps, 4)
+    np.testing.assert_allclose(traces[:, :, 0].mean(1), spd, rtol=1e-5, atol=1e-6)
+    np.testing.assert_allclose(traces[:, :, 1].mean(1), energy, rtol=1e-5, atol=1e-6)
+    np.testing.assert_allclose(traces[:, :, 2].mean(1), food, rtol=1e-5, atol=1e-6)
+    np.testing.assert_allclose(traces[:, :, 3].mean(1), drag, rtol=1e-5, atol=1e-6)
+
+
+def test_pooled_readout_dump_contains_traces(tmp_path):
+    """--dump-states must persist bta/bts (k, steps, 4) so the per-timestep
+    behavior control can run offline on new dumps."""
+    agent, norm = _agent_norm()
+    p = tmp_path / "dump.npz"
+    pooled_readout(agent, norm, P, 0.45, n_eps=6, steps=5, ray_steps=RS,
+                   device="cpu", dump_path=str(p))
+    with np.load(p) as z:
+        assert z["bta"].shape[1:] == (5, 4)
+        assert z["bts"].shape[1:] == (5, 4)
+        assert z["bta"].shape[0] == z["Ha"].shape[0]
+        assert z["bts"].shape[0] == z["Hs"].shape[0]
 
 
 def test_collect_pool_excludes_early_deaths(monkeypatch):
@@ -108,7 +137,8 @@ def test_pooled_readout_too_few_survivors_guard(monkeypatch):
         steps, hid, k = args[5], args[0].hidden, 3           # 3 < 5 -> guard must fire
         H, s = np.zeros((k, steps, hid), np.float32), np.zeros(k)
         z = np.zeros(k)
-        return (H, s, z, z, z, z) if return_anchors else (H, s)
+        bt = np.zeros((k, steps, 4), np.float32)
+        return (H, s, z, z, z, z, bt) if return_anchors else (H, s)
 
     monkeypatch.setattr(b2, "collect_pool", _tiny_pool)
     agent, norm = _agent_norm()
@@ -150,7 +180,8 @@ def _stub_pool(reward_auth, reward_surr, seed=0):
         k = len(reward)
         H = rng.standard_normal((k, steps, hid)).astype(np.float32)
         z = np.zeros(k)
-        return (H, z, z, z, z, reward) if return_anchors else (H, z)
+        bt = np.zeros((k, steps, 4), np.float32)
+        return (H, z, z, z, z, reward, bt) if return_anchors else (H, z)
     return _pool
 
 

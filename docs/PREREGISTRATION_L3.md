@@ -332,6 +332,18 @@ Rigor carried from the B-v3 audit (2026-07-10):
   richer per-timestep behavior control to tighten the behavior-independent estimate; (b) the pre-registered
   hidden=4 second-capacity replication (section 11); (c) the held-out/common-garden probe (a world-signal
   that transfers to an UNSEEN fingerprint is much harder to dismiss as behavior).
+- **2026-07-12 - BEHAVIOR AUDIT MADE REPRODUCIBLE (code, no new runs).** The ad hoc mediation audit above
+  is now canonical committed code (`itasorl/behavior_audit.py` + `scripts/audit_behavior_mediation.py`,
+  in-fold controls, control properties unit-tested on synthetic ground truth). Re-run on the same dumps it
+  reproduces the published survival d=0.45 figures exactly: target 0.752, behavior-only 0.689 linear /
+  0.705 nonlinear (prose said 0.704; random-forest seed wiggle), controlled 0.676 linear / 0.659 quadratic
+  (artifact: `artifacts/expB2/behavior_audit_l3_n10.json`). The dump now also persists PER-TIMESTEP
+  behavior traces (`bta`/`bts`), and the script runs the strictly stronger per-timestep control when
+  traces are present, with a decision rule fixed in advance
+  (`docs/superpowers/specs/2026-07-12-l3-behavior-audit-design.md`): survival per-timestep-controlled
+  mean >= 0.65 strengthens the claim; [0.60, 0.65) weakens it to a below-bar trace; < 0.60 means largely
+  behavior-mediated. Owed items (a) and (b) reduce to two human-launched runs
+  (`scripts/README.md`, "L3 owed runs"): hidden=8 with traces (headline capacity) and hidden=4 n=10.
 
 ## 13. How to run (milestones, in order)
 

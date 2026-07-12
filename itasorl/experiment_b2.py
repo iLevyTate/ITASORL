@@ -622,8 +622,11 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
     world-identity AUROC is genuine absence of encoding, not a dead probe. (They are NOT
     the world label: energy/food vary inside authentic and surrogate alike.) reward_sum
     feeds the pooled leakage audit: L3 dynamics shift movement-cost -> reward, so the
-    headline probe must be shown NOT to be reading 'how much it ate' instead of identity."""
-    Hs, spd, energy, food, drag, reward = [], [], [], [], [], []
+    headline probe must be shown NOT to be reading 'how much it ate' instead of identity.
+    Also returns the PER-TIMESTEP behavior traces (k, steps, 4) - the same
+    speed/energy/food/drag accumulators the anchor means are taken over - so the
+    behavior-mediation audit can run its per-timestep control offline."""
+    Hs, spd, energy, food, drag, reward, traces = [], [], [], [], [], [], []
     for i in range(n_eps):
         w = make_world(params, drift_sigma, ray_steps)
         w.reset(_seeds(seed_base + i))
@@ -654,10 +657,12 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             food.append(float(np.mean(fd)))
             drag.append(float(np.mean(dg)))
             reward.append(rw)
+            traces.append(np.stack([sp, en, fd, dg], axis=1).astype(np.float32))
     H = np.stack(Hs) if Hs else np.zeros((0, steps, agent.hidden), np.float32)
     if return_anchors:
+        Bt = np.stack(traces) if traces else np.zeros((0, steps, 4), np.float32)
         return (H, np.asarray(spd), np.asarray(energy), np.asarray(food),
-                np.asarray(drag), np.asarray(reward))
+                np.asarray(drag), np.asarray(reward), Bt)
     return H, np.asarray(spd)
 
 
@@ -686,17 +691,19 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
     asymmetry from dropping early deaths. If `dump_path` is set, persists the raw recurrent
     states AND per-episode reward so both probes can be recomputed offline (no GPU)."""
     device = device or default_device()
-    Ha, spa, ena, fda, dra, rwa = collect_pool(agent, norm, params, 0.0, n_eps, steps, device,
-                                               800_000, ray_steps, return_anchors=True)
-    Hs, sps, ens, fds, drs, rws = collect_pool(agent, norm, params, drift_sigma, n_eps, steps,
-                                               device, 850_000, ray_steps, return_anchors=True)
+    Ha, spa, ena, fda, dra, rwa, bta = collect_pool(agent, norm, params, 0.0, n_eps, steps,
+                                                    device, 800_000, ray_steps,
+                                                    return_anchors=True)
+    Hs, sps, ens, fds, drs, rws, bts = collect_pool(agent, norm, params, drift_sigma, n_eps,
+                                                    steps, device, 850_000, ray_steps,
+                                                    return_anchors=True)
     if dump_path is not None:
         d = os.path.dirname(dump_path)
         if d:
             os.makedirs(d, exist_ok=True)
         np.savez_compressed(dump_path, Ha=Ha, Hs=Hs, spa=spa, sps=sps, ena=ena, ens=ens,
-                            fda=fda, fds=fds, dra=dra, drs=drs, ra=rwa, rs=rws,
-                            drift_sigma=np.float64(drift_sigma), steps=np.int64(steps))
+                            fda=fda, fds=fds, dra=dra, drs=drs, ra=rwa, rs=rws, bta=bta,
+                            bts=bts, drift_sigma=np.float64(drift_sigma), steps=np.int64(steps))
     nan = float("nan")
     if len(Ha) < 5 or len(Hs) < 5:
         return {"target": nan, "target_lo": nan, "target_hi": nan,

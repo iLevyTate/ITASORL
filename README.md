@@ -125,8 +125,11 @@ so per-timestep behavior could lower it further). The honest statement is: rewar
 survivorship-controlled, robust to nonlinear probing, with a modest (~0.66) behavior-independent
 world-signal. This is still the first place
 "detectable does not imply learned" reverses: a from-scratch agent, never rewarded for it,
-comes to carry world-discriminative state as a byproduct of surviving. Remaining work: a
-richer per-timestep behavior control and a second in-band capacity (hidden = 4). See
+comes to carry world-discriminative state as a byproduct of surviving. The mediation audit is
+now reproducible code (`scripts/audit_behavior_mediation.py`; it re-derives the published
+figures from the dumps exactly). Remaining work: a richer per-timestep behavior control
+(tooling committed, dump format extended; needs a re-run) and a second in-band capacity
+(hidden = 4). See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---
