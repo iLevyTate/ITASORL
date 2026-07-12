@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **preliminary positive at n=3; n=10 confirmation running** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10 (reward/survivorship-controlled; partly behavior-mediated)** |
 | Experiment C (emergence under selection) / Ladder L4 | not started |
 
 ### Key result
@@ -104,13 +104,29 @@ channels and surviving objective-engagement, nonlinear-probe, scale (n=10), and
 capacity-ceiling checks.
 
 *But the picture changes at L3.* When the surrogate is a **learned-dynamics fingerprint**
-(a small net replacing the velocity law) rather than a hand-tuned knob, an early result
-shows the **survival** agent — and only the survival agent — encoding it: at a difficulty
-where an untrained net is at chance (≈ 0.48) and a prediction-only agent is near chance
-(≈ 0.57), the survival probe reads ≈ 0.78. This is a **preliminary positive (n = 3)** — the
-first sign that "detectable ≠ learned" can reverse — but it is **not yet decisive** (the
-honest CI straddles the pre-registered 0.65 bar and one seed misses it); an n = 10
-confirmation and reward/held-out controls are pending. See
+(a small net replacing the velocity law) rather than a hand-tuned knob, the **survival**
+agent, and only the survival agent, encodes it. At a difficulty where an untrained net is at
+chance (about 0.49, and still only 0.52 under a nonlinear probe) and a prediction-only agent
+is near chance (about 0.57), the survival probe reads **0.752** (n = 10, honest 90% CI
+**[0.698, 0.807]**, which excludes the pre-registered 0.65 bar; 8 of 10 seeds clear it). The
+dissociation is robust: it is not reward-mediated (world is not decodable from summed reward,
+AUROC 0.541, clean 10 of 10 seeds), not survivorship-biased (0 early deaths, every pool
+110/110), not a linear-probe artifact (the untrained net stays near chance even nonlinearly),
+and the L0 authentic-vs-authentic control is at chance (0.517). **Caveat, from a post-hoc
+audit:** the signal is partly *behavior-mediated*. The agent moves and forages differently in
+the two worlds, so behavior alone (speed, energy, food, drag) already decodes the world at about
+0.69; controlling for behavior cleanly (behavior model fit in-fold), the state's
+behavior-independent world-signal is about **0.66** (0.676 linear, 0.659 quadratic), still well
+above the untrained floor (0.488) but only *at* the 0.65 bar (6 of 10 seeds clear it). So
+behavior mediates roughly 0.09 of the 0.752 headline; a real behavior-independent component
+survives, but it is weak-to-moderate, not the abstract world-identity direction the raw 0.752
+suggests (and this is still a soft upper bound: only per-episode mean behavior was controlled,
+so per-timestep behavior could lower it further). The honest statement is: reward- and
+survivorship-controlled, robust to nonlinear probing, with a modest (~0.66) behavior-independent
+world-signal. This is still the first place
+"detectable does not imply learned" reverses: a from-scratch agent, never rewarded for it,
+comes to carry world-discriminative state as a byproduct of surviving. Remaining work: a
+richer per-timestep behavior control and a second in-band capacity (hidden = 4). See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---

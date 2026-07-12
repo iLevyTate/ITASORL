@@ -296,6 +296,42 @@ Rigor carried from the B-v3 audit (2026-07-10):
   fingerprint) reverses the L2 nulls - but NOT a settled result at n=3. The **n=10 power
   extension is running** (`fullruns/l3_n10`) to test whether the CI clears 0.65 decisively; the
   reward/held-out controls remain to be reported before any headline claim.
+- **2026-07-12, AUDITED ORGANISM RUN n=10 + POST-HOC CONFOUND AUDITS - POSITIVE, PARTLY
+  BEHAVIOR-MEDIATED.** Re-ran `run_expB2 --drift-mode l3 --l3-hidden 8` (n=10, seeds 0..9, 300
+  updates, RTX 4050, `fullruns/l3_n10_audited`) with the pooled-path leakage audit added (PR #39). At
+  drift 0.45 the survival pooled target is **0.752**, honest t-based 90% CI **[0.698, 0.807]** (EXCLUDES
+  the 0.65 bar; per-seed 0.853/0.636/0.841/0.823/0.830/0.573/0.705/0.782/0.759/0.723; 8/10 seeds >=
+  0.65), with **predictor 0.573** and **untrained 0.488** (mechanical floor at chance) - survival beats
+  both baselines by well over the 0.05 SESOI, and the L0 authentic-vs-authentic control is **0.517**
+  (chance). This is a determinism reproduction of the `fullruns/l3_n10` headline (identical 0.752).
+  CONTROLS THAT PASS: (1) POOLED reward-leakage audit - world identity is NOT decodable from summed
+  reward: **reward-leak AUROC mean 0.541, range [0.517, 0.559], clean 10/10 seeds** (peer-review item 1,
+  RESOLVED). (2) Per-world survivorship - **0 early deaths in every pool (110/110 authentic and surrogate,
+  all seeds)**, so dropping early deaths introduces no asymmetry (peer-review item 2, RESOLVED). (3)
+  Nonlinear-probe check (post-hoc, on the dumped states): a random-forest probe on the UNTRAINED agent
+  reads only **0.517** (its shuffled baseline 0.506; L0 untrained 0.483), so the survival-vs-untrained
+  dissociation is NOT a linear-probe artifact - the world is genuinely near-chance-decodable in the
+  untrained state even nonlinearly.
+  CONTROL THAT PARTLY MEDIATES - BEHAVIORAL MEDIATION (post-hoc, on the dumped states): the agent moves and
+  forages differently in the two worlds, so per-episode behavior alone (speed/energy/food/drag) decodes the
+  world at **~0.69** (0.689 linear, 0.704 nonlinear). Controlling for behavior CLEANLY (behavior->state
+  regression fit IN-FOLD, no leakage) leaves a behavior-independent world-signal of **~0.66** (0.676 linear
+  basis, 0.659 quadratic; per-seed quad 0.71/0.58/0.71/0.69/0.73/0.54/0.62/0.70/0.67/0.64, 6/10 >= 0.65) -
+  clearly above the 0.488 untrained floor but only AT the 0.65 bar. So behavior mediates ~0.09 of the 0.752
+  headline; a real behavior-independent component survives, but it is weak-to-moderate, not the abstract
+  world-identity direction the raw 0.752 suggests. (An in-SAMPLE residualization gave a deflated 0.56-0.63
+  by over-removing via leakage; the in-fold ~0.66 is the defensible figure. Still a soft UPPER bound: only
+  4 coarse per-episode MEANS were controlled, so per-timestep behavior would likely lower it further.) The
+  reward audit passed because reward is one scalar; behavior is multivariate and a much stronger separator.
+  VERDICT: a real, reward- and survivorship-controlled, nonlinear-robust POSITIVE - L3 (a learned-dynamics
+  fingerprint) reverses the L2 nulls and the survival agent (uniquely) carries world-discriminative state,
+  read out and never rewarded. But it is only PARTLY behavior-independent (~0.66 after clean behavior
+  control, right at the 0.65 bar), so the strong "abstract world-identity direction at 0.752" reading is
+  NOT supported; the honest headline is "survival-relevant state that differs by world, plus a modest
+  (~0.66) behavior-independent world component." STILL OWED: (a) a
+  richer per-timestep behavior control to tighten the behavior-independent estimate; (b) the pre-registered
+  hidden=4 second-capacity replication (section 11); (c) the held-out/common-garden probe (a world-signal
+  that transfers to an UNSEEN fingerprint is much harder to dismiss as behavior).
 
 ## 13. How to run (milestones, in order)
 
