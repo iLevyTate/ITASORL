@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10 (reward/survivorship-controlled; partly behavior-mediated)** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10 (reward-, survivorship-, and behavior-controlled)** |
 | Experiment C (emergence under selection) / Ladder L4 | not started |
 
 ### Key result
@@ -112,24 +112,25 @@ is near chance (about 0.57), the survival probe reads **0.752** (n = 10, honest 
 dissociation is robust: it is not reward-mediated (world is not decodable from summed reward,
 AUROC 0.541, clean 10 of 10 seeds), not survivorship-biased (0 early deaths, every pool
 110/110), not a linear-probe artifact (the untrained net stays near chance even nonlinearly),
-and the L0 authentic-vs-authentic control is at chance (0.517). **Caveat, from a post-hoc
-audit:** the signal is partly *behavior-mediated*. The agent moves and forages differently in
-the two worlds, so behavior alone (speed, energy, food, drag) already decodes the world at about
-0.69; controlling for behavior cleanly (behavior model fit in-fold), the state's
-behavior-independent world-signal is about **0.66** (0.676 linear, 0.659 quadratic), still well
-above the untrained floor (0.488) but only *at* the 0.65 bar (6 of 10 seeds clear it). So
-behavior mediates roughly 0.09 of the 0.752 headline; a real behavior-independent component
-survives, but it is weak-to-moderate, not the abstract world-identity direction the raw 0.752
-suggests (and this is still a soft upper bound: only per-episode mean behavior was controlled,
-so per-timestep behavior could lower it further). The honest statement is: reward- and
-survivorship-controlled, robust to nonlinear probing, with a modest (~0.66) behavior-independent
-world-signal. This is still the first place
-"detectable does not imply learned" reverses: a from-scratch agent, never rewarded for it,
-comes to carry world-discriminative state as a byproduct of surviving. The mediation audit is
-now reproducible code (`scripts/audit_behavior_mediation.py`; it re-derives the published
-figures from the dumps exactly). Remaining work: a richer per-timestep behavior control
-(tooling committed, dump format extended; needs a re-run) and a second in-band capacity
-(hidden = 4). See
+and the L0 authentic-vs-authentic control is at chance (0.517). **And the signal is not just
+behavior.** The agent does move and forage differently in the two worlds - in fact the full
+behavior trace alone decodes the world at **0.803**, better than the state probe itself - so
+the obvious deflationary reading was that the probe reads behavior, not a representation. A
+pre-registered per-timestep control (dump every step's speed/energy/food/drag, residualize the
+recurrent state on the behavior trace in-fold, probe what is left) rejects that reading: the
+behavior-independent world-signal is **0.726** (90% CI **[0.685, 0.765]**, which excludes the
+0.65 bar; 9 of 10 seeds clear it; quadratic variant 0.721). The control is honest on its own
+negative controls: the untrained agent's state reads exact chance (0.498) under the same
+control even though untrained *behavior* decodes 0.645, and the prediction-only agent stays
+near chance (0.574). (An earlier, cruder per-episode-mean control had under-estimated the
+signal at ~0.66 by over-removing - the attenuation our synthetic tests predicted.) The honest
+statement is: reward- and survivorship-controlled, robust to nonlinear probing, with a
+behavior-independent world-signal of about **0.73** that clears the pre-registered bar. This
+is the first place "detectable does not imply learned" reverses: a from-scratch agent, never
+rewarded for it, comes to carry world-discriminative state as a byproduct of surviving. The
+mediation audit is reproducible code (`scripts/audit_behavior_mediation.py`; artifacts in
+`artifacts/expB2/`). Remaining work: a second in-band capacity (hidden = 4) and the
+held-out/common-garden probe. See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---

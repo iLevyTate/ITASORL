@@ -51,16 +51,18 @@ python scripts/audit_behavior_mediation.py fullruns/l3_n10_audited/states \
 
 ## L3 owed runs (human-launched, GPU)
 
-Both pre-registered follow-ups need fresh dumps because the audited n=10 run
-predates the trace extension (no `bta`/`bts`, no checkpoints):
+Pre-registered follow-ups needing fresh dumps (the audited n=10 run predates
+the trace extension: no `bta`/`bts`, no checkpoints):
 
 ```bash
-# hidden=8 re-run: per-timestep behavior control at the HEADLINE capacity
+# DONE 2026-07-13 (fullruns/l3_h8_traces): hidden=8 re-run, per-timestep
+# behavior control at the HEADLINE capacity. Outcome: resid_trace 0.726
+# [0.685, 0.765] -> claim STRENGTHENED (artifacts/expB2/behavior_audit_l3_h8_traces.json).
 python scripts/run_expB2.py --drift-mode l3 --l3-hidden 8 \
     --seeds 0 1 2 3 4 5 6 7 8 9 \
     --out-dir fullruns/l3_h8_traces --dump-states fullruns/l3_h8_traces/states
 
-# hidden=4: pre-registered second in-band capacity (PREREGISTRATION_L3.md sec.11)
+# OWED - hidden=4: pre-registered second in-band capacity (PREREGISTRATION_L3.md sec.11)
 python scripts/run_expB2.py --drift-mode l3 --l3-hidden 4 \
     --seeds 0 1 2 3 4 5 6 7 8 9 \
     --out-dir fullruns/l3_h4_traces --dump-states fullruns/l3_h4_traces/states

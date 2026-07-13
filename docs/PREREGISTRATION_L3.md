@@ -344,6 +344,25 @@ Rigor carried from the B-v3 audit (2026-07-10):
   mean >= 0.65 strengthens the claim; [0.60, 0.65) weakens it to a below-bar trace; < 0.60 means largely
   behavior-mediated. Owed items (a) and (b) reduce to two human-launched runs
   (`scripts/README.md`, "L3 owed runs"): hidden=8 with traces (headline capacity) and hidden=4 n=10.
+- **2026-07-13 - PER-TIMESTEP BEHAVIOR CONTROL: CLAIM STRENGTHENED (hidden=8 re-run with traces).** Re-ran
+  the frozen hidden=8 n=10 protocol with trace-extended dumps (`fullruns/l3_h8_traces`, RTX 4050). The
+  pipeline is deterministic end-to-end: every published figure reproduced exactly (survival target 0.752
+  [0.704, 0.797]; behavior-only 0.689/0.705; per-episode controlled 0.676/0.659; L0 mean 0.517, ROPE
+  equivalence accepted; reward-leak clean 10/10; 0 deaths, all pools 110/110). The pre-registered decision
+  rule then evaluated the strictly stronger per-timestep control: survival resid_trace = **0.726** (90% CI
+  [0.685, 0.765], 9/10 seeds >= 0.65; quadratic variant 0.721 [0.678, 0.760]) -> >= 0.65, STRENGTHENS, and
+  unlike the per-episode estimate the CI EXCLUDES the 0.65 bar. Honesty checks on real data: the untrained
+  agent's resid_trace is 0.498 (exact chance) even though untrained BEHAVIOR alone decodes the world at
+  0.645, so the control neither manufactures nor spares signal; predictor resid_trace 0.574 (the
+  survival-only dissociation is preserved under the control). Two notable structural facts: (1) the full
+  behavior trace alone decodes the world at 0.803, BETTER than the state probe itself - behavior is highly
+  world-discriminative; (2) the per-episode-mean control had been OVER-removing (0.676), exactly the
+  attenuation the synthetic tests predicted, while the surgical per-timestep control leaves ~0.73. The
+  honest headline improves to: reward- and survivorship-controlled, nonlinear-robust, with a
+  behavior-independent world-signal of **~0.73** whose CI clears the pre-registered bar. Caveats: the
+  residualization is linear/quadratic over phi = [b_t, b_(t-1), cummean(b)]; a full-history or nonlinear
+  control could in principle remove more. Artifact: `artifacts/expB2/behavior_audit_l3_h8_traces.json`.
+  STILL OWED: the hidden=4 second-capacity replication (section 11) and the held-out/common-garden probe.
 
 ## 13. How to run (milestones, in order)
 
