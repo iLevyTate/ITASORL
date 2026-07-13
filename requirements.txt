@@ -1,4 +1,4 @@
-# ITASORL runtime dependencies (see FINDINGS.md sec. 8).
+# ITASORL runtime dependencies (see FINDINGS.md sec. 12).
 # Lower bounds reflect versions the experiments have been run against; they are
 # kept loose so the CI matrix (Python 3.10-3.12) can resolve current wheels.
 

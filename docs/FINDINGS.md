@@ -4,6 +4,11 @@
 was run and what was found; the research plan lives in `ITASORL.md` and the world
 in `ITASORL_world_spec.md`.*
 
+*Section numbers are stable identifiers: frozen pre-registration documents cite
+them, so result sections are appended, never renumbered. (The one exception: the
+reproducibility appendix, cited nowhere frozen, moved from 8 to 12 to restore
+reading order; there is deliberately no section 8.)*
+
 ---
 
 ## TL;DR
@@ -13,16 +18,34 @@ asked whether a from-scratch agent can tell that its world is a generative
 surrogate rather than the authentic base dynamics, using only substrate seams,
 with detection **read out, not rewarded**.
 
-**The headline result is a well-controlled negative: detectability does not imply
-incidental encoding.** A substrate artifact that an external, privileged oracle
-detects almost perfectly (AUROC ≈ 0.99) leaves essentially no decodable trace in a
-from-scratch agent's learned representation (AUROC ≈ 0.5), across three different
-readout channels, and surviving checks that the training objective was genuinely
-engaged and that the probe was not merely too weak (linear *or* nonlinear). The gap
-between the *detectability ceiling* (Experiment A) and the *incidental-detection
-floor* (Experiment B) is itself the finding, and it reframes the project's core
-hypothesis into a falsifiable, conditional question: *under what conditions does
-incidental encoding emerge?*
+**There are two headline results, one negative and one positive, and the contrast
+between them is the finding.**
+
+**At L2 (a hand-tuned dynamics artifact), detectability does not imply incidental
+encoding: a robust, well-controlled negative.** A substrate artifact that an
+external, privileged oracle detects almost perfectly (AUROC ≈ 0.99) leaves
+essentially no decodable trace in a from-scratch agent's learned representation
+(AUROC ≈ 0.5), across three readout channels, surviving engagement and probe checks
+(linear *and* nonlinear), and surviving survival pressure at scale: the
+survival-coupled variants reach only 0.610 (90% CI [0.585, 0.634]) at n = 10, with
+the architectural capacity ceiling itself at 0.596 (90% CI [0.577, 0.616]), both
+entirely below the pre-registered 0.65 bar (sections 3, 4, 9).
+
+**At L3 (a learned-dynamics fingerprint surrogate), survival-trained agents do
+incidentally encode world identity: a controlled, partly behavior-mediated
+positive.** With the oracle-calibrated fingerprint (gate AUROC 0.928, untrained
+floor at chance), the survival agent's state decodes the world at **0.752**
+(t-based 90% CI [0.698, 0.807], excluding the bar; n = 10 seeds), while the
+predictor (0.573) and untrained (0.488) baselines on the identical trunk do not.
+Reward leakage, survivorship, and nonlinear-probe controls pass; a strict
+per-timestep behavior control leaves a behavior-independent world-signal of
+**0.726** (90% CI [0.685, 0.765], 9/10 seeds above the bar; section 10).
+
+Together: an agent does not represent a detectable artifact *for free* (L2), but
+when the artifact is a generative fingerprint that survival pressure forces it to
+cope with, world-discriminative state emerges as a byproduct, read out and never
+rewarded (L3). The conditions under which incidental encoding emerges are exactly
+the object of study.
 
 ---
 
@@ -38,12 +61,13 @@ substrate). Detection is measured against a **surrogate ladder**:
 | L0 | Identical re-implementation (control, must be at chance) | tested |
 | L1 | Observation discretization (a lattice / quantization tell) | tested |
 | L2 | Rollout drift (a slowly drifting dynamics coefficient) | tested |
-| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, partly behavior-mediated; see PREREGISTRATION_L3 sec.12) |
+| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; section 10) |
 | L4 | Adversarially-hardened surrogate | not started |
 
-Three experiments were planned. This cycle completed Experiment A for L1 and L2,
-and the first full arc of Experiment B. Experiment C (emergence under selection)
-is not started.
+Three experiments were planned. This cycle completed Experiment A for L1 and L2
+(and later the L3 oracle gate, section 10.1), the first full arc of Experiment B,
+the survival-coupled B-v2/B-v3 arc (section 9), and the L3 arc (section 10).
+Experiment C (emergence under selection) is not started.
 
 The world is **"A Patch of Earth" v0**, a 2.5D, deterministic, dissipative,
 Earth-*like* (authored, not data-driven) environment with a ~146-dimensional
@@ -246,11 +270,17 @@ inducing it (if possible) requires something more deliberate.
 
 ## 6. Status against the hypotheses
 
-- **H1 (detectability).** Supported at the substrate level: L1 and L2 are both
+- **H1 (detectability).** Supported at the substrate level: L1, L2, and L3 are all
   detectable by a privileged discriminator, with calibrated difficulty and a
-  validated leakage gate (Experiment A).
-- **H4 (legibility / incidental encoding).** Not supported under the conditions
-  tested. Reframed as a conditional question rather than abandoned.
+  validated leakage gate (Experiment A; the L3 oracle gate in section 10.1).
+- **H4 (legibility / incidental encoding).** Conditionally supported. Not supported
+  at L2 under any lever pulled (sections 3, 9): a hand-tuned dynamics artifact is
+  not encoded even under survival pressure at scale. Supported at L3 (section 10):
+  a learned-dynamics fingerprint IS incidentally encoded by the survival-trained
+  agent, uniquely among the three objectives, with a behavior-independent component
+  that clears the pre-registered bar. The condition that flips the result is the
+  artifact's character (a generative fingerprint that survival must cope with), not
+  probe power, capacity, or objective horizon.
 - **H2 (substrate-grounding via ablations)** and **H3 (emergence under
   selection)**: not yet tested.
 
@@ -287,20 +317,22 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    readout has been scaled to n = 10 seeds without clearing the bar, so neither the
    probe family nor sampling power is the bottleneck.
 
-### 7.2 Open directions (untested; could still change the result)
+### 7.2 Open directions (status as of the L3 arc)
 
-1. **L3, a generative fingerprint.** L1 (input quantization) would almost certainly be
-   encoded but invites the "it is just reading input format" critique, which is exactly
-   why **L3**, a surrogate whose tell comes from a separately *learned* predictive
-   world-model (smoothing/blur, missing fine detail, mode collapse; see the ladder in
-   `docs/ITASORL.md`), is the more interesting target. Structurally a different rung;
-   scope pending human sign-off.
-2. **Held-out / common-garden probe.** Resolves the reactive-vs-representational
-   ambiguity (§9 caveats): whether the recurrent state encodes persistent world identity
-   or merely tracks felt drag moment-to-moment. Design pending.
+1. **L3, a generative fingerprint: TESTED, POSITIVE (section 10).** This was the lever
+   that changed the result. A surrogate whose tell comes from a separately *learned*
+   predictive world-model reverses the L2 nulls: the survival agent incidentally
+   encodes world identity at 0.752 with a behavior-independent component of 0.726.
+   No longer an open direction; the open questions it spawned (second in-band
+   capacity, held-out fingerprints) are tracked in sections 10.5 and 10.6.
+2. **Held-out / common-garden probe: IN PROGRESS (section 10.6).** Resolves the
+   reactive-vs-representational ambiguity (§9 caveats): whether the recurrent state
+   encodes persistent world identity or merely tracks the felt dynamics
+   moment-to-moment. A world-signal that transfers to an unseen fingerprint is much
+   harder to dismiss as behavior.
 3. **Remaining objective variants.** Weighting the dynamics-relevant observation
    dimensions and increasing capacity, though the capacity-ceiling result above makes a
-   pooled-probe breakthrough from these unlikely.
+   pooled-probe breakthrough from these unlikely at L2.
 
 ---
 
@@ -383,7 +415,163 @@ not persistent encoding.
 
 ---
 
-## 8. Reproducibility
+## 10. Experiment B, L3: the learned-dynamics fingerprint (positive)
+
+L2's artifact is hand-tuned (an authored drift coefficient). L3's artifact is a
+**generative fingerprint**: the surrogate's dynamics come from a separately learned
+predictive model, so its tell is the systematic error signature of a learned
+approximation, the artifact class the simulation argument actually cares about.
+Pre-registered before the confirmatory run in `PREREGISTRATION_L3.md`; every
+deviation is logged in its section 12. All headline numbers below are committed in
+`artifacts/expB2/behavior_audit_l3_h8_traces.json` and reproduce deterministically.
+
+### 10.1 The surrogate and its gate
+
+`G_motion` is a small MLP velocity law `(vel, action) -> vel_next` trained on a
+fixed budget of authentic rollouts of the same world `P` the organism inhabits
+(`itasorl/surrogate_l3.py`). The surrogate world runs `G`'s predicted state through
+the REAL sensor model, so observations stay on the authentic manifold and the sole
+tell is `G`'s dynamics error. Capacity is the single difficulty knob: the
+pre-registered gate requires an Experiment-A-style residual oracle to detect
+authentic-vs-surrogate at AUROC in [0.85, 0.95] (fingerprint exists, but not
+L2-trivially).
+
+**Frozen gate 0 (world `P`): hidden = 8, sensor σ = 0.02, oracle AUROC 0.928,
+untrained mechanical floor 0.483 (chance).**
+
+Two honesty notes from the audit trail (full detail: `PREREGISTRATION_L3.md`
+sec. 12). First, an earlier observation-channel construction was retired because it
+was trivially detectable at every capacity; the dynamics-level construction above
+replaced it before any organism run. Second, the first n = 3 organism run was
+**retracted**: `G` had been trained on default world parameters rather than `P`, so
+the "fingerprint" was partly a wrong-world artifact (untrained floor 0.706). The
+bug was fixed with a regression test, gate 0 recalibrated on `P`, and the corrected
+run showed a chance-level floor, which is what makes the survival-specific result
+below interpretable.
+
+### 10.2 Headline result (n = 10 seeds, drift 0.45)
+
+Three agents share the identical recurrent trunk and identical readout, differing
+only in objective (as in section 9). Pooled world-identity target, mean over 10
+seeds with stratified-bootstrap 90% CI:
+
+| agent | pooled target | 90% CI | seeds ≥ 0.65 |
+|-------|--------------|--------|---------------|
+| untrained | 0.488 | [0.461, 0.514] | 0/10 |
+| predictor | 0.573 | [0.546, 0.599] | 0/10 |
+| **survival** | **0.752** | [0.704, 0.797] | **8/10** |
+
+The honest t-based 90% CI for the survival mean is **[0.698, 0.807]**, which
+**excludes the pre-registered 0.65 bar** (per-seed: 0.853, 0.636, 0.841, 0.823,
+0.830, 0.573, 0.705, 0.782, 0.759, 0.723). Survival beats both baselines by far
+more than the 0.05 SESOI; the L0 authentic-vs-authentic control is 0.517 (TOST and
+ROPE both accept equivalence to chance). The same artifact that the L2 arc showed
+is NOT encoded for free is here encoded by the survival objective, uniquely.
+
+### 10.3 Controls that pass
+
+- **Reward leakage (the live channel for dynamics rungs, cf. section 2.2):** world
+  identity is not decodable from summed reward: AUROC mean 0.541, range
+  [0.517, 0.559], clean in 10/10 seeds.
+- **Survivorship:** 0 early deaths in every pool (110/110 episodes, authentic and
+  surrogate, all seeds), so the pooled probe's drop-early-deaths rule introduces no
+  asymmetry in this regime.
+- **Nonlinear-probe floor:** a random-forest probe on the untrained agent reads
+  0.517 (shuffled baseline 0.506; L0 untrained 0.483), so the survival-vs-untrained
+  dissociation is not a linear-probe artifact.
+- **Shuffled negative control:** at chance for every arm.
+
+### 10.4 Behavior mediation: how much of the signal is just "acting differently"?
+
+The agent moves and forages differently in the two worlds, so behavior itself
+decodes the world: per-episode behavior means (speed/energy/food/drag) read 0.689
+(linear) / 0.705 (nonlinear), and the full per-timestep behavior trace reads
+**0.803**, better than the state probe itself. The question is whether the state
+signal is behavior in disguise.
+
+Two controls, both fit in-fold (no leakage), committed as reproducible code
+(`itasorl/behavior_audit.py`, `scripts/audit_behavior_mediation.py`):
+
+- **Per-episode-mean residualization** leaves 0.676 (linear basis) / 0.659
+  (quadratic). Synthetic ground-truth tests show this control OVER-removes
+  (episode-mean regression absorbs state signal correlated with behavior averages),
+  so these are deflated estimates.
+- **Per-timestep residualization** (behavior traces φ = [b_t, b_(t-1), cummean(b)]
+  regressed out of h_t timestep-by-timestep) is the surgical control:
+  **survival 0.726 (90% CI [0.685, 0.765], 9/10 seeds ≥ 0.65; quadratic variant
+  0.721 [0.678, 0.760])**. The CI excludes the bar.
+
+Honesty checks on real data: the untrained agent's per-timestep-controlled state
+reads 0.498 (exact chance) even though untrained *behavior* alone decodes 0.645, so
+the control neither manufactures nor spares signal; the predictor stays at 0.574,
+preserving the survival-only dissociation. Under the per-timestep control, behavior
+mediates only ≈ 0.03 of the 0.752 headline. Caveat: the residualization basis is
+linear/quadratic in a short behavior window; a full-history or nonlinear control
+could in principle remove more.
+
+### 10.5 Second in-band capacity (replication across artifact type)
+
+The preregistration requires the organism test at a second in-band capacity, since
+the oracle band fixes difficulty but not artifact *type*. In progress: the first
+candidate capacity failed its gates and was adjudicated uninformative per the
+pre-registered decision matrix, the gate-0 check was hardened into a committed
+per-capacity validation, and a re-frozen second capacity is being run at n = 10.
+The full selection trail and adjudication live in `PREREGISTRATION_L3.md` sec. 12;
+results will be recorded here when the run completes.
+
+### 10.6 Held-out fingerprint (common-garden) probe
+
+Owed. The headline is conditional on the single frozen fingerprint instance `G_0`.
+The held-out probe trains the readout against `G_0` and tests transfer to unseen
+same-recipe fingerprints `G_k`: a world-signal that transfers to a fingerprint the
+agent never lived with is much harder to dismiss as behavioral residue, and it
+resolves the reactive-vs-representational ambiguity (§9 caveats) at the L3 rung.
+Design will be pre-registered in `PREREGISTRATION_L3.md` sec. 12 before the run.
+
+---
+
+## 11. Methods notes and limitations
+
+Stated once, plainly, with pointers into the code.
+
+1. **The pooled probe conditions on survival.** `collect_pool` drops episodes that
+   end early, so a surrogate that kills more would yield a survivorship-selected
+   pool (`itasorl/experiment_b2.py`, `collect_pool`). This is a substantive
+   assumption, empirically bounded here: at the L3 headline config there were 0
+   early deaths in 110/110 episodes per pool across all seeds and both worlds
+   (10.3), and per-world death counts are reported for every run. The matched-pair
+   channel is built to avoid the asymmetry entirely.
+2. **The engagement gate margin is frozen from the pilot.** `ENGAGE_MARGIN = 0.15`
+   (and `LIFE_TOL = 2.0`) were fixed during the B-v2 de-risk and carried forward
+   unchanged (`itasorl/experiment_b2.py`); no sensitivity sweep has been run. A
+   materially different margin could flip engagement-gate adjudications near the
+   boundary, though every headline run passed with room.
+3. **One primary readout; everything else is a control or exploratory.** The
+   pre-registered decision uses only the pooled LEVEL `target` against the 0.65 bar
+   and the 0.05 SESOI. The volatility readouts (`target_var`, `target_full`),
+   selectivity, speed/energy/food ceilings, drag tracking, and leakage channels are
+   gates, controls, or exploratory layers; no multiple-comparison correction is
+   applied, and none is needed for the primary decision because it is a single
+   pre-specified test.
+4. **The L3 fingerprint is a single frozen instance.** `G` is trained once at a
+   fixed seed by design (`scripts/run_expB2.py`, `setup_l3_surrogate`): the
+   experiment tests encoding of one reproducible artifact, not artifact-general
+   detection. Generality across fingerprint instances is exactly what the held-out
+   probe (10.6) tests, and stability across artifact type is what the second
+   capacity (10.5) tests.
+5. **CI methodology at the decision boundary.** The percentile bootstrap of a seed
+   mean under-covers near the bar at n ≤ 10, so "clears / misses 0.65"
+   adjudications use the t-based interval, with both reported
+   (`itasorl/stats.py`; history in `PREREGISTRATION_L3.md` sec. 10 and 12).
+6. **Scope.** All results are conditional on one architecture (RSSM-lite trunk,
+   GRU core, hidden = 96), one world family ("A Patch of Earth" v0), the frozen
+   difficulty band (oracle AUROC in [0.85, 0.95]), and the specific objectives
+   tested. They are existence and non-existence proofs within that scope, not
+   universal claims.
+
+---
+
+## 12. Reproducibility
 
 All experiments are deterministic given their seeds. Dependencies: `numpy`,
 `scikit-learn`, `matplotlib`, and (for Experiment B) `torch`.
@@ -399,7 +587,11 @@ All experiments are deterministic given their seeds. Dependencies: `numpy`,
 | B, nonlinear probe | `scripts/run_expB_nonlinear.py` | random-forest probe on the recurrent states |
 | B-v2, survival-coupled | `scripts/run_expB2.py` | A2C+GAE agent, harsh metabolism, drift [0,0.45], 3 seeds, 300 updates (`--quick` for a fast pass) |
 | B-v2, compare runs | `scripts/compare_expB2_artifacts.py` | Side-by-side survival @ drift 0.45 vs canonical / lab JSON (no GPU) |
+| L3, organism run | `scripts/run_expB2.py --drift-mode l3 --l3-hidden 8 --seeds 0 1 2 3 4 5 6 7 8 9` | learned-fingerprint surrogate, frozen gate 0, `--dump-states` for the audit |
+| L3, behavior audit | `scripts/audit_behavior_mediation.py <states-dir> --json <out>` | per-episode and per-timestep behavior controls on dumped states |
 
 Core modules live under `itasorl/` (`world.py`, `patch_of_earth.py`, `agent.py`,
-`experiment_a.py` / `experiment_b.py` / `experiment_b2.py`). See `README.md`
-for the full manifest and run commands.
+`experiment_a.py` / `experiment_b.py` / `experiment_b2.py`, `surrogate_l3.py`,
+`behavior_audit.py`, `stats.py`). See `README.md` for the full manifest and run
+commands. Published result JSONs and their promotion history live in
+`artifacts/expB2/`.
