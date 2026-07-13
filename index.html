@@ -160,6 +160,10 @@ document.addEventListener('DOMContentLoaded', async function() {
     // keeps the scrollbar gutter and background constant across the swap.
     doc.documentElement.style.overflowY = 'scroll';
     doc.documentElement.style.background = '#e8e5f1';
+    // Render-block like a normal page: keep the body invisible (background
+    // only) until scripts have mounted and fonts are in, so text never
+    // re-renders or resizes on screen and template placeholders never show.
+    if (doc.body) doc.body.style.visibility = 'hidden';
     document.documentElement.replaceWith(doc.documentElement);
     const dead = Array.from(document.scripts);
     for (const old of dead) {
@@ -184,7 +188,32 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (window.Babel && typeof window.Babel.transformScriptTags === 'function') {
       window.Babel.transformScriptTags();
     }
+    const capped = function(p, ms){ return Promise.race([p, new Promise(function(r){ setTimeout(r, ms); })]); };
+    // App mounted? (#lg is the gradient the chart creates on mount.)
+    await new Promise(function(r){
+      const t0 = Date.now();
+      (function poll(){
+        if (document.getElementById('lg') || Date.now() - t0 > 2500) return r();
+        setTimeout(poll, 60);
+      })();
+    });
+    // Fonts in (they are data: URIs, so this is near-instant)...
+    if (document.fonts) {
+      const faces = [
+        "400 16px 'Hanken Grotesk'", "500 16px 'Hanken Grotesk'", "600 16px 'Hanken Grotesk'",
+        "400 12px 'IBM Plex Mono'", "500 12px 'IBM Plex Mono'",
+        "400 16px 'Space Grotesk'", "500 16px 'Space Grotesk'", "600 40px 'Space Grotesk'", "700 16px 'Space Grotesk'"
+      ];
+      await capped(Promise.all(faces.map(function(f){ return document.fonts.load(f).catch(function(){}); })), 1500);
+    }
+    // ...images decoded, then reveal the finished page in one frame.
+    await capped(Promise.all(Array.from(document.images).map(function(im){
+      return (im.decode ? im.decode() : Promise.resolve()).catch(function(){});
+    })), 800);
+    await new Promise(function(r){ requestAnimationFrame(function(){ requestAnimationFrame(r); }); });
+    if (document.body) document.body.style.visibility = '';
   } catch (err) {
+    if (document.body) document.body.style.visibility = '';
     setStatus('Error unpacking: ' + err.message);
     console.error('Bundle unpack error:', err);
   }
