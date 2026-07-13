@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "itasorl"
+version = "1.0.0"
+description = "Incidental detection of surrogate worlds by a from-scratch digital organism (ALife / RL experiments)"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [{ name = "Levy Tate" }]
+keywords = ["artificial-life", "reinforcement-learning", "world-models", "self-supervised-learning"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+# Mirrors requirements.txt (the CI installs from requirements.txt; keep both in sync).
+dependencies = [
+    "numpy>=1.24",
+    "scikit-learn>=1.3",
+    "matplotlib>=3.7",
+    "torch>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.4"]
+
+[project.urls]
+Repository = "https://github.com/iLevyTate/ITASORL"
+
+[tool.setuptools]
+packages = ["itasorl"]

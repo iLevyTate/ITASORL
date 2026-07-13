@@ -141,6 +141,8 @@ held-out/common-garden probe. See
 .
 |-- README.md                   this file: the map
 |-- LICENSE
+|-- CITATION.cff                citation metadata (name, ORCID, version)
+|-- pyproject.toml              package metadata (pip install -e .)
 |-- requirements.txt            runtime dependencies
 |-- requirements-dev.txt        pytest + dev tooling
 |-- itasorl/                    core library (world, agents, experiments)
@@ -149,19 +151,27 @@ held-out/common-garden probe. See
 |   |-- agent.py                recurrent world model (RSSM-lite)
 |   |-- agent_ac.py             survival actor-critic (Experiment B-v2)
 |   |-- experiment_a.py         agent-free L1 detectability oracle
+|   |-- experiment_a_l2.py      agent-free L2 detectability oracle
+|   |-- experiment_a_l3.py      agent-free L3 (learned-fingerprint) oracle
 |   |-- experiment_b.py         incidental-detection harness
 |   |-- experiment_b2.py        survival-coupled B-v2 pipeline
+|   |-- surrogate_l3.py         L3 learned-dynamics surrogate (G_motion)
+|   |-- behavior_audit.py       behavior-mediation controls (residual probes)
+|   |-- stats.py                TOST/ROPE equivalence, bootstrap AUROC CIs
 |   `-- results_io.py           end-to-end run recording
 |-- scripts/                    deterministic reproduction runners
 |   |-- run_e2e.py              pytest + all experiments (recorded)
 |   |-- run_expA.py ...         Experiment A/B runners
-|   `-- run_expB2.py            Experiment B-v2 (GPU if available)
+|   |-- run_expB2.py            Experiment B-v2 / L3 (GPU if available)
+|   `-- audit_behavior_mediation.py  behavior-mediation audit on dumped states
 |-- docs/
 |   |-- ITASORL.md              research plan
 |   |-- FINDINGS.md             empirical results
 |   |-- PREREGISTRATION.md      B-v2 pre-registration
-|   `-- figures/                result figures (.png)
-|-- artifacts/expB2/            published B-v2 JSON/PNG (committed)
+|   |-- PREREGISTRATION_Bv3.md  B-v3 pre-registration
+|   |-- PREREGISTRATION_L3.md   L3 pre-registration + deviation log
+|   `-- figures/                result figures (.png) + provenance README
+|-- artifacts/expB2/            published B-v2/L3 JSON/PNG (committed)
 |-- fullruns/                   e2e run bundles (gitignored; default output)
 |-- results/LATEST_RUN.txt      pointer to latest fullruns folder
 |-- notebooks/colab_gpu.ipynb   Colab end-to-end runner
@@ -186,6 +196,11 @@ run scripts:
 - `expB_channels.png`: two incidental-detection channels (recurrent state vs prediction error).
 - `expB_kstep.png`: effect of a longer-horizon objective on encoding.
 
+To regenerate all of them in one recorded pass, run `python scripts/run_e2e.py --quick`
+from the repo root; each `scripts/run_exp*.py` runner rewrites only its own figure.
+Per-figure provenance (which script, which doc section) is tracked in
+[`docs/figures/README.md`](docs/figures/README.md).
+
 ---
 
 ## How to run
@@ -193,7 +208,8 @@ run scripts:
 Dependencies:
 
 ```bash
-pip install numpy scikit-learn matplotlib torch
+pip install -r requirements.txt      # runtime deps
+pip install -e .                     # or: install itasorl as an editable package
 ```
 
 Reproduce the experiments (each is deterministic given its seeds; run from the repo
@@ -235,6 +251,13 @@ pytest -q
 2. [`docs/FINDINGS.md`](docs/FINDINGS.md): what we found and what it means.
 3. [`docs/ITASORL.md`](docs/ITASORL.md): the full research plan and rationale.
 4. [`docs/ITASORL_world_spec.md`](docs/ITASORL_world_spec.md): the world, in detail.
+
+---
+
+## Citing
+
+Citation metadata lives in [`CITATION.cff`](CITATION.cff); GitHub renders a
+"Cite this repository" button from it, or run `cffconvert -f bibtex` for BibTeX.
 
 ---
 
