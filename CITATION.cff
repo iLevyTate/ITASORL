@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this software or build on these experiments, please cite it as below."
+type: software
+title: "ITASORL: Incidental Detection of Surrogate Worlds by a From-Scratch Digital Organism"
+authors:
+  - family-names: "Tate"
+    given-names: "Levy"
+    orcid: "https://orcid.org/0009-0009-1337-0709"
+repository-code: "https://github.com/iLevyTate/ITASORL"
+license: MIT
+version: 1.0.0
+abstract: >-
+  ITASORL tests whether a self-supervised digital organism, trained with no
+  imported semantic knowledge, incidentally encodes whether its world is an
+  authentic base simulation or a generative surrogate. Hand-tuned dynamics
+  artifacts (L2) are readily detectable by a privileged oracle but are not
+  encoded by the agent (robust negative); a learned-dynamics fingerprint
+  surrogate (L3) is incidentally encoded by survival-trained agents, with a
+  behavior-independent component that clears the pre-registered bar.
+keywords:
+  - artificial-life
+  - reinforcement-learning
+  - self-supervised-learning
+  - simulation-hypothesis
+  - world-models

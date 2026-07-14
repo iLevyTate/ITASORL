@@ -187,6 +187,13 @@ docs/DEVTO_POST.md
 docs/LINKEDIN_POSTS.md
 docs/BRAND_IDENTITY_BRIEF.md
 
+# Local outreach / branding assets (kept on disk, not research content)
+promo/
+
+# Tool session state and local worktrees
+.playwright-mcp/
+.worktrees/
+
 # Recorded e2e run output (logs, figures, bundle.zip)
 results/runs/
 results/LATEST_RUN.txt
