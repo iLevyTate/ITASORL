@@ -889,6 +889,8 @@ def common_garden_rollout(agent, norm, params, drift_sigma, *, n_pairs=110,
                 pair.append(None)
                 continue
             tail = make_world(params, 0.0, ray_steps)   # common garden: authentic dynamics
+            # reset only populates tail._rng for the key filter below;
+            # set_state then overwrites the whole state - do not remove
             tail.reset(seeds)
             snap = w.get_state()
             # authentic tail world has no "drift" RNG; strip surplus keys so set_state
