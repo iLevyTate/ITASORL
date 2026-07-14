@@ -62,10 +62,33 @@ python scripts/run_expB2.py --drift-mode l3 --l3-hidden 8 \
     --seeds 0 1 2 3 4 5 6 7 8 9 \
     --out-dir fullruns/l3_h8_traces --dump-states fullruns/l3_h8_traces/states
 
-# OWED - hidden=4: pre-registered second in-band capacity (PREREGISTRATION_L3.md sec.11)
+# DONE 2026-07-13 (fullruns/l3_h4_traces): hidden=4 completed but UNINFORMATIVE
+# per the decision matrix - gate failures (untrained floor 0.891, reward-leak
+# clean 0/10 seeds, engagement 30%). hidden=4 was never re-validated on world P
+# after the world-params fix; see the 2026-07-13 gate-0 re-freeze entry in
+# docs/PREREGISTRATION_L3.md sec.12.
 python scripts/run_expB2.py --drift-mode l3 --l3-hidden 4 \
     --seeds 0 1 2 3 4 5 6 7 8 9 \
     --out-dir fullruns/l3_h4_traces --dump-states fullruns/l3_h4_traces/states
+
+# Gate-0 recalibration on world P (validates oracle band AND untrained floor per
+# capacity, hidden=8 regression check; selects the second capacity). Result
+# 2026-07-13: hidden=7 is the only valid second capacity (oracle 0.922, floor
+# 0.566); table in fullruns/l3_gate0_recal/calibration.json.
+python scripts/run_expA_l3.py --json fullruns/l3_gate0_recal/calibration.json
+
+# DONE 2026-07-14 (fullruns/l3_h7_traces): hidden=7 second-capacity replication,
+# all gates pass. Survival 0.737 [0.688, 0.780] with resid_trace 0.722 (replicates
+# hidden=8's 0.726) but predictor reads 0.714, so the survival-vs-predictor
+# dissociation does NOT replicate at this coarser artifact; see the 2026-07-14
+# entry in docs/PREREGISTRATION_L3.md sec.12.
+python scripts/run_expB2.py --drift-mode l3 --l3-hidden 7 \
+    --seeds 0 1 2 3 4 5 6 7 8 9 \
+    --out-dir fullruns/l3_h7_traces --dump-states fullruns/l3_h7_traces/states
+
+# Behavior-mediation audit for the hidden=7 run (artifact committed):
+python scripts/audit_behavior_mediation.py fullruns/l3_h7_traces/states \
+    --json artifacts/expB2/behavior_audit_l3_h7_traces.json
 ```
 
 Then run `audit_behavior_mediation.py` on each `states/` directory. Decision
