@@ -11,7 +11,7 @@ is updated in the same commit.
 | `expA_L2_ceiling.png` | `scripts/run_expA_l2.py` | L2 detectability ceiling vs drift strength | FINDINGS.md sec. 2 |
 | `expB_incidental.png` | `scripts/run_expB_full.py` | Recurrent-state probe across the drift sweep | FINDINGS.md sec. 3 |
 | `expB_channels.png` | `scripts/run_expB_surprise.py` | Recurrent-state vs prediction-error channels | FINDINGS.md sec. 3 |
-| `expB_kstep.png` | `scripts/run_expB_kstep.py` | Effect of open-loop horizon on encoding | FINDINGS.md sec. 3.3 |
+| `expB_kstep.png` | `scripts/run_expB_kstep.py` | Effect of open-loop horizon on encoding | FINDINGS.md sec. 3.3 (regenerated 2026-07-13 with the table; log `fullruns/kstep_rerun_20260713.log`) |
 
 Regenerate all of the above in one recorded pass:
 
