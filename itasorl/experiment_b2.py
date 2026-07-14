@@ -854,6 +854,75 @@ def transfer_readout(agent, norm, params, drift_sigma, Ha_train, Hs_train, *,
     return out
 
 
+def common_garden_rollout(agent, norm, params, drift_sigma, *, n_pairs=110,
+                          prefix_steps=20, tail_steps=24, ray_steps=5,
+                          device=None, seed_base=930_000) -> tuple[list, list]:
+    """Common-garden channel (spec 2026-07-14): PAIRED episodes from identical
+    seeds run their prefix in the authentic vs the surrogate world, then BOTH
+    continue under authentic dynamics (fresh authentic world restored from each
+    prefix's final snapshot, drift_w forced to 0). Returns (auth_tails,
+    surr_tails): lists of (tail_steps, hidden) arrays, tail-only states. A pair
+    is dropped if EITHER member dies in prefix or tail (symmetric, so
+    survivorship cannot create asymmetry)."""
+    device = device or default_device()
+    auth_tails, surr_tails = [], []
+    for p in range(n_pairs):
+        seeds = _seeds(seed_base + p)
+        pair = []
+        for dsig in (0.0, drift_sigma):
+            w = make_world(params, dsig, ray_steps)
+            w.reset(seeds)
+            h = agent.initial_state(1, device)
+            prev = torch.zeros(1, agent.act_dim, device=device)
+            obs = w.observe().astype(np.float64)
+            died = False
+            for _ in range(prefix_steps):
+                obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
+                _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
+                r = w.step(env_act[0].detach().cpu().numpy().astype(np.float32))
+                obs = r.obs.astype(np.float64)
+                prev = env_act
+                if r.terminated:
+                    died = True
+                    break
+            if died:
+                pair.append(None)
+                continue
+            tail = make_world(params, 0.0, ray_steps)   # common garden: authentic dynamics
+            tail.reset(seeds)
+            snap = w.get_state()
+            # authentic tail world has no "drift" RNG; strip surplus keys so set_state
+            # can restore only the RNG slots that exist in the tail world
+            snap["rng"] = {k: v for k, v in snap["rng"].items() if k in tail._rng}
+            tail.set_state({**snap, "drift_w": 0.0})
+            Ht, _, _, alive = _run_branch(agent, norm, tail, h, prev, tail_steps, device)
+            pair.append(Ht if (alive and len(Ht) == tail_steps) else None)
+        if pair[0] is not None and pair[1] is not None:
+            auth_tails.append(pair[0])
+            surr_tails.append(pair[1])
+    return auth_tails, surr_tails
+
+
+def cg_probe(auth_tails: list, surr_tails: list, *, late_k: int = 8, seed: int = 0) -> dict:
+    """Probe tail-only states for the PREFIX world. cg_tail_target uses the full
+    tail's [mean h, final h]; cg_latetail_target repeats it on the last late_k
+    steps only - the persistence-decay check (a reactive signal washes out along
+    the tail; a persistent representation does not)."""
+    n = len(auth_tails)
+    out = {"cg_n_pairs": n, "cg_tail_target": float("nan"), "cg_tail_lo": float("nan"),
+           "cg_tail_hi": float("nan"), "cg_latetail_target": float("nan")}
+    if n < 5:
+        return out
+    y = np.concatenate([np.zeros(n), np.ones(n)]).astype(int)
+    X = np.stack([_episode_feature(H) for H in auth_tails + surr_tails])
+    k = min(late_k, auth_tails[0].shape[0])
+    Xl = np.stack([_episode_feature(H[-k:]) for H in auth_tails + surr_tails])
+    tgt, lo, hi = _auroc_with_ci(X, y, seed=seed)
+    out.update(cg_tail_target=tgt, cg_tail_lo=lo, cg_tail_hi=hi,
+               cg_latetail_target=probe_auroc(Xl, y))
+    return out
+
+
 def readout(agent, norm, params, drift_sigma, *, n_pairs=60, prefix_steps=20, branch_steps=24,
             ray_steps=5, device=None, seed_base=700_000, seed=0, leak_margin=0.1) -> dict:
     """Run the SECONDARY matched-pair recurrent readout (detectability-style) and return
