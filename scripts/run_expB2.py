@@ -202,7 +202,10 @@ def evaluate_agent(agent, norm, drift, a, dev, seed, agent_name=""):
     pr = pooled_readout(agent, norm, P, drift, n_eps=a.pool_n, steps=a.pool_steps,
                         ray_steps=a.ray_steps, device=dev, seed=seed, dump_path=dump_path,
                         return_pools=heldout)
-    pool, pools = (pr if heldout else (pr, None))
+    if heldout:
+        pool, pools = pr    # pooled_readout returns (metrics, (Ha, Hs)) with return_pools=True
+    else:
+        pool, pools = pr, None
     mp = readout(agent, norm, P, drift, n_pairs=a.mp_pairs, prefix_steps=a.mp_prefix,
                  branch_steps=a.mp_branch, ray_steps=a.ray_steps, device=dev, seed=seed)
     ho = None
@@ -217,8 +220,8 @@ def evaluate_agent(agent, norm, drift, a, dev, seed, agent_name=""):
                                        ray_steps=a.ray_steps, device=dev)
         ho.update(cg_probe(at, st, seed=seed))
         if cdump:
-            np.savez_compressed(cdump, auth=np.stack(at) if at else np.zeros((0, a.cg_steps, 1)),
-                                surr=np.stack(st) if st else np.zeros((0, a.cg_steps, 1)))
+            np.savez_compressed(cdump, auth=np.stack(at) if at else np.zeros((0, a.cg_steps, a.hidden), np.float32),
+                                surr=np.stack(st) if st else np.zeros((0, a.cg_steps, a.hidden), np.float32))
     return pool, mp, ho
 
 
