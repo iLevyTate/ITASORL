@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10 (reward-, survivorship-, and behavior-controlled)** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only)** |
 | Experiment C (emergence under selection) / Ladder L4 | not started |
 
 ### Key result
@@ -105,7 +105,7 @@ capacity-ceiling checks.
 
 *But the picture changes at L3.* When the surrogate is a **learned-dynamics fingerprint**
 (a small net replacing the velocity law) rather than a hand-tuned knob, the **survival**
-agent, and only the survival agent, encodes it. At a difficulty where an untrained net is at
+agent, and at this fingerprint only the survival agent, encodes it. At a difficulty where an untrained net is at
 chance (about 0.49, and still only 0.52 under a nonlinear probe) and a prediction-only agent
 is near chance (about 0.57), the survival probe reads **0.752** (n = 10, honest 90% CI
 **[0.698, 0.807]**, which excludes the pre-registered 0.65 bar; 8 of 10 seeds clear it). The
@@ -129,8 +129,16 @@ behavior-independent world-signal of about **0.73** that clears the pre-register
 is the first place "detectable does not imply learned" reverses: a from-scratch agent, never
 rewarded for it, comes to carry world-discriminative state as a byproduct of surviving. The
 mediation audit is reproducible code (`scripts/audit_behavior_mediation.py`; artifacts in
-`artifacts/expB2/`). Remaining work: a second in-band capacity (hidden = 4) and the
-held-out/common-garden probe. See
+`artifacts/expB2/`). *A pre-registered replication at a second calibrated capacity sharpens
+the claim.* The second in-band fingerprint (hidden = 7, selected by a frozen fallback rule
+after hidden = 4 failed its gates) passes every gate and replicates the behavior-independent
+world-signal almost exactly: **0.722** (90% CI [0.678, 0.763]) vs 0.726 at hidden = 8. But
+that coarser artifact is one every trained agent picks up (predictor 0.714 vs survival 0.737,
+under the pre-registered +0.05 dissociation requirement), so the survival-*only* part of the
+claim is conditional on the subtler hidden = 8 artifact. What survives both capacities is a
+reward-clean, survivorship-clean, behavior-independent world-signal of about **0.72** in the
+survival agent's state. Remaining work: the held-out/common-garden probe (design finalized;
+run pending). See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---

@@ -40,8 +40,10 @@ resolve.*
      probes; survival coupling 0.610 [0.585, 0.634]; capacity ceiling 0.596.
    - 4.3 The L3 positive (FINDINGS 10): 0.752 [0.698, 0.807] survival-only;
      controls; behavior mediation; 0.726 behavior-independent.
-   - 4.4 Replications: second capacity (FINDINGS 10.5), held-out fingerprint
-     (FINDINGS 10.6) - pending.
+   - 4.4 Replications: second capacity resolved (FINDINGS 10.5): the
+     behavior-independent signal replicates (0.722 vs 0.726) but the
+     survival-vs-predictor dissociation is artifact-conditional; held-out
+     fingerprint (FINDINGS 10.6) pending.
 5. **Limitations** (FINDINGS 11, verbatim spirit)
 6. **Related work** (ITASORL.md Part I literature sections)
 7. **Reproducibility statement** (FINDINGS 12; artifacts/expB2/ promotion history;
@@ -70,8 +72,10 @@ resolve.*
 | 17 | Behavior alone decodes world | trace 0.803 [0.763, 0.840] | FINDINGS 10.4 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
 | 18 | Behavior-independent component | 0.726 [0.685, 0.765], 9/10; quad 0.721 | FINDINGS 10.4 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
 | 19 | Control neither manufactures nor spares signal | untrained resid 0.498; predictor 0.574 | FINDINGS 10.4 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
-| 20 | Second in-band capacity replication | pending (FINDINGS 10.5) | FINDINGS 10.5 | pending | - |
-| 21 | Held-out fingerprint transfer | pending (FINDINGS 10.6) | FINDINGS 10.6 | pending | - |
+| 20 | Second capacity: behavior-independent signal replicates | 0.722 [0.678, 0.763], 8/10; quad 0.704 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
+| 21 | Second capacity: dissociation NOT met (artifact-conditional) | survival 0.737 [0.688, 0.780] vs predictor 0.714 [0.687, 0.740]; lead +0.023 < +0.05 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
+| 22 | Gate 0 re-validated per capacity; hidden=7 frozen | oracle 0.922, floor 0.566; hidden=8 regression exact (0.928/0.482); hidden=4 uninformative | FINDINGS 10.5 | PREREGISTRATION_L3.md sec. 12 + scripts/run_expA_l3.py | - |
+| 23 | Held-out fingerprint transfer | pending (FINDINGS 10.6; design finalized 2026-07-14) | FINDINGS 10.6 | pending | - |
 
 ## Known gaps before submission
 
@@ -81,5 +85,7 @@ resolve.*
   recorded-rerun treatment before the paper freezes).
 - Claims 9-10 should get their run JSONs promoted into artifacts/ alongside the
   L3 ones.
-- Rows 20-21 must resolve (either direction) before the paper freezes; the paper
-  reports them as replication and generality checks, not as new headlines.
+- Row 23 must resolve (either direction) before the paper freezes; the paper
+  reports it as a generality check, not as a new headline. Rows 20-22 resolved
+  2026-07-14: the second capacity replicates the behavior-independent signal and
+  bounds the survival-specific claim to the subtler artifact.

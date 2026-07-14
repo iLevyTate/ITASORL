@@ -39,7 +39,13 @@ floor at chance), the survival agent's state decodes the world at **0.752**
 predictor (0.573) and untrained (0.488) baselines on the identical trunk do not.
 Reward leakage, survivorship, and nonlinear-probe controls pass; a strict
 per-timestep behavior control leaves a behavior-independent world-signal of
-**0.726** (90% CI [0.685, 0.765], 9/10 seeds above the bar; section 10).
+**0.726** (90% CI [0.685, 0.765], 9/10 seeds above the bar; section 10). A
+pre-registered replication at a second oracle-calibrated capacity (hidden = 7)
+splits the claim: the behavior-independent world-signal replicates almost exactly
+(**0.722**, CI clearing the bar), but the survival-vs-predictor dissociation does
+not (survival 0.737 vs predictor 0.714, under the pre-registered +0.05
+requirement), so the survival-*specific* part of the claim is conditional on the
+subtler hidden = 8 artifact (section 10.5).
 
 Together: an agent does not represent a detectable artifact *for free* (L2), but
 when the artifact is a generative fingerprint that survival pressure forces it to
@@ -335,8 +341,11 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    that changed the result. A surrogate whose tell comes from a separately *learned*
    predictive world-model reverses the L2 nulls: the survival agent incidentally
    encodes world identity at 0.752 with a behavior-independent component of 0.726.
-   No longer an open direction; the open questions it spawned (second in-band
-   capacity, held-out fingerprints) are tracked in sections 10.5 and 10.6.
+   The second in-band capacity is now tested (section 10.5): the
+   behavior-independent signal replicates (0.722), but the survival-vs-predictor
+   dissociation does not, making the survival-specific verdict conditional on the
+   subtler hidden = 8 artifact. The held-out fingerprint probe (section 10.6) is
+   the remaining open question.
 2. **Held-out / common-garden probe: IN PROGRESS (section 10.6).** Resolves the
    reactive-vs-representational ambiguity (§9 caveats): whether the recurrent state
    encodes persistent world identity or merely tracks the felt dynamics
@@ -524,12 +533,54 @@ could in principle remove more.
 ### 10.5 Second in-band capacity (replication across artifact type)
 
 The preregistration requires the organism test at a second in-band capacity, since
-the oracle band fixes difficulty but not artifact *type*. In progress: the first
-candidate capacity failed its gates and was adjudicated uninformative per the
-pre-registered decision matrix, the gate-0 check was hardened into a committed
-per-capacity validation, and a re-frozen second capacity is being run at n = 10.
-The full selection trail and adjudication live in `PREREGISTRATION_L3.md` sec. 12;
-results will be recorded here when the run completes.
+the oracle band fixes difficulty but not artifact *type*. The trail (full detail
+and adjudications in `PREREGISTRATION_L3.md` sec. 12, entries 2026-07-13/14):
+
+- **hidden = 4 was uninformative, not negative.** The first candidate capacity had
+  been frozen from a pre-bugfix calibration on the wrong world and was never
+  re-validated on `P`; its n = 10 run failed the gates (untrained floor 0.891,
+  reward-leak clean in 0/10 seeds, engagement in 30% of seeds) and was adjudicated
+  UNINFORMATIVE per the pre-registered decision matrix.
+- **Gate 0 became a committed per-capacity check** (`scripts/run_expA_l3.py`)
+  validating both the oracle band and the organism-side untrained floor on world
+  `P`, with a hidden = 8 regression check (oracle 0.928, floor 0.482, both exact
+  reproductions). The frozen fallback rule selected **hidden = 7** (oracle 0.922,
+  mechanical leakage clean, floor 0.566; hidden = 5 out of band at 0.972,
+  hidden = 6 floor 0.647, hidden = 4 floor 0.896).
+- **The hidden = 7 n = 10 run passed every gate:** engagement 10/10 seeds, L0
+  control 0.517, speed positive control 0.959, reward-leak 0.567 clean in 10/10
+  seeds, 0 early deaths (110/110 per pool), pooled untrained floor 0.586 (inside
+  the frozen tolerance, though violated per-seed in 2 of 10 seeds).
+
+Result (pooled world-identity target at drift 0.45, mean over 10 seeds with
+stratified-bootstrap 90% CI):
+
+| agent | pooled target | 90% CI | seeds ≥ 0.65 |
+|-------|--------------|--------|---------------|
+| untrained | 0.586 | [0.550, 0.623] | 2/10 |
+| predictor | 0.714 | [0.687, 0.740] | 8/10 |
+| **survival** | **0.737** | [0.688, 0.780] | **8/10** |
+
+**What replicates: the behavior-independent survival world-signal.** Under the
+same frozen per-timestep control, survival resid_trace reads **0.722** (90% CI
+[0.678, 0.763], 8/10 seeds ≥ 0.65; quadratic variant 0.704) - an almost exact
+replication of hidden = 8's 0.726
+(`artifacts/expB2/behavior_audit_l3_h7_traces.json`).
+
+**What does not: the survival-vs-predictor dissociation.** The predictor reads
+0.714, so survival's lead is +0.023, under the pre-registered +0.05 requirement;
+predictor resid_trace is 0.691 (vs 0.574 at hidden = 8) and untrained resid_trace
+0.579 (vs 0.498, exact chance, at hidden = 8). The hidden = 7 artifact is
+qualitatively coarser: mechanically leakier and far more behaviorally salient (the
+behavior trace alone decodes the world at 0.762-0.796 in ALL arms, including
+untrained, vs 0.645 for the untrained arm at hidden = 8), so at this capacity
+every trained agent picks the fingerprint up.
+
+**Reading, per the pre-registered two-capacity clause:** the cross-capacity claim
+that survives both runs is a reward-clean, survivorship-clean,
+behavior-independent world-signal of ≈ 0.72 in the survival agent's state at both
+frozen capacities. The survival-*specific* "encoding induced" verdict is
+conditional on the subtler hidden = 8 artifact.
 
 ### 10.6 Held-out fingerprint (common-garden) probe
 
@@ -538,7 +589,9 @@ The held-out probe trains the readout against `G_0` and tests transfer to unseen
 same-recipe fingerprints `G_k`: a world-signal that transfers to a fingerprint the
 agent never lived with is much harder to dismiss as behavioral residue, and it
 resolves the reactive-vs-representational ambiguity (§9 caveats) at the L3 rung.
-Design will be pre-registered in `PREREGISTRATION_L3.md` sec. 12 before the run.
+The design was finalized 2026-07-14 (two evaluation channels on one frozen
+hidden = 8 training run: probe transfer to an unseen same-recipe fingerprint, and
+a common-garden shared-tail probe); the run is pending.
 
 ---
 
@@ -580,6 +633,17 @@ Stated once, plainly, with pointers into the code.
    difficulty band (oracle AUROC in [0.85, 0.95]), and the specific objectives
    tested. They are existence and non-existence proofs within that scope, not
    universal claims.
+7. **The behavior-mediation control covers behavior, not the full sensory
+   stream.** The residualization basis is the four per-timestep behavior scalars
+   (speed/energy/food/drag) with lag and cumulative-mean expansions
+   (`itasorl/behavior_audit.py`), not the ~146-dim observation.
+   "Behavior-independent" therefore does not mean "sensory-echo-independent":
+   state that passively mirrors world-dependent inputs (e.g. the vision rays)
+   would survive the control. That reading is bounded by the untrained and
+   predictor arms, which pass through the identical control - cleanly at
+   hidden = 8 (untrained 0.498, predictor 0.574) but not at hidden = 7 (0.579 and
+   0.691), which is part of why the survival-specific claim is stated as
+   artifact-conditional (10.5).
 
 ---
 
