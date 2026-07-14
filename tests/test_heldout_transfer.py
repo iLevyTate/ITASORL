@@ -109,3 +109,19 @@ def test_transfer_readout_requires_heldout_installed(l3_tiny):
         transfer_readout(agent, norm, P, 0.45, np.zeros((5, 5, 8), np.float32),
                          np.zeros((5, 5, 8), np.float32), n_eps=5, steps=5,
                          ray_steps=RS, device="cpu")
+
+
+def test_transfer_readout_restores_surrogate_on_exception(l3_tiny, monkeypatch):
+    agent, norm = untrained_agent(P, 0.45, RS, hidden=8, embed=16, world_model=True,
+                                  device="cpu", seed=0)
+    before = b2._L3_GMOTION
+
+    def boom(*a, **k):
+        raise ValueError("collect_pool failed mid-swap")
+
+    monkeypatch.setattr(b2, "collect_pool", boom)
+    with pytest.raises(ValueError):
+        transfer_readout(agent, norm, P, 0.45, np.zeros((5, 5, 8), np.float32),
+                         np.zeros((5, 5, 8), np.float32), n_eps=5, steps=5,
+                         ray_steps=RS, device="cpu")
+    assert b2._L3_GMOTION is before, "finally block must restore the trained surrogate"

@@ -823,6 +823,9 @@ def transfer_readout(agent, norm, params, drift_sigma, Ha_train, Hs_train, *,
     saved = _L3_GMOTION
     try:
         _L3_GMOTION = _L3_GMOTION_HELDOUT
+        # auth pool deliberately collected inside the swap: authentic worlds never
+        # attach a G (make_world guards drift_sigma>0), and keeping both collections
+        # here keeps swap/restore in one place - do not "simplify" it out.
         Ha2, _ = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 860_000, ray_steps)
         H7, _ = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, 870_000, ray_steps)
     finally:
