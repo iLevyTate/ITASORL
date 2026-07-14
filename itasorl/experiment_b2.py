@@ -70,6 +70,9 @@ DRIFT_MODE = "ar1"
 # surrogate world (drift_sigma>0) when DRIFT_MODE=="l3". Authentic worlds (drift_sigma=0)
 # never receive it, so they stay byte-identical to authentic. None until setup runs.
 _L3_GMOTION = None
+# Held-out L3 fingerprint (spec 2026-07-14): a SECOND trained G, never seen by any
+# agent during training, used only by transfer_readout. None until setup runs.
+_L3_GMOTION_HELDOUT = None
 
 
 def setup_l3_surrogate(**train_kwargs) -> None:
@@ -80,6 +83,14 @@ def setup_l3_surrogate(**train_kwargs) -> None:
     global _L3_GMOTION
     from .surrogate_l3 import train_g_motion
     _L3_GMOTION = train_g_motion(**train_kwargs)
+
+
+def setup_l3_heldout_surrogate(**train_kwargs) -> None:
+    """Train the held-out G (different capacity, same frozen recipe) and store it for
+    transfer_readout. Does NOT touch the training surrogate _L3_GMOTION."""
+    global _L3_GMOTION_HELDOUT
+    from .surrogate_l3 import train_g_motion
+    _L3_GMOTION_HELDOUT = train_g_motion(**train_kwargs)
 
 
 def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int) -> PatchOfEarthV0:
@@ -516,6 +527,29 @@ def leakage_audit_b2(auth_eps: list, surr_eps: list, margin: float = 0.1) -> dic
     return audit
 
 
+def transfer_probe(Xtr: np.ndarray, ytr: np.ndarray, Xte: np.ndarray, yte: np.ndarray,
+                   return_scores: bool = False):
+    """Held-out fingerprint transfer: fit the STANDARD linear probe family (same
+    scaler+logistic pipeline grouped_auroc uses) once on the training pools, then
+    score a FROZEN AUROC on disjoint test pools. No CV: train and test worlds are
+    disjoint by construction, and the frozen score is the estimand (does the
+    direction learned on the trained fingerprint generalize to an unseen one).
+    return_scores=True also returns (yte, p_te) so callers can bootstrap a CI
+    with itasorl.stats.auroc_ci (no refit), mirroring _auroc_with_ci."""
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import roc_auc_score
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    if len(np.unique(ytr)) < 2 or len(np.unique(yte)) < 2:
+        nan = float("nan")
+        return (nan, yte, np.array([])) if return_scores else nan
+    clf = make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000))
+    clf.fit(Xtr, ytr)
+    p = clf.predict_proba(Xte)[:, 1]
+    auc = float(roc_auc_score(yte, p))
+    return (auc, yte, p) if return_scores else auc
+
+
 # ---------------------------------------------------------------------------
 # Control agents: same trunk, different objective, probed by the IDENTICAL readout.
 #   untrained_agent     - random init -> the MECHANICAL floor (drift perturbs inputs,
@@ -677,7 +711,7 @@ def _auroc_with_ci(X, y, seed: int = 0) -> tuple[float, float, float]:
 
 
 def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray_steps=5,
-                   device=None, seed=0, dump_path=None, leak_margin=0.1) -> dict:
+                   device=None, seed=0, dump_path=None, leak_margin=0.1, return_pools=False) -> dict:
     """Experiment-B-style probe: decode world identity across independent episodes.
     Reports the headline `target` (LEVEL features) with a bootstrap CI, plus two
     additive readouts that probe a VOLATILITY signature - `target_var` (dispersion
@@ -706,15 +740,16 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
                             bts=bts, drift_sigma=np.float64(drift_sigma), steps=np.int64(steps))
     nan = float("nan")
     if len(Ha) < 5 or len(Hs) < 5:
-        return {"target": nan, "target_lo": nan, "target_hi": nan,
-                "target_var": nan, "target_var_lo": nan, "target_var_hi": nan,
-                "target_full": nan, "target_full_lo": nan, "target_full_hi": nan,
-                "shuffled": nan, "shuffled_var": nan, "shuffled_full": nan,
-                "selectivity": nan, "selectivity_var": nan, "selectivity_full": nan,
-                "speed": nan, "anchor_energy": nan, "anchor_food": nan, "ceiling_drag": nan,
-                "pool_reward_leak": nan, "pool_leak_clean": False, "pool_leak_max_dev": nan,
-                "pool_n_eps": n_eps, "deaths_auth": n_eps - len(Ha), "deaths_surr": n_eps - len(Hs),
-                "n": len(Ha) + len(Hs), "too_few_survivors": True}
+        out = {"target": nan, "target_lo": nan, "target_hi": nan,
+               "target_var": nan, "target_var_lo": nan, "target_var_hi": nan,
+               "target_full": nan, "target_full_lo": nan, "target_full_hi": nan,
+               "shuffled": nan, "shuffled_var": nan, "shuffled_full": nan,
+               "selectivity": nan, "selectivity_var": nan, "selectivity_full": nan,
+               "speed": nan, "anchor_energy": nan, "anchor_food": nan, "ceiling_drag": nan,
+               "pool_reward_leak": nan, "pool_leak_clean": False, "pool_leak_max_dev": nan,
+               "pool_n_eps": n_eps, "deaths_auth": n_eps - len(Ha), "deaths_surr": n_eps - len(Hs),
+               "n": len(Ha) + len(Hs), "too_few_survivors": True}
+        return (out, (Ha, Hs)) if return_pools else out
     H = np.concatenate([Ha, Hs])
     X = episode_features(H)                          # reuse Exp B's feature builder verbatim
     Xv = episode_features_var(H)                     # dispersion (volatility signature)
@@ -752,7 +787,7 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
     auth_eps = [{"label": 0, "reward_sum": float(r), "length": steps, "lifetime": steps} for r in rwa]
     surr_eps = [{"label": 1, "reward_sum": float(r), "length": steps, "lifetime": steps} for r in rws]
     pool_leak = leakage_audit_b2(auth_eps, surr_eps, margin=leak_margin)
-    return {
+    out = {
         "target": tgt, "target_lo": t_lo, "target_hi": t_hi,
         "target_var": tgt_v, "target_var_lo": tv_lo, "target_var_hi": tv_hi,
         "target_full": tgt_f, "target_full_lo": tf_lo, "target_full_hi": tf_hi,
@@ -768,6 +803,155 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
         "pool_n_eps": n_eps, "deaths_auth": n_eps - len(Ha), "deaths_surr": n_eps - len(Hs),
         "n": len(y), "n_auth": len(Ha), "n_surr": len(Hs), "too_few_survivors": False,
     }
+    return (out, (Ha, Hs)) if return_pools else out
+
+
+def transfer_readout(agent, norm, params, drift_sigma, Ha_train, Hs_train, *,
+                     n_eps=110, steps=24, ray_steps=5, device=None, seed=0,
+                     dump_path=None) -> dict:
+    """Unseen-fingerprint transfer channel (spec 2026-07-14). Fits the standard
+    linear probe on the TRAINED-fingerprint pools (Ha_train vs Hs_train, i.e. the
+    exact pools pooled_readout probed), then scores it FROZEN on a fresh authentic
+    pool vs a pool collected under the HELD-OUT surrogate _L3_GMOTION_HELDOUT.
+    Fresh authentic pool: the probe must never be tested on authentic episodes it
+    trained on. Restores the training surrogate in a finally block so the global
+    can never leak into later evals."""
+    global _L3_GMOTION
+    if _L3_GMOTION_HELDOUT is None:
+        raise RuntimeError("transfer_readout: call setup_l3_heldout_surrogate() first")
+    device = device or default_device()
+    saved = _L3_GMOTION
+    try:
+        _L3_GMOTION = _L3_GMOTION_HELDOUT
+        # auth pool deliberately collected inside the swap: authentic worlds never
+        # attach a G (make_world guards drift_sigma>0), and keeping both collections
+        # here keeps swap/restore in one place - do not "simplify" it out.
+        Ha2, _ = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 860_000, ray_steps)
+        H7, _ = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, 870_000, ray_steps)
+    finally:
+        _L3_GMOTION = saved
+    if dump_path is not None:
+        d = os.path.dirname(dump_path)
+        if d:
+            os.makedirs(d, exist_ok=True)
+        np.savez_compressed(dump_path, Ha2=Ha2, H7=H7,
+                            drift_sigma=np.float64(drift_sigma), steps=np.int64(steps))
+    nan = float("nan")
+    out = {"transfer_n_auth": int(len(Ha2)), "transfer_n_surr": int(len(H7)),
+           "transfer_deaths_auth": int(n_eps - len(Ha2)),
+           "transfer_deaths_surr": int(n_eps - len(H7)),
+           "transfer_target": nan, "transfer_lo": nan, "transfer_hi": nan}
+    if len(Ha_train) < 5 or len(Hs_train) < 5 or len(Ha2) < 5 or len(H7) < 5:
+        return out
+    Xtr = episode_features(np.concatenate([Ha_train, Hs_train]))
+    ytr = np.concatenate([np.zeros(len(Ha_train)), np.ones(len(Hs_train))]).astype(int)
+    Xte = episode_features(np.concatenate([Ha2, H7]))
+    yte = np.concatenate([np.zeros(len(Ha2)), np.ones(len(H7))]).astype(int)
+    auc, yv, pv = transfer_probe(Xtr, ytr, Xte, yte, return_scores=True)
+    out["transfer_target"] = auc
+    if pv.size:
+        out["transfer_lo"], out["transfer_hi"] = auroc_ci(yv, pv, seed=seed)
+    return out
+
+
+def common_garden_rollout(agent, norm, params, drift_sigma, *, n_pairs=110,
+                          prefix_steps=20, tail_steps=24, ray_steps=5,
+                          device=None, seed_base=930_000) -> tuple[list, list]:
+    """Common-garden channel (spec 2026-07-14): PAIRED episodes from identical
+    seeds run their prefix in the authentic vs the surrogate world, then BOTH
+    continue under authentic dynamics (fresh authentic world restored from each
+    prefix's final snapshot, drift_w forced to 0). Returns (auth_tails,
+    surr_tails): lists of (tail_steps, hidden) arrays, tail-only states. A pair
+    is dropped if EITHER member dies in prefix or tail (symmetric, so
+    survivorship cannot create asymmetry)."""
+    device = device or default_device()
+    auth_tails, surr_tails = [], []
+    for p in range(n_pairs):
+        seeds = _seeds(seed_base + p)
+        pair = []
+        for dsig in (0.0, drift_sigma):
+            w = make_world(params, dsig, ray_steps)
+            w.reset(seeds)
+            h = agent.initial_state(1, device)
+            prev = torch.zeros(1, agent.act_dim, device=device)
+            obs = w.observe().astype(np.float64)
+            died = False
+            for _ in range(prefix_steps):
+                obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
+                _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
+                r = w.step(env_act[0].detach().cpu().numpy().astype(np.float32))
+                obs = r.obs.astype(np.float64)
+                prev = env_act
+                if r.terminated:
+                    died = True
+                    break
+            if died:
+                pair.append(None)
+                continue
+            tail = make_world(params, 0.0, ray_steps)   # common garden: authentic dynamics
+            # reset only populates tail._rng for the key filter below;
+            # set_state then overwrites the whole state - do not remove
+            tail.reset(seeds)
+            snap = w.get_state()
+            # authentic tail world has no "drift" RNG; strip surplus keys so set_state
+            # can restore only the RNG slots that exist in the tail world
+            snap["rng"] = {k: v for k, v in snap["rng"].items() if k in tail._rng}
+            tail.set_state({**snap, "drift_w": 0.0})
+            Ht, _, _, alive = _run_branch(agent, norm, tail, h, prev, tail_steps, device)
+            pair.append(Ht if (alive and len(Ht) == tail_steps) else None)
+        if pair[0] is not None and pair[1] is not None:
+            auth_tails.append(pair[0])
+            surr_tails.append(pair[1])
+    return auth_tails, surr_tails
+
+
+def cg_probe(auth_tails: list, surr_tails: list, *, late_k: int = 8, seed: int = 0) -> dict:
+    """Probe tail-only states for the PREFIX world. cg_tail_target uses the full
+    tail's [mean h, final h]; cg_latetail_target repeats it on the last late_k
+    steps only - the persistence-decay check (a reactive signal washes out along
+    the tail; a persistent representation does not)."""
+    n = len(auth_tails)
+    out = {"cg_n_pairs": n, "cg_tail_target": float("nan"), "cg_tail_lo": float("nan"),
+           "cg_tail_hi": float("nan"), "cg_latetail_target": float("nan")}
+    if n < 5:
+        return out
+    y = np.concatenate([np.zeros(n), np.ones(n)]).astype(int)
+    X = np.stack([_episode_feature(H) for H in auth_tails + surr_tails])
+    k = min(late_k, auth_tails[0].shape[0])
+    Xl = np.stack([_episode_feature(H[-k:]) for H in auth_tails + surr_tails])
+    tgt, lo, hi = _auroc_with_ci(X, y, seed=seed)
+    out.update(cg_tail_target=tgt, cg_tail_lo=lo, cg_tail_hi=hi,
+               cg_latetail_target=probe_auroc(Xl, y))
+    return out
+
+
+def save_agent_bundle(path: str, agent: RecurrentActorCritic, norm: RunningNorm) -> None:
+    """Persist a frozen agent + its frozen obs normalizer with the constructor args
+    needed to rebuild it. A few MB; prevents ever again losing trained agents."""
+    d = os.path.dirname(path)
+    if d:
+        os.makedirs(d, exist_ok=True)
+    assert isinstance(agent.encoder[0], torch.nn.Linear), "encoder[0] must be the embed Linear"
+    # embed is not a stored attribute; encoder[0] is the first Linear by
+    # construction (agent_ac.py) - if the encoder ever gains a pre-layer,
+    # this recovery breaks loudly via the assert below
+    torch.save({"state_dict": agent.state_dict(),
+                "ctor": {"obs_dim": agent.obs_dim, "act_dim": agent.act_dim,
+                         "embed": agent.encoder[0].out_features, "hidden": agent.hidden,
+                         "world_model": agent.world_model, "sysid_aux": agent.sysid_aux},
+                "norm": {"mean": norm.mean, "var": norm.var, "count": norm.count}}, path)
+
+
+def load_agent_bundle(path: str, device: str = "cpu"):
+    """Rebuild (agent, norm) from save_agent_bundle output. Returns them frozen."""
+    # weights_only=False is required: the bundle holds a plain dict of numpy
+    # arrays (norm state), which weights_only=True rejects. Own artifacts only.
+    blob = torch.load(path, map_location=device, weights_only=False)
+    agent = RecurrentActorCritic(**blob["ctor"]).to(device)
+    agent.load_state_dict(blob["state_dict"])
+    norm = RunningNorm(blob["ctor"]["obs_dim"])
+    norm.mean, norm.var, norm.count = blob["norm"]["mean"], blob["norm"]["var"], blob["norm"]["count"]
+    return agent.train(False), norm.freeze()
 
 
 def readout(agent, norm, params, drift_sigma, *, n_pairs=60, prefix_steps=20, branch_steps=24,

@@ -89,6 +89,16 @@ python scripts/run_expB2.py --drift-mode l3 --l3-hidden 7 \
 # Behavior-mediation audit for the hidden=7 run (artifact committed):
 python scripts/audit_behavior_mediation.py fullruns/l3_h7_traces/states \
     --json artifacts/expB2/behavior_audit_l3_h7_traces.json
+
+# OWED - held-out fingerprint + common-garden run (last open L3 item; spec
+# docs/superpowers/specs/2026-07-14-l3-heldout-common-garden-probe-design.md).
+# Trains at hidden=8, holds out hidden=7; adds transfer + common-garden
+# channels and persists trained agents.
+python scripts/run_expB2.py --drift-mode l3 --l3-hidden 8 \
+    --heldout-evals --heldout-hidden 7 --save-agents \
+    --seeds 0 1 2 3 4 5 6 7 8 9 --device cuda \
+    --out-dir fullruns/l3_h8_heldout \
+    --dump-states fullruns/l3_h8_heldout/states
 ```
 
 Then run `audit_behavior_mediation.py` on each `states/` directory. Decision
