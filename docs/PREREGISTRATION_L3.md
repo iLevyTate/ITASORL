@@ -363,6 +363,65 @@ Rigor carried from the B-v3 audit (2026-07-10):
   residualization is linear/quadratic over phi = [b_t, b_(t-1), cummean(b)]; a full-history or nonlinear
   control could in principle remove more. Artifact: `artifacts/expB2/behavior_audit_l3_h8_traces.json`.
   STILL OWED: the hidden=4 second-capacity replication (section 11) and the held-out/common-garden probe.
+- **2026-07-13 - HIDDEN=4 RUN UNINFORMATIVE (gate failure); GATE 0 RE-VALIDATED PER CAPACITY AND THE
+  SECOND CAPACITY RE-FROZEN AT HIDDEN=7.** The owed hidden=4 n=10 run (`fullruns/l3_h4_traces`, RTX
+  4050) completed and FAILS its gates at drift 0.45: untrained mechanical floor **0.891** (not
+  chance), pooled reward-leak 0.637 with the clean gate passing in **0/10 seeds**, engagement
+  passing in only **30% of seeds** (the drift-trained policy barely recovers: train@0.45 eval@0.45
+  return -1.069, vs -0.219 at hidden=8). Per the section-8 decision matrix the run is
+  **UNINFORMATIVE** (gate-0 / engagement failure), NOT a negative; the L0 control (0.517, TOST and
+  ROPE both accept equivalence) confirms the apparatus itself is fine. ROOT CAUSE: hidden=4's
+  in-band status (oracle 0.940) was frozen from the 2026-07-10 calibration made on the WRONG world
+  at sigma=0.05, BEFORE the world-params fix; the post-fix re-calibration froze gate 0 only at
+  hidden=8 and swept the untrained floor over capacities 8-32, so hidden=4 was never re-validated
+  on world `P` (its reward leak was itself anticipated in the gate-0 entry above). FIX: gate 0 is
+  now a committed, runnable check (`scripts/run_expA_l3.py`) validating BOTH halves per capacity on
+  world `P` at the frozen sigma=0.02 - the residual oracle (band [0.85, 0.95], mechanical leakage)
+  AND the organism-side untrained floor (|target - 0.5| < 0.1 at drift 0.45, arm built exactly as
+  `run_expB2` builds it) - with a hidden=8 regression check and a selection rule frozen in advance:
+  the smallest in-band capacity below 8 with a clean floor (section-9 fallback (a), bisection
+  between the bracketing capacities 4 and 8). RECALIBRATION RESULT
+  (`fullruns/l3_gate0_recal/calibration.json`): hidden=8 regression EXACT (oracle 0.928, floor
+  0.482); hidden=4 oracle 0.932 in-band but floor **0.896** (independently reproducing the organism
+  run's 0.891 from 3 seeds); hidden=5 oracle 0.972 (OUT of band); hidden=6 oracle 0.946 in-band but
+  floor 0.647; **hidden=7 oracle 0.922 in-band, mechanical leakage clean, floor 0.566** -> second
+  capacity RE-FROZEN at **hidden=7**. Honest note: the hidden=7 floor (0.566) is elevated relative
+  to hidden=8 (0.482) though within the frozen tolerance; the SESOI already requires survival >
+  untrained + 0.05, so the elevated floor is priced into adjudication. The hidden=7 n=10 organism
+  run with trace dumps is running (`fullruns/l3_h7_traces`); its result and the per-timestep
+  behavior audit will be recorded here when complete.
+- **2026-07-14 - SECOND-CAPACITY REPLICATION AT HIDDEN=7 (n=10): THE BEHAVIOR-INDEPENDENT SURVIVAL
+  SIGNAL REPLICATES (~0.72, CI clears the bar) BUT THE SURVIVAL-VS-PREDICTOR DISSOCIATION DOES NOT -
+  THE FULL "ENCODING INDUCED" VERDICT IS ARTIFACT-CONDITIONAL.** The re-frozen hidden=7 n=10 run
+  (`fullruns/l3_h7_traces`, RTX 4050, frozen protocol, trace dumps) completed with ALL gates passing:
+  engagement 10/10 seeds at drift 0.45 (pooled train@0.45 eval@0.45 return -0.734, a partial recovery
+  sitting between hidden=8's -0.219 and hidden=4's failing -1.069; the per-seed engagement criterion
+  passes in every seed), L0 control 0.517 (TOST p=0.010 and ROPE P=0.999 both accept equivalence),
+  speed positive control 0.959, pooled reward-leak 0.567 clean in 10/10 seeds, 0 deaths in every pool
+  (110/110 both worlds, all seeds), and the untrained mechanical floor pooled at **0.586** (dev 0.086,
+  inside the frozen <0.1 tolerance and matching the recalibration's 0.566, though per-seed it is
+  violated in s3 0.732 and s9 0.683 with s6 0.605 marginal). PRIMARY at drift 0.45: survival pooled
+  target **0.737**, 90% CI [0.688, 0.780], 8/10 seeds >= 0.65 (per-seed
+  0.540/0.748/0.820/0.799/0.696/0.623/0.749/0.768/0.770/0.852) - above the 0.65 bar and clearing
+  untrained (0.586) by +0.151, BUT **predictor reads 0.714** [0.687, 0.740], so survival leads the
+  predictor by only +0.023 and the section-8 requirement (> predictor + 0.05) is NOT met: the clean
+  hidden=8 dissociation (survival 0.752 vs predictor 0.573) does not replicate at hidden=7. BEHAVIOR
+  AUDIT (`artifacts/expB2/behavior_audit_l3_h7_traces.json`, frozen decision rule): survival
+  resid_trace = **0.722** (90% CI [0.678, 0.763], 8/10 seeds >= 0.65; quadratic 0.704) -> >= 0.65
+  with the CI excluding the bar, an almost exact replication of hidden=8's 0.726 - the
+  behavior-independent survival world-signal is STABLE across the two in-band artifacts. The
+  dissociation is not: predictor resid_trace 0.691 (vs 0.574 at hidden=8) and untrained resid_trace
+  0.579 (vs 0.498 = exact chance at hidden=8). READING (per the section-11 two-capacity clause): the
+  hidden=7 artifact is qualitatively coarser - mechanically leakier (untrained floor 0.586/resid
+  0.579) and far more behaviorally salient (the behavior trace alone decodes the world at 0.762-0.796
+  in ALL arms, including untrained, vs 0.645 untrained at hidden=8) - so at this capacity every
+  trained agent picks the fingerprint up and the survival-SPECIFIC part of the claim is conditional
+  on the subtler hidden=8 artifact. The cross-capacity finding that survives both runs is: a
+  reward-clean, survivorship-clean, behavior-independent world-signal of ~0.72 in the survival
+  agent's state at both frozen capacities. Secondary notes: matched-pair survival mp_target 0.814;
+  volatility readout target_var 0.706 / target_full 0.763 (above the 0.65 bar, consistent with the
+  volatility-encoding observation on earlier rungs). STILL OWED: the held-out/common-garden probe
+  (a world-signal that transfers to an UNSEEN fingerprint), now the last open post-hoc item.
 
 ## 13. How to run (milestones, in order)
 
