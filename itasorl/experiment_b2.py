@@ -516,6 +516,29 @@ def leakage_audit_b2(auth_eps: list, surr_eps: list, margin: float = 0.1) -> dic
     return audit
 
 
+def transfer_probe(Xtr: np.ndarray, ytr: np.ndarray, Xte: np.ndarray, yte: np.ndarray,
+                   return_scores: bool = False):
+    """Held-out fingerprint transfer: fit the STANDARD linear probe family (same
+    scaler+logistic pipeline grouped_auroc uses) once on the training pools, then
+    score a FROZEN AUROC on disjoint test pools. No CV: train and test worlds are
+    disjoint by construction, and the frozen score is the estimand (does the
+    direction learned on the trained fingerprint generalize to an unseen one).
+    return_scores=True also returns (yte, p_te) so callers can bootstrap a CI
+    with itasorl.stats.auroc_ci (no refit), mirroring _auroc_with_ci."""
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import roc_auc_score
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    if len(np.unique(ytr)) < 2 or len(np.unique(yte)) < 2:
+        nan = float("nan")
+        return (nan, yte, np.array([])) if return_scores else nan
+    clf = make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000))
+    clf.fit(Xtr, ytr)
+    p = clf.predict_proba(Xte)[:, 1]
+    auc = float(roc_auc_score(yte, p))
+    return (auc, yte, p) if return_scores else auc
+
+
 # ---------------------------------------------------------------------------
 # Control agents: same trunk, different objective, probed by the IDENTICAL readout.
 #   untrained_agent     - random init -> the MECHANICAL floor (drift perturbs inputs,
