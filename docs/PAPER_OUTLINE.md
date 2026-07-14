@@ -56,7 +56,7 @@ resolve.*
 | 3 | L2 detectable (oracle) | AUROC 0.993 | FINDINGS 2.2 | run_expA_l2.py output | expA_L2_ceiling.png |
 | 4 | L2 not encoded (recurrent state) | 0.510 ± 0.039 @ drift 0.45 | FINDINGS 3.1 | run_expB_full.py output | expB_incidental.png |
 | 5 | L2 surprise channel weak | 0.596 ± 0.007 @ drift 0.45 | FINDINGS 3.2 | run_expB_surprise.py output | expB_channels.png |
-| 6 | No liftoff with horizon | 0.49-0.52 across 0/8/16 | FINDINGS 3.3 | run_expB_kstep.py output (rerun pending, see task note) | expB_kstep.png |
+| 6 | No liftoff with horizon | 0.48-0.51 across 0/8/16 | FINDINGS 3.3 | fullruns/kstep_rerun_20260713.log (recorded rerun; see 3.3 correction) | expB_kstep.png |
 | 7 | L2 null robust (nonlinear probe) | 0.482 ± 0.031 | FINDINGS 3.4 | run_expB_nonlinear.py output | - |
 | 8 | Survival coupling does not rescue L2 | 0.523 ± 0.045 (replication) | FINDINGS 9 | artifacts/expB2/expB2_results.json | expB2_survival.png |
 | 9 | B-v3 regime negative at scale | 0.610, 90% CI [0.585, 0.634], n=10 | FINDINGS 7.1 | see PREREGISTRATION_Bv3.md trail | - |
@@ -75,9 +75,10 @@ resolve.*
 
 ## Known gaps before submission
 
-- Claims 4-7 cite script console output rather than committed JSON artifacts; the
-  kstep figure/table pair is being regenerated from a recorded run (FINDINGS 3.3
-  correction note pending).
+- Claims 4-7 cite script console output rather than committed JSON artifacts
+  (claim 6 now has a recorded rerun log and the FINDINGS 3.3 correction note;
+  claims 4, 5, 7 still trace to unrecorded original runs and deserve the same
+  recorded-rerun treatment before the paper freezes).
 - Claims 9-10 should get their run JSONs promoted into artifacts/ alongside the
   L3 ones.
 - Rows 20-21 must resolve (either direction) before the paper freezes; the paper

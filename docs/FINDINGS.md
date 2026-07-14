@@ -185,12 +185,24 @@ grows.
 
 | open-loop horizon | target (drift 0.45) | target (control) |
 |-------------------|---------------------|-------------------|
-| 0 (pure next-step) | 0.516 ± 0.025 | 0.465 ± 0.020 |
-| 8 | 0.523 ± 0.028 | 0.444 ± 0.024 |
-| 16 | 0.490 ± 0.008 | 0.468 ± 0.035 |
+| 0 (pure next-step) | 0.506 ± 0.033 | 0.453 ± 0.023 |
+| 8 | 0.480 ± 0.026 | 0.448 ± 0.032 |
+| 16 | 0.484 ± 0.021 | 0.410 ± 0.045 |
 
 No liftoff. The target stays at chance across all horizons; the control stays
-flat.
+flat (the horizon-16 control dips slightly below chance, within its error bar
+at n = 3 seeds).
+
+*Correction (2026-07-13).* An earlier version of this table quoted numbers from
+the original pre-refactor run (0.516/0.523/0.490 drift; 0.465/0.444/0.468
+control). When the open-loop rollout API was later reimplemented (the original
+script depended on an API that had been committed but not implemented) all
+figures were regenerated, but this table was not, so the published figure and
+table came from different runs. Both now come from a single recorded rerun of
+`scripts/run_expB_kstep.py` on the current code (log:
+`fullruns/kstep_rerun_20260713.log`); the rerun is deterministic (a repeat
+reproduces it exactly). The qualitative conclusion is unchanged in every
+version: no liftoff at any horizon.
 
 ![Experiment B, does a longer-horizon objective induce encoding?](figures/expB_kstep.png)
 
