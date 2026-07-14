@@ -31,3 +31,4 @@ def test_bundle_round_trip(tmp_path):
     _, a1, _, _, _ = agent.act(x, prev, h, deterministic=True)
     _, a2, _, _, _ = agent2.act(x2, prev, agent2.initial_state(1, "cpu"), deterministic=True)
     assert torch.allclose(a1, a2), "reloaded agent must act identically"
+    assert agent2.world_model is True and agent2.sysid_aux is False

@@ -931,6 +931,10 @@ def save_agent_bundle(path: str, agent: RecurrentActorCritic, norm: RunningNorm)
     d = os.path.dirname(path)
     if d:
         os.makedirs(d, exist_ok=True)
+    assert isinstance(agent.encoder[0], torch.nn.Linear), "encoder[0] must be the embed Linear"
+    # embed is not a stored attribute; encoder[0] is the first Linear by
+    # construction (agent_ac.py) - if the encoder ever gains a pre-layer,
+    # this recovery breaks loudly via the assert below
     torch.save({"state_dict": agent.state_dict(),
                 "ctor": {"obs_dim": agent.obs_dim, "act_dim": agent.act_dim,
                          "embed": agent.encoder[0].out_features, "hidden": agent.hidden,
@@ -940,6 +944,8 @@ def save_agent_bundle(path: str, agent: RecurrentActorCritic, norm: RunningNorm)
 
 def load_agent_bundle(path: str, device: str = "cpu"):
     """Rebuild (agent, norm) from save_agent_bundle output. Returns them frozen."""
+    # weights_only=False is required: the bundle holds a plain dict of numpy
+    # arrays (norm state), which weights_only=True rejects. Own artifacts only.
     blob = torch.load(path, map_location=device, weights_only=False)
     agent = RecurrentActorCritic(**blob["ctor"]).to(device)
     agent.load_state_dict(blob["state_dict"])
