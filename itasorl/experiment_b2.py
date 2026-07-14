@@ -925,6 +925,29 @@ def cg_probe(auth_tails: list, surr_tails: list, *, late_k: int = 8, seed: int =
     return out
 
 
+def save_agent_bundle(path: str, agent: RecurrentActorCritic, norm: RunningNorm) -> None:
+    """Persist a frozen agent + its frozen obs normalizer with the constructor args
+    needed to rebuild it. A few MB; prevents ever again losing trained agents."""
+    d = os.path.dirname(path)
+    if d:
+        os.makedirs(d, exist_ok=True)
+    torch.save({"state_dict": agent.state_dict(),
+                "ctor": {"obs_dim": agent.obs_dim, "act_dim": agent.act_dim,
+                         "embed": agent.encoder[0].out_features, "hidden": agent.hidden,
+                         "world_model": agent.world_model, "sysid_aux": agent.sysid_aux},
+                "norm": {"mean": norm.mean, "var": norm.var, "count": norm.count}}, path)
+
+
+def load_agent_bundle(path: str, device: str = "cpu"):
+    """Rebuild (agent, norm) from save_agent_bundle output. Returns them frozen."""
+    blob = torch.load(path, map_location=device, weights_only=False)
+    agent = RecurrentActorCritic(**blob["ctor"]).to(device)
+    agent.load_state_dict(blob["state_dict"])
+    norm = RunningNorm(blob["ctor"]["obs_dim"])
+    norm.mean, norm.var, norm.count = blob["norm"]["mean"], blob["norm"]["var"], blob["norm"]["count"]
+    return agent.train(False), norm.freeze()
+
+
 def readout(agent, norm, params, drift_sigma, *, n_pairs=60, prefix_steps=20, branch_steps=24,
             ray_steps=5, device=None, seed_base=700_000, seed=0, leak_margin=0.1) -> dict:
     """Run the SECONDARY matched-pair recurrent readout (detectability-style) and return
