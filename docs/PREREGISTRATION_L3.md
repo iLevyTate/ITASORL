@@ -461,6 +461,19 @@ Rigor carried from the B-v3 audit (2026-07-10):
   dynamics, not a persistent world-identity representation. Tooling note:
   `audit_behavior_mediation.py` now skips the heldout sibling dumps (`*_h7transfer.npz`, `*_cg.npz`)
   it does not understand.
+- **2026-07-14 - REVERSE-TRANSFER RUN ANNOUNCED (frozen BEFORE launch).** The spec's staged
+  follow-up condition is met (forward transfer positive), so the reverse direction runs next:
+  train at hidden=7, hold out the SUBTLER hidden=8 fingerprint
+  (`fullruns/l3_h7_heldout`, n=10, frozen protocol, `--save-agents`, trace dumps). Decision
+  rules are IDENTICAL in form to the forward spec and frozen here: transfer - survival
+  transfer_target >= 0.65 AND > untrained transfer + 0.05 -> the world-signal generalizes to a
+  subtler unseen fingerprint (the stricter version of the 0.773 claim); common garden - same
+  form, second data point on persistence at the coarser training artifact. INTERPRETATION
+  LIMIT, stated in advance: at hidden=7 the survival-vs-predictor dissociation did not hold
+  (two-capacity entry above), so this run reads the survival arm against the untrained floor
+  only and cannot support any survival-SPECIFICITY claim. Determinism expectation: the
+  standard-probe half must reproduce the `fullruns/l3_h7_traces` table exactly (survival 0.737
+  [0.688, 0.780]); any deviation invalidates the run. Result to be recorded here when complete.
 
 ## 13. How to run (milestones, in order)
 
