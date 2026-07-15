@@ -420,8 +420,38 @@ Rigor carried from the B-v3 audit (2026-07-10):
   reward-clean, survivorship-clean, behavior-independent world-signal of ~0.72 in the survival
   agent's state at both frozen capacities. Secondary notes: matched-pair survival mp_target 0.814;
   volatility readout target_var 0.706 / target_full 0.763 (above the 0.65 bar, consistent with the
-  volatility-encoding observation on earlier rungs). STILL OWED: the held-out/common-garden probe
-  (a world-signal that transfers to an UNSEEN fingerprint), now the last open post-hoc item.
+  volatility-encoding observation on earlier rungs). LAST OWED ITEM, the held-out/common-garden probe
+  (a world-signal that transfers to an UNSEEN fingerprint), is now run and recorded in the entry below.
+- **2026-07-14 - HELD-OUT FINGERPRINT + COMMON-GARDEN PROBE (n=10): THE WORLD-SIGNAL GENERALIZES TO AN
+  UNSEEN SAME-RECIPE FINGERPRINT (TRANSFER POSITIVE) BUT DOES NOT SURVIVE A COMMON-GARDEN CONTROL
+  (REACTIVE, NOT A PERSISTENT REPRESENTATION).** Two readout-only evaluation channels on one frozen
+  hidden=8 training run (`fullruns/l3_h8_heldout`, RTX 4050, frozen protocol, spec
+  `docs/superpowers/specs/2026-07-14-l3-heldout-common-garden-probe-design.md`); no change to training,
+  the surrogate family, or the pre-registered headline probe. GATES REPRODUCED (third independent
+  determinism check): survival pooled target **0.752** (90% CI [0.704, 0.797]), byte-matching the
+  published hidden=8 headline; L0 control 0.517 (TOST p=0.010, ROPE P=0.999 both accept equivalence);
+  pooled reward-leak 0.541 clean in 10/10 seeds; 0 deaths in every pool (110/110 both worlds, all
+  seeds). CHANNEL 1, UNSEEN-FINGERPRINT TRANSFER: the world-identity direction fit against the trained
+  hidden=8 fingerprint, frozen, then scored on a FRESH authentic pool vs the held-out hidden=7
+  fingerprint the agent never trained against. Survival `transfer_target` = **0.773** (90% CI
+  [0.722, 0.824], 9/10 seeds >= 0.65), predictor 0.633 (3/10), untrained mechanical floor 0.569
+  (0/10). Frozen decision rule (survival >= 0.65 AND > untrained + 0.05 = 0.619) PASSES on both
+  clauses -> GENERALIZES beyond the single trained fingerprint instance. Scope caveat, stated in the
+  spec and honored here: hidden=7 is the SAME surrogate recipe at a different capacity, not a
+  different surrogate family; cross-recipe transfer is out of scope for this run. CHANNEL 2, COMMON
+  GARDEN: 20-step prefix in either the authentic or the hidden=8 surrogate world, then both groups
+  continue under IDENTICAL authentic dynamics for a 24-step tail; the probe reads tail-only state,
+  labels = prefix world, GroupKFold. Survival `cg_tail_target` = **0.557** (90% CI [0.492, 0.622],
+  1/10 seeds >= 0.65), predictor 0.409, untrained 0.377. Frozen decision rule (survival >= 0.65 AND >
+  untrained + 0.05) FAILS on the first clause. DECAY CHECK on the last 8 tail steps: survival
+  `cg_latetail_target` = **0.492** (90% CI [0.431, 0.553]), at chance -> the prefix-world signal
+  washes out along the shared tail. READING (frozen rules applied): the L3 world-signal is NOT an
+  overfit to the one artifact instance `G_0` (transfer generalizes), but once the felt dynamics are
+  made identical it does not persist in tail-only state - so the signal reads as REACTIVE tracking of
+  the currently-felt dynamics, not a persistent stored world-identity representation. This is an
+  informative negative for the representational reading (spec: "not a gate failure"), and it resolves
+  the long-standing reactive-vs-representational ambiguity (section-11 caveats) toward reactive. This
+  was the last owed post-hoc item; the L3 arc is complete.
 
 ## 13. How to run (milestones, in order)
 

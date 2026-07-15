@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only)** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: generalizes to an unseen fingerprint but reactive, not a persistent representation** |
 | Experiment C (emergence under selection) / Ladder L4 | not started |
 
 ### Key result
@@ -137,8 +137,15 @@ that coarser artifact is one every trained agent picks up (predictor 0.714 vs su
 under the pre-registered +0.05 dissociation requirement), so the survival-*only* part of the
 claim is conditional on the subtler hidden = 8 artifact. What survives both capacities is a
 reward-clean, survivorship-clean, behavior-independent world-signal of about **0.72** in the
-survival agent's state. Remaining work: the held-out/common-garden probe (design finalized;
-run pending). See
+survival agent's state. *A held-out probe (n = 10, `fullruns/l3_h8_heldout`) then sharpens what
+that signal is.* It splits: the world-identity direction learned against the trained fingerprint
+still reads an unseen same-recipe fingerprint the agent never lived with (transfer **0.773** vs
+untrained floor 0.569; the pre-registered rule passes), so it is not an overfit to one artifact
+instance; but under a common-garden control that runs both groups through an identical tail after
+differing prefixes, tail-only state does not carry the prefix world (**0.557**, below the 0.65 bar;
+the late tail decays to chance, 0.492). So the L3 world-signal is best read as reactive tracking of
+the currently-felt dynamics, not a persistent stored world-identity representation. This closes the
+last owed L3 item. See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---

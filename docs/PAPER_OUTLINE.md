@@ -43,7 +43,10 @@ resolve.*
    - 4.4 Replications: second capacity resolved (FINDINGS 10.5): the
      behavior-independent signal replicates (0.722 vs 0.726) but the
      survival-vs-predictor dissociation is artifact-conditional; held-out
-     fingerprint (FINDINGS 10.6) pending.
+     fingerprint resolved (FINDINGS 10.6): transfer generalizes (0.773 vs
+     untrained 0.569) but the common-garden control shows the signal is
+     reactive, not a persistent representation (0.557, below bar; late tail
+     0.492 at chance).
 5. **Limitations** (FINDINGS 11, verbatim spirit)
 6. **Related work** (ITASORL.md Part I literature sections)
 7. **Reproducibility statement** (FINDINGS 12; artifacts/expB2/ promotion history;
@@ -75,7 +78,8 @@ resolve.*
 | 20 | Second capacity: behavior-independent signal replicates | 0.722 [0.678, 0.763], 8/10; quad 0.704 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
 | 21 | Second capacity: dissociation NOT met (artifact-conditional) | survival 0.737 [0.688, 0.780] vs predictor 0.714 [0.687, 0.740]; lead +0.023 < +0.05 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
 | 22 | Gate 0 re-validated per capacity; hidden=7 frozen | oracle 0.922, floor 0.566; hidden=8 regression exact (0.928/0.482); hidden=4 uninformative | FINDINGS 10.5 | PREREGISTRATION_L3.md sec. 12 + scripts/run_expA_l3.py | - |
-| 23 | Held-out fingerprint transfer | pending (FINDINGS 10.6; design finalized 2026-07-14) | FINDINGS 10.6 | pending | - |
+| 23 | Held-out fingerprint transfer: GENERALIZES | survival 0.773 [0.722, 0.824], 9/10 vs untrained floor 0.569; rule passes | FINDINGS 10.6 | fullruns/l3_h8_heldout/expB2_results.json | - |
+| 24 | Common-garden control: REACTIVE not persistent | survival cg_tail 0.557 [0.492, 0.622], 1/10 (below bar); late tail 0.492 at chance; rule fails | FINDINGS 10.6 | fullruns/l3_h8_heldout/expB2_results.json | - |
 
 ## Known gaps before submission
 

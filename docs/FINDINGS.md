@@ -50,8 +50,15 @@ subtler hidden = 8 artifact (section 10.5).
 Together: an agent does not represent a detectable artifact *for free* (L2), but
 when the artifact is a generative fingerprint that survival pressure forces it to
 cope with, world-discriminative state emerges as a byproduct, read out and never
-rewarded (L3). The conditions under which incidental encoding emerges are exactly
-the object of study.
+rewarded (L3). A held-out probe (n = 10, section 10.6) sharpens what "emerges"
+means: the world-signal *generalizes* to an unseen same-recipe fingerprint the
+agent never lived with (transfer 0.773 vs untrained 0.569, pre-registered rule
+passes), so it is not an overfit to one artifact instance; but under a
+common-garden control that equalizes the felt dynamics, the signal does **not**
+persist (0.557, below the bar; late-tail at chance). The emergent state is best
+read as **reactive tracking of the currently-felt dynamics, not a persistent
+stored world-identity representation.** The conditions under which incidental
+encoding emerges are exactly the object of study.
 
 ---
 
@@ -67,7 +74,7 @@ substrate). Detection is measured against a **surrogate ladder**:
 | L0 | Identical re-implementation (control, must be at chance) | tested |
 | L1 | Observation discretization (a lattice / quantization tell) | tested |
 | L2 | Rollout drift (a slowly drifting dynamics coefficient) | tested |
-| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; section 10) |
+| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; held-out probe: transfer-generalizing but reactive, not a persistent representation; section 10) |
 | L4 | Adversarially-hardened surrogate | not started |
 
 Three experiments were planned. This cycle completed Experiment A for L1 and L2
@@ -298,7 +305,11 @@ inducing it (if possible) requires something more deliberate.
   agent, uniquely among the three objectives, with a behavior-independent component
   that clears the pre-registered bar. The condition that flips the result is the
   artifact's character (a generative fingerprint that survival must cope with), not
-  probe power, capacity, or objective horizon.
+  probe power, capacity, or objective horizon. A held-out probe (section 10.6)
+  qualifies the *nature* of the encoding: it transfers to an unseen same-recipe
+  fingerprint (not an overfit to one artifact instance), but a common-garden
+  control shows it is reactive tracking of the felt dynamics, not a persistent
+  stored world-identity representation.
 - **H2 (substrate-grounding via ablations)** and **H3 (emergence under
   selection)**: not yet tested.
 
@@ -345,12 +356,17 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    behavior-independent signal replicates (0.722), but the survival-vs-predictor
    dissociation does not, making the survival-specific verdict conditional on the
    subtler hidden = 8 artifact. The held-out fingerprint probe (section 10.6) is
-   the remaining open question.
-2. **Held-out / common-garden probe: IN PROGRESS (section 10.6).** Resolves the
-   reactive-vs-representational ambiguity (§9 caveats): whether the recurrent state
-   encodes persistent world identity or merely tracks the felt dynamics
-   moment-to-moment. A world-signal that transfers to an unseen fingerprint is much
-   harder to dismiss as behavior.
+   now run and reported below.
+2. **Held-out / common-garden probe: TESTED, SPLIT (section 10.6).** Two channels
+   on one hidden = 8 run. Transfer is POSITIVE: the world-identity direction fit
+   against the trained fingerprint still reads an unseen same-recipe fingerprint
+   (survival 0.773 vs untrained 0.569; pre-registered rule passes), so the signal
+   is not an overfit to one artifact instance. Common garden is a NEGATIVE:
+   once the felt dynamics are made identical for the tail, tail-only state does not
+   carry the prefix world (survival 0.557, below the 0.65 bar; late-tail 0.492 at
+   chance; rule fails). This resolves the reactive-vs-representational ambiguity
+   (§9 caveats) toward REACTIVE: the state tracks the currently-felt dynamics, it
+   does not hold a persistent world-identity tag.
 3. **Remaining objective variants.** Weighting the dynamics-relevant observation
    dimensions and increasing capacity, though the capacity-ceiling result above makes a
    pooled-probe breakthrough from these unlikely at L2.
@@ -584,14 +600,43 @@ conditional on the subtler hidden = 8 artifact.
 
 ### 10.6 Held-out fingerprint (common-garden) probe
 
-Owed. The headline is conditional on the single frozen fingerprint instance `G_0`.
-The held-out probe trains the readout against `G_0` and tests transfer to unseen
-same-recipe fingerprints `G_k`: a world-signal that transfers to a fingerprint the
-agent never lived with is much harder to dismiss as behavioral residue, and it
-resolves the reactive-vs-representational ambiguity (§9 caveats) at the L3 rung.
-The design was finalized 2026-07-14 (two evaluation channels on one frozen
-hidden = 8 training run: probe transfer to an unseen same-recipe fingerprint, and
-a common-garden shared-tail probe); the run is pending.
+Done (`fullruns/l3_h8_heldout`, n = 10, frozen spec 2026-07-14). The headline is
+conditional on the single frozen fingerprint instance `G_0` and on the dynamics
+felt at readout time; two evaluation channels on one hidden = 8 training run test
+both. Both are readout-only: no change to training, the surrogate family, or the
+pre-registered headline probe. The standard pools in the same run reproduced the
+published survival headline exactly (0.752, 90% CI [0.704, 0.797]; L0 control
+0.517, equivalent to chance; reward-leak 0.541, clean; 0 deaths / 110 per pool),
+a third independent determinism check.
+
+**Channel 1, unseen-fingerprint transfer: POSITIVE.** The world-identity direction
+is fit against the trained hidden = 8 fingerprint, then frozen and scored on a
+fresh authentic pool versus the held-out hidden = 7 fingerprint the agent never
+lived with. Survival `transfer_target` = **0.773** (90% CI [0.722, 0.824], 9/10
+seeds ≥ 0.65), predictor 0.633 (3/10), untrained mechanical floor 0.569 (0/10).
+The pre-registered rule (survival ≥ 0.65 AND > untrained + 0.05) PASSES on both
+clauses, so the signal generalizes beyond the one artifact instance it was trained
+against. Scope, stated honestly: hidden = 7 is the same surrogate recipe at a
+different capacity, not a different surrogate family; cross-recipe transfer is out
+of scope for this run (spec 2026-07-14).
+
+**Channel 2, common garden: NEGATIVE (informative).** Two groups run a 20-step
+prefix in different worlds (authentic vs the hidden = 8 surrogate), then continue
+under identical authentic dynamics for a 24-step tail; the probe reads tail-only
+state and must recover the prefix world. Survival `cg_tail_target` = **0.557**
+(90% CI [0.492, 0.622], 1/10 seeds ≥ 0.65), predictor 0.409, untrained 0.377. The
+pre-registered rule (survival ≥ 0.65) FAILS. The late-tail decay confirms it: on
+the last 8 tail steps the survival probe falls to `cg_latetail_target` = 0.492,
+chance. Once the felt dynamics are made identical, tail-only state does not
+reliably carry where the episode came from.
+
+**Reading.** The L3 world-signal generalizes across fingerprint instances (it is
+not an overfit to `G_0`), but under a common-garden control it reads as reactive
+tracking of the currently-felt dynamics, not a persistent stored world-identity
+representation. This resolves the long-standing reactive-vs-representational
+ambiguity (§7.2, §9 caveats), and it resolves toward reactive: the emergent
+"world-discriminative state" is a byproduct of coping with the live dynamics, not
+an internal world-identity tag the state retains after the dynamics equalize.
 
 ---
 
