@@ -1,0 +1,81 @@
+{
+  "duration_ms": 85000,
+  "fps": 30,
+  "size": [1080, 1350],
+  "numbers": {
+    "oracle_l2": { "display": "0.99", "source": "docs/FINDINGS.md sec 2.2 (0.993)" },
+    "probe_chance": { "display": "0.50", "source": "artifacts h8 untrained target 0.488 / L0 0.517" },
+    "probe_survival": { "display": "0.73", "source": "artifacts h8 survival resid_trace 0.726 / h7 0.722" }
+  },
+  "beats": [
+    {
+      "id": "creature",
+      "t0": 0,
+      "t1": 10000,
+      "world": { "mode": "single", "zoom": [1.0, 1.05], "stage": 0 },
+      "caption": {
+        "kicker": "A PATCH OF EARTH",
+        "headline": "Raise a creature ((from nothing.))",
+        "subline": "No labels. No instructions. It senses, moves, eats, and learns to predict what happens next."
+      }
+    },
+    {
+      "id": "trick",
+      "t0": 10000,
+      "t1": 25000,
+      "world": { "mode": "split", "zoom": [1.0, 1.03], "stage": 1 },
+      "caption": {
+        "kicker": "THE TRICK",
+        "headline": "Sometimes its world is real. Sometimes it is a ((flawed copy.))",
+        "subline": "Same place, same rules - except one runs on a subtle stand-in physics. Can you tell? Neither can we, by eye."
+      }
+    },
+    {
+      "id": "observer",
+      "t0": 25000,
+      "t1": 40000,
+      "world": { "mode": "cloud", "zoom": [1.0, 1.0] },
+      "gauge": { "label": "outside observer / world detection (AUROC)", "from": 0.5, "to": 0.99, "display": "0.99", "sweep": [1500, 7000] },
+      "caption": {
+        "kicker": "THE OUTSIDE OBSERVER",
+        "headline": "From outside, the copy is ((obvious.))",
+        "subline": "A privileged observer reading the raw dynamics catches the fake almost every time."
+      }
+    },
+    {
+      "id": "nocare",
+      "t0": 40000,
+      "t1": 55000,
+      "world": { "mode": "single", "zoom": [1.02, 1.06], "stage": 2 },
+      "gauge": { "label": "creature's mind / world signal (AUROC)", "from": 0.99, "to": 0.5, "display": "0.50", "sweep": [1200, 5200] },
+      "caption": {
+        "kicker": "THE CREATURE'S MIND",
+        "headline": "The creature ((never notices.))",
+        "subline": "We read its internal state - and never reward it for anything. The difference leaves no trace. Detectable is not learned."
+      }
+    },
+    {
+      "id": "survival",
+      "t0": 55000,
+      "t1": 75000,
+      "world": { "mode": "single", "zoom": [1.0, 1.08], "energy": true, "stage": 3 },
+      "gauge": { "label": "creature's mind / world signal (AUROC)", "from": 0.5, "to": 0.73, "display": "0.73", "sweep": [4000, 14000] },
+      "caption": {
+        "kicker": "SURVIVAL PRESSURE",
+        "headline": "Until its life ((depends on it.))",
+        "subline": "Make the copy something it must cope with to eat, and the difference shows up in its head - unasked, unrewarded, a side effect of surviving."
+      }
+    },
+    {
+      "id": "close",
+      "t0": 75000,
+      "t1": 85000,
+      "world": { "mode": "none" },
+      "endcard": {
+        "headline": "Detectable is not learned. Survival changes that.",
+        "url": "ilevytate.github.io/ITASORL",
+        "foot": "AUROC, n = 10 seeds, pre-specified 0.65 bar. Readout, not reward."
+      }
+    }
+  ]
+}

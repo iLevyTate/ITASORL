@@ -1,0 +1,227 @@
+/* Soft Substrate tokens - lifted from promo/DESIGN-SYSTEM.md (v1). */
+
+:root {
+  --substrate: #E8E5F1;
+  --shadow-dark: #C8C3DD;
+  --shadow-light: #FBFAFF;
+  --ink: #2A2547;
+  --body: #5C5776;
+  --secondary: #6B6588;
+  --muted: #9A94B0;
+  --violet: #8A72C0;
+  --blue: #5F82C6;
+  --ghost: #DEDAEB;
+  --divider: #D9D5E7;
+  --grad: linear-gradient(135deg, #9079C8, #5F82C6);
+  --font-head: "Space Grotesk", sans-serif;
+  --font-body: "Hanken Grotesk", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  background: var(--substrate);
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+/* The stage is a fixed 1080x1350 composition, scaled to fit the window for
+   preview; capture runs the window at exactly 1080x1350 so scale = 1. */
+#stage {
+  position: absolute;
+  width: 1080px;
+  height: 1350px;
+  left: 50%;
+  top: 50%;
+  transform-origin: center center;
+  background: var(--substrate);
+  font-family: var(--font-body);
+}
+
+/* World card: raised neumorphic surface holding the canvas. */
+#world-card {
+  position: absolute;
+  left: 60px;
+  top: 84px;
+  width: 960px;
+  height: 960px;
+  border-radius: 26px;
+  background: var(--substrate);
+  box-shadow: -14px -14px 30px var(--shadow-light), 14px 14px 30px var(--shadow-dark);
+  overflow: hidden;
+}
+
+#world {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Split-screen labels (beat 2). */
+.pool-chip {
+  position: absolute;
+  top: 26px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: var(--substrate);
+  box-shadow: inset 4px 4px 9px var(--shadow-dark), inset -4px -4px 9px var(--shadow-light);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  color: var(--secondary);
+  opacity: 0;
+}
+#chip-a { left: 34px; }
+#chip-b { right: 34px; }
+
+/* Gauge: a pressed well with a gradient fill bar and a mono readout. */
+#gauge {
+  position: absolute;
+  left: 60px;
+  top: 1076px;
+  width: 960px;
+  border-radius: 22px;
+  padding: 22px 30px 26px;
+  background: var(--substrate);
+  box-shadow: inset 6px 6px 14px var(--shadow-dark), inset -6px -6px 14px var(--shadow-light);
+  opacity: 0;
+}
+#gauge-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+#gauge-row { display: flex; align-items: center; gap: 26px; margin-top: 12px; }
+#gauge-track {
+  position: relative;
+  flex: 1;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--ghost);
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+}
+#gauge-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%;
+  border-radius: 999px;
+  background: var(--grad);
+}
+#gauge-tick {
+  position: absolute;
+  top: -7px;
+  width: 2px;
+  height: 28px;
+  background: var(--muted);
+  opacity: 0.9;
+}
+#gauge-tick::after {
+  content: "bar";
+  position: absolute;
+  top: -20px;
+  left: -12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+#gauge-value {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 44px;
+  color: var(--ink);
+  min-width: 132px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Caption zone. */
+#caption {
+  position: absolute;
+  left: 60px;
+  right: 60px;
+  top: 1108px;
+  text-align: left;
+}
+#kicker {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 10px;
+}
+#headline {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 44px;
+  letter-spacing: -0.02em;
+  line-height: 1.08;
+  color: var(--ink);
+}
+#headline .grad {
+  background: var(--grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+#subline {
+  margin-top: 12px;
+  font-size: 21px;
+  line-height: 1.5;
+  color: var(--body);
+  max-width: 900px;
+}
+
+/* Closing card (beat 6): a full-stage overlay on the substrate. */
+#endcard {
+  position: absolute;
+  inset: 0;
+  background: var(--substrate);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  opacity: 0;
+}
+#endcard .glyph { margin-bottom: 44px; }
+/* Crown-stage teal Blob, cropped from the sprite sheet at 8x. */
+#endcard .blob-glyph {
+  width: 208px;
+  height: 208px;
+  background: url("blob-spritesheet.png") no-repeat -624px -1040px;
+  background-size: 832px 1248px;
+  image-rendering: pixelated;
+}
+#end-headline {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 58px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink);
+  max-width: 800px;
+}
+#end-url {
+  margin-top: 30px;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--blue);
+}
+#end-foot {
+  position: absolute;
+  bottom: 46px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* When any element carries data-fade, the player drives opacity by keyframe. */
+.layer { will-change: opacity, transform; }

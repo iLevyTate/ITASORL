@@ -1,0 +1,47 @@
+{
+  "image": "blob-spritesheet.png",
+  "frameWidth": 26,
+  "frameHeight": 26,
+  "cols": 4,
+  "rows": 6,
+  "stages": [
+    "spark",
+    "hatch",
+    "horns",
+    "crown"
+  ],
+  "morphs": [
+    "leucistic",
+    "golden",
+    "olive",
+    "melanoid",
+    "lavender",
+    "teal"
+  ],
+  "frames": [
+    { "stage": "spark", "stageIndex": 0, "morph": "leucistic", "x": 0, "y": 0, "w": 26, "h": 26, "anchor": { "x": 13, "y": 14 } },
+    { "stage": "hatch", "stageIndex": 1, "morph": "leucistic", "x": 26, "y": 0, "w": 26, "h": 26, "anchor": { "x": 39, "y": 14 } },
+    { "stage": "horns", "stageIndex": 2, "morph": "leucistic", "x": 52, "y": 0, "w": 26, "h": 26, "anchor": { "x": 65, "y": 14 } },
+    { "stage": "crown", "stageIndex": 3, "morph": "leucistic", "x": 78, "y": 0, "w": 26, "h": 26, "anchor": { "x": 91, "y": 14 } },
+    { "stage": "spark", "stageIndex": 0, "morph": "golden", "x": 0, "y": 26, "w": 26, "h": 26, "anchor": { "x": 13, "y": 40 } },
+    { "stage": "hatch", "stageIndex": 1, "morph": "golden", "x": 26, "y": 26, "w": 26, "h": 26, "anchor": { "x": 39, "y": 40 } },
+    { "stage": "horns", "stageIndex": 2, "morph": "golden", "x": 52, "y": 26, "w": 26, "h": 26, "anchor": { "x": 65, "y": 40 } },
+    { "stage": "crown", "stageIndex": 3, "morph": "golden", "x": 78, "y": 26, "w": 26, "h": 26, "anchor": { "x": 91, "y": 40 } },
+    { "stage": "spark", "stageIndex": 0, "morph": "olive", "x": 0, "y": 52, "w": 26, "h": 26, "anchor": { "x": 13, "y": 66 } },
+    { "stage": "hatch", "stageIndex": 1, "morph": "olive", "x": 26, "y": 52, "w": 26, "h": 26, "anchor": { "x": 39, "y": 66 } },
+    { "stage": "horns", "stageIndex": 2, "morph": "olive", "x": 52, "y": 52, "w": 26, "h": 26, "anchor": { "x": 65, "y": 66 } },
+    { "stage": "crown", "stageIndex": 3, "morph": "olive", "x": 78, "y": 52, "w": 26, "h": 26, "anchor": { "x": 91, "y": 66 } },
+    { "stage": "spark", "stageIndex": 0, "morph": "melanoid", "x": 0, "y": 78, "w": 26, "h": 26, "anchor": { "x": 13, "y": 92 } },
+    { "stage": "hatch", "stageIndex": 1, "morph": "melanoid", "x": 26, "y": 78, "w": 26, "h": 26, "anchor": { "x": 39, "y": 92 } },
+    { "stage": "horns", "stageIndex": 2, "morph": "melanoid", "x": 52, "y": 78, "w": 26, "h": 26, "anchor": { "x": 65, "y": 92 } },
+    { "stage": "crown", "stageIndex": 3, "morph": "melanoid", "x": 78, "y": 78, "w": 26, "h": 26, "anchor": { "x": 91, "y": 92 } },
+    { "stage": "spark", "stageIndex": 0, "morph": "lavender", "x": 0, "y": 104, "w": 26, "h": 26, "anchor": { "x": 13, "y": 118 } },
+    { "stage": "hatch", "stageIndex": 1, "morph": "lavender", "x": 26, "y": 104, "w": 26, "h": 26, "anchor": { "x": 39, "y": 118 } },
+    { "stage": "horns", "stageIndex": 2, "morph": "lavender", "x": 52, "y": 104, "w": 26, "h": 26, "anchor": { "x": 65, "y": 118 } },
+    { "stage": "crown", "stageIndex": 3, "morph": "lavender", "x": 78, "y": 104, "w": 26, "h": 26, "anchor": { "x": 91, "y": 118 } },
+    { "stage": "spark", "stageIndex": 0, "morph": "teal", "x": 0, "y": 130, "w": 26, "h": 26, "anchor": { "x": 13, "y": 144 } },
+    { "stage": "hatch", "stageIndex": 1, "morph": "teal", "x": 26, "y": 130, "w": 26, "h": 26, "anchor": { "x": 39, "y": 144 } },
+    { "stage": "horns", "stageIndex": 2, "morph": "teal", "x": 52, "y": 130, "w": 26, "h": 26, "anchor": { "x": 65, "y": 144 } },
+    { "stage": "crown", "stageIndex": 3, "morph": "teal", "x": 78, "y": 130, "w": 26, "h": 26, "anchor": { "x": 91, "y": 144 } }
+  ]
+}

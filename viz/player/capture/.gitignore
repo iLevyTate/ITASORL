@@ -1,0 +1,6 @@
+node_modules/
+proof/
+# Scratch render output: PNG stills, logs, and encoded video are dev artifacts.
+*.png
+*.log
+*.mp4

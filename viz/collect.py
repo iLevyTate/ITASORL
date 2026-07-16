@@ -24,11 +24,14 @@ from itasorl.world import WorldParams  # noqa: E402
 P = WorldParams(k_land=1.5, k_water=1.5, gravity=0.4)
 RAY_STEPS = 5           # run_expB2.py --ray_steps default; the eval standard
 ENERGY_FULL = 1.0       # SURVIVAL_METAB E0; player energy bar expects [0, 1]
-# Beat 2 (trick, 10s-25s at step_ms=100) shows a 477px center strip of the
-# 960px world; x outside [0.25, 0.75] is clipped. 0.28/0.72 leaves a margin.
+# Beat 2 (trick, 10s-25s) shows a 477px center strip of the 960px world; x
+# outside [0.25, 0.75] is clipped. 0.28/0.72 leaves a margin. TRICK_I0/I1 are
+# the step indices for the 100 ms/step case (the unit-test default); main()
+# recomputes them from the chosen step_ms.
+TRICK_T0, TRICK_T1 = 10_000, 25_000  # split beat: auth AND surr both on screen
 TRICK_I0, TRICK_I1 = 100, 250
 SPLIT_LO, SPLIT_HI = 0.28, 0.72
-LAST_WORLD_MS = 75_000  # the world is on screen through beat 5 (55s-75s)
+LAST_WORLD_MS = 75_000  # the authentic world is on screen through beat 5 (75s)
 STEP_MS = 100
 
 
@@ -48,14 +51,16 @@ def sample_fields(world, n):
 
 
 def rollout(agent, norm, world, steps, device="cpu"):
-    """Deterministic policy rollout; per-step [x, y, heading, energy] plus active
-    pellet positions. Returns None if the creature dies (caller tries new seeds).
-    Mirrors common_garden_rollout (itasorl/experiment_b2.py:869-887)."""
+    """Deterministic policy rollout up to `steps` or death, whichever comes first.
+    Records per-step [x, y, heading, energy] plus active pellet positions. Returns
+    {"pts", "pellets_t", "n", "died"}; n == len(pts) is the survival length (< steps
+    if the creature starved). Mirrors common_garden_rollout (experiment_b2.py:869)."""
     import torch
     h = agent.initial_state(1, device)
     prev = torch.zeros(1, agent.act_dim, device=device)
     obs = world.observe().astype(np.float64)
     pts, pellets_t = [], []
+    died = False
     for _ in range(steps):
         obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
         _, env_act, _, _, h = agent.act(obs_t, prev, h, deterministic=True)
@@ -68,8 +73,9 @@ def rollout(agent, norm, world, steps, device="cpu"):
         pellets_t.append([[round(float(x), 4), round(float(y), 4)]
                           for x, y in world.pellets[active]])
         if r.terminated:
-            return None
-    return {"pts": pts, "pellets_t": pellets_t}
+            died = True
+            break
+    return {"pts": pts, "pellets_t": pellets_t, "n": len(pts), "died": died}
 
 
 def in_split_window(pts, i0=TRICK_I0, i1=TRICK_I1, lo=SPLIT_LO, hi=SPLIT_HI):
@@ -127,8 +133,9 @@ def build_scene(meta, grid_n, height, wet, ra, rs, step_ms=STEP_MS):
         "step_ms": step_ms,
     }
     assert len(scene["trajs"]["auth"]) * step_ms >= LAST_WORLD_MS, \
-        "trajectory too short: the world is on screen through beat 5"
-    assert len(scene["trajs"]["surr"]) * step_ms >= LAST_WORLD_MS
+        "authentic trajectory too short: it is on screen through beat 5 (75 s)"
+    assert len(scene["trajs"]["surr"]) * step_ms >= TRICK_T1, \
+        "surrogate trajectory too short: it must outlast the split beat (25 s)"
     return scene
 
 
@@ -141,10 +148,14 @@ def main(argv=None):
     ap.add_argument("--bundle", default="agent_d0.45_s0_survival.pt")
     ap.add_argument("--drift", type=float, default=0.45)
     ap.add_argument("--l3-hidden", type=int, default=8)
-    ap.add_argument("--steps", type=int, default=900)
+    ap.add_argument("--steps", type=int, default=900,
+                    help="rollout cap; the agent usually starves well before this")
     ap.add_argument("--grid", type=int, default=160)
     ap.add_argument("--seed-base", type=int, default=424_242)
-    ap.add_argument("--max-candidates", type=int, default=30)
+    ap.add_argument("--max-candidates", type=int, default=240,
+                    help="seeds ranked by authentic survival length")
+    ap.add_argument("--top-k", type=int, default=32,
+                    help="longest survivors that get the surrogate + framing check")
     ap.add_argument("--out", default=str(WT_ROOT / "viz" / "data" / "scene.json"))
     a = ap.parse_args(argv)
 
@@ -167,10 +178,28 @@ def main(argv=None):
 
     agent, norm = load_agent_bundle(str(Path(a.agents) / a.bundle), device="cpu")
 
-    ra = rs = None
-    base = a.seed_base
+    # Option 1 (slow the world clock): the saved short-horizon survival agent
+    # (trained at max_steps<=80) starves long before 900 steps, so no single seed
+    # survives the film at 100 ms/step. Rank seeds by AUTHENTIC survival (auth is on
+    # screen through beat 5 / 75 s), then stretch the longest real episode across
+    # those 75 s by picking step_ms = ceil(75000 / n_auth). The SURROGATE creature
+    # only appears in the split beat (10-25 s), so it just has to outlast that.
+    ranked = []
     for i in range(a.max_candidates):
         base = a.seed_base + 1000 * i
+        wa = make_world(P, 0.0, RAY_STEPS)
+        wa.reset(_seeds(base))
+        ra = rollout(agent, norm, wa, a.steps)
+        ranked.append((ra["n"], base))
+    ranked.sort(reverse=True)
+    print("authentic survival: best "
+          + f"{ranked[0][0]} median {ranked[len(ranked) // 2][0]} "
+          + f"worst {ranked[-1][0]} steps (n={len(ranked)})", flush=True)
+
+    chosen = None
+    for n_auth, base in ranked[:a.top_k]:
+        step_ms = (LAST_WORLD_MS + n_auth - 1) // n_auth   # ceil
+        i0, i1 = round(TRICK_T0 / step_ms), round(TRICK_T1 / step_ms)
         seeds = _seeds(base)
         wa = make_world(P, 0.0, RAY_STEPS)
         wa.reset(seeds)
@@ -178,31 +207,40 @@ def main(argv=None):
         ws.reset(seeds)
         ra = rollout(agent, norm, wa, a.steps)
         rs = rollout(agent, norm, ws, a.steps)
-        ok = (ra is not None and rs is not None
-              and in_split_window(ra["pts"]) and in_split_window(rs["pts"]))
-        print("candidate seed base " + f"{base}: " + ("selected" if ok else "rejected"),
-              flush=True)
-        if ok:
+        surr_ok = rs["n"] > i1  # surrogate creature alive through the split beat
+        frame_ok = (surr_ok and in_split_window(ra["pts"], i0, i1)
+                    and in_split_window(rs["pts"], i0, i1))
+        print("seed " + f"{base}: n_auth={n_auth} n_surr={rs['n']} step_ms={step_ms} "
+              + f"surr_ok={surr_ok} frame_ok={frame_ok}", flush=True)
+        if frame_ok:
+            chosen = (base, step_ms, ra, rs, wa, n_auth, rs["n"], i0, i1)
             break
-    else:
-        raise SystemExit("no candidate stayed alive 900 steps inside the split-beat "
-                         "frame; raise --max-candidates")
+    if chosen is None:
+        raise SystemExit("no ranked seed kept both creatures framed through the split "
+                         "beat; raise --max-candidates/--top-k or loosen SPLIT_LO/HI")
+    base, step_ms, ra, rs, wa, n_auth, n_surr, i0, i1 = chosen
 
     height, wet = sample_fields(wa, a.grid)
-    e5 = [p[3] for p in ra["pts"][550:750]]  # beat 5 window on the auth trajectory
+    b5_lo, b5_hi = round(55_000 / step_ms), round(75_000 / step_ms)
+    e5 = [p[3] for p in ra["pts"][b5_lo:b5_hi]]  # beat 5 (survival) energy span
     meta = {"source": "collect.py",
             "bundle": a.bundle,
             "agents_dir": str(Path(a.agents).resolve()),
             "drift": a.drift, "l3_hidden": a.l3_hidden,
             "surrogate_refit_device": "cpu",
             "seed_base": base, "steps": a.steps,
+            "step_ms": step_ms, "n_auth": n_auth, "n_surr": n_surr,
+            "clock_note": "step_ms stretches the real episode over the 75 s the world "
+                          "is on screen; agent is short-horizon (starves ~150 steps)",
+            "split_frame_idx": [i0, i1],
             "energy_range_beat5": [round(min(e5), 3), round(max(e5), 3)],
             "numbers_verified": numbers}
-    scene = build_scene(meta, a.grid, height, wet, ra, rs)
+    scene = build_scene(meta, a.grid, height, wet, ra, rs, step_ms=step_ms)
     out = Path(a.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(scene, separators=(",", ":")), encoding="utf-8")
-    print("wrote " + str(out) + f" ({out.stat().st_size / 1e6:.1f} MB), seed_base={base}")
+    print("wrote " + str(out) + f" ({out.stat().st_size / 1e6:.1f} MB), "
+          + f"seed_base={base} step_ms={step_ms}")
 
 
 if __name__ == "__main__":
