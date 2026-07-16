@@ -65,6 +65,10 @@ def cfg():
     ap.add_argument("--json", type=str, default=None,
                     help="write the calibration table + selection to this path")
     ap.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
+    ap.add_argument("--family", choices=("mlp", "rff", "cd"), default="mlp",
+                    help="surrogate family to calibrate; mlp is the frozen "
+                         "GMotion path and stays byte-identical to the "
+                         "pre-flag behavior")
     return ap.parse_args()
 
 
@@ -77,11 +81,20 @@ def main():
           f"n_pairs={a.n_pairs} branch={a.branch}")
     print(f"  floor : untrained pooled target @ drift={DRIFT}, seeds={a.floor_seeds}, "
           f"pass if |target-0.5| < {FLOOR_TOL}")
+    if a.family == "mlp":
+        candidates = ((("hidden", h),
+                       train_g_motion(hidden=h, device=dev, seed=0, params=P))
+                      for h in a.hiddens)
+    else:
+        from itasorl.surrogate_l3_families import gate0_candidates
+        candidates = gate0_candidates(a.family, params=P)
+
     rows = []
-    for h in a.hiddens:
+    last_knob = "hidden"  # tracks the knob name for selection after the loop
+    for (knob, val), g in candidates:
+        last_knob = knob
         # Same training seed/world as run_expB2's setup_l3_surrogate call, so the
         # organism run at the selected capacity uses a bit-identical G_motion.
-        g = train_g_motion(hidden=h, device=dev, seed=0, params=P)
         eps = generate_l3_pairs(g, n_pairs=a.n_pairs, branch=a.branch, seed0=3000, params=P)
         oa = run_experiment_a_l3(eps, sigma_meas=SIGMA_MEAS, seed=0)
         oracle = float(oa["oracle_auroc"])
@@ -97,32 +110,38 @@ def main():
             leaks.append(float(pool["pool_reward_leak"]))
         floor = float(np.mean(floors))
         floor_ok = abs(floor - 0.5) < FLOOR_TOL
-        row = {"hidden": h, "oracle_auroc": oracle, "in_band": in_band,
+        row = {"family": a.family, knob: val, "oracle_auroc": oracle, "in_band": in_band,
                "mech_leak_pass": bool(oa["leakage_pass"]),
                "oracle_reward_leak": float(oa["reward_leak"]),
                "floor": floor, "floor_per_seed": floors, "floor_ok": floor_ok,
                "pool_reward_leak_per_seed": leaks,
                "passes_gate0": bool(in_band and oa["leakage_pass"] and floor_ok)}
         rows.append(row)
-        print(f"  hidden={h}: oracle={oracle:.3f} in_band={in_band} "
+        print(f"  {knob}={val}: oracle={oracle:.3f} in_band={in_band} "
               f"mech_leak_pass={row['mech_leak_pass']} "
               f"(oracle reward_leak={row['oracle_reward_leak']:.3f}, legit for this rung)  "
               f"floor={floor:.3f} per-seed={[f'{x:.3f}' for x in floors]} floor_ok={floor_ok} "
               f"pool_reward_leak={[f'{x:.3f}' for x in leaks]} "
               f"-> gate0 {'PASS' if row['passes_gate0'] else 'FAIL'}", flush=True)
 
-    # Regression check: hidden=8 must reproduce the frozen gate-0 values.
-    h8 = next((r for r in rows if r["hidden"] == 8), None)
+    # Regression check: hidden=8 must reproduce the frozen gate-0 values (mlp only).
     regression_ok = None
-    if h8 is not None:
-        regression_ok = (abs(h8["oracle_auroc"] - H8_ORACLE_REF) < 0.05
-                         and abs(h8["floor"] - H8_FLOOR_REF) < FLOOR_TOL)
-        print(f"\nregression check @ hidden=8: oracle {h8['oracle_auroc']:.3f} "
-              f"(ref {H8_ORACLE_REF}), floor {h8['floor']:.3f} (ref {H8_FLOOR_REF}) "
-              f"-> {'OK' if regression_ok else 'FAILED'}")
+    if a.family == "mlp":
+        h8 = next((r for r in rows if r.get("hidden") == 8), None)
+        if h8 is not None:
+            regression_ok = (abs(h8["oracle_auroc"] - H8_ORACLE_REF) < 0.05
+                             and abs(h8["floor"] - H8_FLOOR_REF) < FLOOR_TOL)
+            print(f"\nregression check @ hidden=8: oracle {h8['oracle_auroc']:.3f} "
+                  f"(ref {H8_ORACLE_REF}), floor {h8['floor']:.3f} (ref {H8_FLOOR_REF}) "
+                  f"-> {'OK' if regression_ok else 'FAILED'}")
 
-    candidates = [r for r in rows if r["hidden"] != 8 and r["passes_gate0"]]
-    selected = min((r["hidden"] for r in candidates), default=None)
+    if a.family == "mlp":
+        passing = [r for r in rows if r.get("hidden") != 8 and r["passes_gate0"]]
+        selected = min((r["hidden"] for r in passing), default=None)
+    else:
+        passing = [r for r in rows if r["passes_gate0"]]
+        selected = passing[0][last_knob] if passing else None
+
     if regression_ok is False:
         print("REGRESSION FAILED: the hidden=8 row does not reproduce the frozen "
               "gate-0 values; do NOT trust this table or launch an organism run.")

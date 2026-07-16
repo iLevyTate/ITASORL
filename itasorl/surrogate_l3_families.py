@@ -74,3 +74,20 @@ def fit_g_rff(*, D: int = 32, lam: float = 1e-3, ell: float = 1.0,
     A = Z.T @ Z + lam * np.eye(D, dtype=np.float64)
     Wout = np.linalg.solve(A, Z.T @ ((Y - ym) / ys).astype(np.float64))
     return GRff(W, b, Wout, (xm, xs, ym, ys), D)
+
+
+RFF_SWEEP = (8, 16, 32, 64, 128)          # spec: ascending, freeze FIRST in-band
+CD_SWEEP = (0.05, 0.1, 0.2, 0.4, 0.8)     # spec: coarse grid, then bisect
+
+
+def gate0_candidates(family: str, *, params, **fit_kwargs):
+    """Yield ((knob_name, knob_value), g) pairs for the gate-0 sweep.
+    fit_kwargs pass through to fit_g_rff (test-size overrides)."""
+    if family == "rff":
+        for D in RFF_SWEEP:
+            yield ("D", D), fit_g_rff(D=D, params=params, **fit_kwargs)
+    elif family == "cd":
+        for eps in CD_SWEEP:
+            yield ("eps", eps), make_g_cd(eps=eps, params=params)
+    else:
+        raise ValueError(f"unknown family: {family!r}")

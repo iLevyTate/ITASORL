@@ -66,3 +66,15 @@ def test_g_rff_output_contract():
     g = fit_g_rff(D=16, params=P, n_eps=4, steps=10)
     out = g(np.array([0.1, 0.2]), np.array([0.3, 0.4]), drag=1.5)  # drag ignored
     assert out.shape == (2,) and out.dtype == np.float64
+
+
+def test_gate0_candidates_labels_and_callables():
+    from itasorl.surrogate_l3_families import gate0_candidates
+    rff = list(gate0_candidates("rff", params=P, n_eps=2, steps=5))
+    assert [lab for lab, _ in rff] == [
+        ("D", 8), ("D", 16), ("D", 32), ("D", 64), ("D", 128)]
+    cd = list(gate0_candidates("cd", params=P))
+    assert [lab for lab, _ in cd] == [
+        ("eps", 0.05), ("eps", 0.1), ("eps", 0.2), ("eps", 0.4), ("eps", 0.8)]
+    out = cd[0][1](np.array([0.1, 0.1]), np.array([0.0, 0.0]))
+    assert out.shape == (2,)
