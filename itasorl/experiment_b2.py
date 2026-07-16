@@ -808,7 +808,8 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
 
 def transfer_readout(agent, norm, params, drift_sigma, Ha_train, Hs_train, *,
                      n_eps=110, steps=24, ray_steps=5, device=None, seed=0,
-                     dump_path=None) -> dict:
+                     dump_path=None, heldout=None, seed_base_auth=860_000,
+                     seed_base_surr=870_000) -> dict:
     """Unseen-fingerprint transfer channel (spec 2026-07-14). Fits the standard
     linear probe on the TRAINED-fingerprint pools (Ha_train vs Hs_train, i.e. the
     exact pools pooled_readout probed), then scores it FROZEN on a fresh authentic
@@ -817,17 +818,18 @@ def transfer_readout(agent, norm, params, drift_sigma, Ha_train, Hs_train, *,
     trained on. Restores the training surrogate in a finally block so the global
     can never leak into later evals."""
     global _L3_GMOTION
-    if _L3_GMOTION_HELDOUT is None:
-        raise RuntimeError("transfer_readout: call setup_l3_heldout_surrogate() first")
+    heldout = heldout if heldout is not None else _L3_GMOTION_HELDOUT
+    if heldout is None:
+        raise RuntimeError("transfer_readout: pass heldout= or call setup_l3_heldout_surrogate() first")
     device = device or default_device()
     saved = _L3_GMOTION
     try:
-        _L3_GMOTION = _L3_GMOTION_HELDOUT
+        _L3_GMOTION = heldout
         # auth pool deliberately collected inside the swap: authentic worlds never
         # attach a G (make_world guards drift_sigma>0), and keeping both collections
         # here keeps swap/restore in one place - do not "simplify" it out.
-        Ha2, _ = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, 860_000, ray_steps)
-        H7, _ = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, 870_000, ray_steps)
+        Ha2, _ = collect_pool(agent, norm, params, 0.0, n_eps, steps, device, seed_base_auth, ray_steps)
+        H7, _ = collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_base_surr, ray_steps)
     finally:
         _L3_GMOTION = saved
     if dump_path is not None:
