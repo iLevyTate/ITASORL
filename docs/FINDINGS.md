@@ -53,7 +53,9 @@ cope with, world-discriminative state emerges as a byproduct, read out and never
 rewarded (L3). A held-out probe (n = 10, section 10.6) sharpens what "emerges"
 means: the world-signal *generalizes* to an unseen same-recipe fingerprint the
 agent never lived with (transfer 0.773 vs untrained 0.569, pre-registered rule
-passes), so it is not an overfit to one artifact instance; but under a
+passes), so it is not an overfit to one artifact instance - though a frozen
+reverse run shows the transfer is direction-dependent (coarse-trained reading the
+subtler fingerprint fails the bar at 0.638, section 10.6); but under a
 common-garden control that equalizes the felt dynamics, the signal does **not**
 persist (0.557, below the bar; late-tail at chance). The emergent state is best
 read as **reactive tracking of the currently-felt dynamics, not a persistent
@@ -671,6 +673,27 @@ representation. This resolves the long-standing reactive-vs-representational
 ambiguity (§7.2, §9 caveats), and it resolves toward reactive: the emergent
 "world-discriminative state" is a byproduct of coping with the live dynamics, not
 an internal world-identity tag the state retains after the dynamics equalize.
+
+**Reverse direction (staged follow-up, frozen 2026-07-14, run 2026-07-15):
+NEGATIVE (informative).** The freeze's staged reverse run trains at hidden = 7 and
+holds out the *subtler* hidden = 8 fingerprint (`fullruns/l3_h7_heldout`, n = 10;
+per-seed summary committed as
+`artifacts/expB2/heldout_l3_h7_reverse_summary.json`). The run is valid per its
+freeze: the standard-probe half reproduces the hidden = 7 table exactly (survival
+pooled 0.737, boot 90% CI [0.688, 0.780]; L0 0.517, equivalent to chance;
+reward-leak 0.567, clean; 0 deaths). Transfer: survival `transfer_target` =
+**0.638** (t-based 90% CI [0.600, 0.676], 4/10 seeds ≥ 0.65) vs untrained floor
+0.525 and predictor 0.603. The pre-registered rule (≥ 0.65 AND > untrained + 0.05)
+FAILS on the absolute bar (the floor-margin clause alone passes, +0.063). Common
+garden: survival `cg_tail_target` = 0.598 (4/10), decaying to 0.489 late-tail;
+FAILS again, a second independent data point for the reactive reading. Per the
+freeze's interpretation limit, no survival-specificity claim is made at
+hidden = 7. **Combined reading: held-out transfer is direction-dependent.** Fit on
+the subtle fingerprint, the world-identity direction reads coarser unseen
+artifacts (0.773 same recipe, 0.684 cross recipe); fit on the coarse fingerprint,
+it reads the subtler one only partially (0.638, above the floor but below the
+bar). The honest generality claim is that the survival world-signal generalizes
+*from subtle training artifacts*; it is not bidirectional.
 
 ### 10.7 Cross-recipe transfer probe
 

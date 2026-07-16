@@ -471,6 +471,29 @@ Rigor carried from the B-v3 audit (2026-07-10):
   standard-probe half must reproduce the `fullruns/l3_h7_traces` table exactly (survival 0.737
   [0.688, 0.780]); any deviation invalidates the run. Result to be recorded here when complete.
 
+- **2026-07-16 - REVERSE-TRANSFER RUN RECORDED (completed 2026-07-15): THE COARSE-TRAINED
+  DIRECTION READS THE SUBTLER UNSEEN FINGERPRINT ONLY PARTIALLY - THE FROZEN RULE FAILS
+  (INFORMATIVE NEGATIVE); HELD-OUT TRANSFER IS DIRECTION-DEPENDENT.** Executes the 2026-07-14
+  freeze above (`fullruns/l3_h7_heldout`, n=10, `--save-agents`; per-seed summary committed as
+  `artifacts/expB2/heldout_l3_h7_reverse_summary.json`). DETERMINISM GATE PASSES: the
+  standard-probe half reproduces the `fullruns/l3_h7_traces` table exactly - survival pooled
+  target 0.737 (boot 90% CI [0.688, 0.780]), L0 0.517 (TOST p=0.010 / ROPE accept equivalence),
+  reward-leak 0.567 clean 10/10, engagement 10/10, 0 deaths per pool - so the run is valid per
+  the freeze. TRANSFER (train hidden=7, hold out the subtler hidden=8): survival
+  `transfer_target` = **0.638** (t 90% CI [0.600, 0.676], 4/10 seeds >= 0.65) vs untrained
+  mechanical floor **0.525** and predictor 0.603. The frozen rule (>= 0.65 AND > untrained +
+  0.05 = 0.575) FAILS on the absolute bar; the floor-margin clause alone passes (+0.063).
+  Adjudicated NEGATIVE per the frozen rule. COMMON GARDEN: survival `cg_tail_target` = **0.598**
+  (t 90% CI [0.547, 0.649], 4/10 seeds >= 0.65), decaying to 0.489 on the last-8 window;
+  predictor 0.504, untrained 0.456. Rule FAILS -> REACTIVE, a second independent data point
+  matching the forward run. READING (frozen rules applied; the freeze's interpretation limit
+  honored - no survival-specificity claim at hidden=7, and predictor transfer 0.603 indeed sits
+  near survival 0.638): held-out transfer is DIRECTION-DEPENDENT. Fit on the subtle hidden=8
+  fingerprint the direction reads coarser unseen artifacts (same-recipe 0.773, cross-recipe
+  0.684); fit on the coarse hidden=7 fingerprint it reads the subtler one only partially (0.638,
+  above the floor but below the bar). The published "fingerprint-GENERAL" wording is qualified
+  accordingly in FINDINGS 10.6 and README.
+
 - **2026-07-16 - RESEARCH-INTEGRITY AUDIT: FREEZE-TIMING NOTE FOR THE HIDDEN=7 SELECTION.** A
   commit-level audit of this log found: the capacity-fallback RULE was frozen in the original
   pre-registration commit (`0217263`, 2026-07-10), strictly before the hidden=4 gate failure it was

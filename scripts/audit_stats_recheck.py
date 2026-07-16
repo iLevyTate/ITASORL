@@ -113,12 +113,13 @@ def main() -> int:
     h8 = load("behavior_audit_l3_h8_traces.json")
     h7 = load("behavior_audit_l3_h7_traces.json")
     held = load("heldout_l3_h8_summary.json")
+    rev = load("heldout_l3_h7_reverse_summary.json")
     b2 = load("expB2_results.json")
     b2c = load("expB2_results_confirmatory_n3.json")
 
     print("== internal consistency: stored aggregates reproduce from per-seed cells ==")
     for name, doc in [("n10", n10), ("h8_traces", h8), ("h7_traces", h7),
-                      ("heldout_summary", held)]:
+                      ("heldout_summary", held), ("h7_reverse_summary", rev)]:
         verify_aggregate_consistency(name, doc)
 
     print("== FINDINGS 10.2 / README / PAPER_OUTLINE: L3 headline (hidden=8) ==")
@@ -256,6 +257,47 @@ def main() -> int:
           float(np.mean(seed_vals(held, "0.45", "untrained", "cg_tail_target"))), 0.377)
     check("late-tail decay (0.492)",
           float(np.mean(seed_vals(held, "0.45", "survival", "cg_latetail_target"))), 0.492)
+
+    print("== FINDINGS 10.6 / PREREG 2026-07-16: reverse transfer (train h7, hold out h8) ==")
+    rpool = seed_vals(rev, "0.45", "survival", "pool_target")
+    check("reverse standard-half survival (0.737)", float(np.mean(rpool)), 0.737)
+    check("reverse standard-half boot lo (0.688)", mean_ci(rpool)[1], 0.688)
+    check("reverse standard-half boot hi (0.780)", mean_ci(rpool)[2], 0.780)
+    rl0 = seed_vals(rev, "0.00", "survival", "pool_target")
+    check("reverse L0 (0.517)", float(np.mean(rl0)), 0.517)
+    check_true("reverse L0 TOST equivalent to chance",
+               equivalence_test(rl0, margin=0.05).equivalent)
+    check_true("reverse L0 ROPE accepts equivalence", rope_test(rl0).accept)
+    rleak = seed_vals(rev, "0.45", "survival", "pool_reward_leak")
+    check("reverse reward-leak (0.567)", float(np.mean(rleak)), 0.567)
+    check_true("reverse reward-leak clean 10/10",
+               all(seed_vals(rev, "0.45", "survival", "pool_leak_clean")))
+    rtr = seed_vals(rev, "0.45", "survival", "transfer_target")
+    check("reverse transfer survival (0.638)", float(np.mean(rtr)), 0.638)
+    tlo, thi = t_ci(rtr)
+    check("reverse transfer t lo (0.600)", tlo, 0.600)
+    check("reverse transfer t hi (0.676)", thi, 0.676)
+    check_int("reverse transfer seeds >= 0.65 (4)", sum(v >= BAR for v in rtr), 4)
+    rtru = seed_vals(rev, "0.45", "untrained", "transfer_target")
+    rtrp = seed_vals(rev, "0.45", "predictor", "transfer_target")
+    check("reverse transfer untrained floor (0.525)", float(np.mean(rtru)), 0.525)
+    check("reverse transfer predictor (0.603)", float(np.mean(rtrp)), 0.603)
+    check_true("reverse frozen rule FAILS the absolute bar (0.638 < 0.65)",
+               float(np.mean(rtr)) < BAR)
+    check_true("reverse floor-margin clause passes (> untrained + 0.05)",
+               float(np.mean(rtr)) > float(np.mean(rtru)) + 0.05)
+    rcg = seed_vals(rev, "0.45", "survival", "cg_tail_target")
+    check("reverse common-garden survival (0.598)", float(np.mean(rcg)), 0.598)
+    tlo, thi = t_ci(rcg)
+    check("reverse common-garden t lo (0.547)", tlo, 0.547)
+    check("reverse common-garden t hi (0.649)", thi, 0.649)
+    check_int("reverse common-garden seeds >= 0.65 (4)", sum(v >= BAR for v in rcg), 4)
+    check("reverse common-garden predictor (0.504)",
+          float(np.mean(seed_vals(rev, "0.45", "predictor", "cg_tail_target"))), 0.504)
+    check("reverse common-garden untrained (0.456)",
+          float(np.mean(seed_vals(rev, "0.45", "untrained", "cg_tail_target"))), 0.456)
+    check("reverse late-tail decay (0.489)",
+          float(np.mean(seed_vals(rev, "0.45", "survival", "cg_latetail_target"))), 0.489)
 
     print("== FINDINGS 9 / artifacts: B-v2 survival coupling (L2, n=3) ==")
     rep = [float(v) for v in b2["0.45"]["survival"]["pool_target"]]
