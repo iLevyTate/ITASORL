@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import run_l3_crossrecipe as rc  # noqa: E402
@@ -14,6 +15,8 @@ def test_parse_agent_filename():
     d, s, arm = rc.parse_agent_filename("agent_d0.45_s7_survival.pt")
     assert (d, s, arm) == (0.45, 7, "survival")
     assert rc.parse_agent_filename("agent_d0.00_s0_untrained.pt") == (0.0, 0, "untrained")
+    with pytest.raises(ValueError):
+        rc.parse_agent_filename("checkpoint_final.pt")
 
 
 def test_rename_transfer_keys():

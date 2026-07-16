@@ -57,7 +57,7 @@ def parse_agent_filename(name: str) -> tuple[float, int, str]:
 
 
 def rename_transfer_keys(out: dict, family: str) -> dict:
-    return {k.replace("transfer_", f"transfer_{family}_"): v for k, v in out.items()}
+    return {k.replace("transfer_", f"transfer_{family}_", 1): v for k, v in out.items()}
 
 
 def selected_knob(path: str, family: str):
@@ -186,7 +186,7 @@ def main():
            "published_target_check": None if a.quick else PUBLISHED_TARGET}
     for fam in families:
         for arm in ("untrained", "predictor", "survival"):
-            vals = [r[f"transfer_{fam}_target"] for r in results if r["arm"] == arm
+            vals = [r.get(f"transfer_{fam}_target") for r in results if r["arm"] == arm
                     and np.isfinite(r.get(f"transfer_{fam}_target", float("nan")))]
             if vals:
                 v = np.asarray(vals, float)
