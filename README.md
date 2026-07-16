@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: generalizes to an unseen fingerprint but reactive, not a persistent representation** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: generalizes to an unseen fingerprint but reactive, not a persistent representation; cross-recipe probe: also reads a different surrogate family (0.684, rule passes)** |
 | Experiment C (emergence under selection) / Ladder L4 | not started |
 
 ### Key result
@@ -145,8 +145,12 @@ untrained floor 0.569; the pre-registered rule passes), so it is not an overfit 
 instance; but under a common-garden control that runs both groups through an identical tail after
 differing prefixes, tail-only state does not carry the prefix world (**0.557**, below the 0.65 bar;
 the late tail decays to chance, 0.492). So the L3 world-signal is best read as reactive tracking of
-the currently-felt dynamics, not a persistent stored world-identity representation. This closes the
-last owed L3 item. See
+the currently-felt dynamics, not a persistent stored world-identity representation. A cross-recipe
+probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
+surrogate *families*: the same direction reads a gate-calibrated random-Fourier-features ridge law
+the agent never lived with (**0.684** vs untrained floor 0.548; the pre-registered rule passes,
+machine-checked), so the reactive world-signal is recipe-general, not a signature of one function
+class. See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---

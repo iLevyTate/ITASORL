@@ -323,6 +323,45 @@ def main() -> int:
     check("ceiling t hi (0.619)", cthi, 0.619)
     check_true("ceiling t-CI also below 0.65 bar", cthi < BAR)
 
+    print("== FINDINGS 10.7: cross-recipe transfer probe (committed) ==")
+    with open(os.path.join(ARTROOT, "l3_crossrecipe", "summary.json"), encoding="utf-8") as fh:
+        xr = json.load(fh)
+    tr = xr["transfer_rff"]
+    sv = tr["survival_per_seed"]
+    m, lo, hi = mean_ci(sv, level=0.90, seed=0)
+    check("cross-recipe survival mean (0.684)", m, 0.684)
+    check("cross-recipe survival boot lo (0.657)", lo, 0.657)
+    check("cross-recipe survival boot hi (0.710)", hi, 0.710)
+    tlo, thi = t_ci(sv)
+    check("cross-recipe survival t lo (0.654)", tlo, 0.654)
+    check("cross-recipe survival t hi (0.715)", thi, 0.715)
+    check_true("cross-recipe survival t-CI entirely above 0.65 bar", tlo > BAR)
+    check_int("cross-recipe survival seeds >= 0.65 (7)",
+              sum(1 for v in sv if v >= BAR), 7)
+    mu, ulo, uhi = mean_ci(tr["untrained_per_seed"], level=0.90, seed=0)
+    check("cross-recipe untrained floor mean (0.548)", mu, 0.548)
+    check("cross-recipe untrained boot lo (0.538)", ulo, 0.538)
+    check("cross-recipe untrained boot hi (0.557)", uhi, 0.557)
+    mp, plo, phi = mean_ci(tr["predictor_per_seed"], level=0.90, seed=0)
+    check("cross-recipe predictor mean (0.574)", mp, 0.574)
+    check("cross-recipe predictor boot lo (0.554)", plo, 0.554)
+    check("cross-recipe predictor boot hi (0.593)", phi, 0.593)
+    check_true("cross-recipe frozen rule recomputed (survival >= 0.65 AND "
+               "> untrained + 0.05)", m >= BAR and m > mu + 0.05)
+    check_true("cross-recipe rule_pass recorded true", bool(tr["rule_pass"]))
+    check("cross-recipe rule margin (0.034)", tr["rule_margin"], 0.034)
+    check("cross-recipe integrity gate reproduced 0.752",
+          xr["integrity_gate"]["drift045_survival_mean_reproduced"], 0.752)
+    g0 = xr["gate0"]
+    check("cross-recipe gate-0 rff oracle (0.887)", g0["rff"]["selected_oracle_auroc"], 0.887)
+    check_true("cross-recipe gate-0 rff oracle in band",
+               0.85 <= g0["rff"]["selected_oracle_auroc"] <= 0.95)
+    check_true("cross-recipe cd dropped with empty window (floors > 0.6 "
+               "wherever oracle in band)",
+               g0["cd"]["dropped"] and all(
+                   f > 0.6 for o, f in zip(g0["cd"]["sweep_oracle"],
+                                           g0["cd"]["sweep_floor"]) if o >= 0.85))
+
     print()
     if failures:
         print(f"RESULT: {len(failures)} of {n_checks} checks FAILED:")

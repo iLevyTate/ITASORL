@@ -46,7 +46,11 @@ resolve.*
      fingerprint resolved (FINDINGS 10.6): transfer generalizes (0.773 vs
      untrained 0.569) but the common-garden control shows the signal is
      reactive, not a persistent representation (0.557, below bar; late tail
-     0.492 at chance).
+     0.492 at chance); cross-recipe resolved (FINDINGS 10.7): the direction
+     also reads a different surrogate family (RFF ridge, 0.684 vs untrained
+     0.548, rule passes), while the constant-drag family proved uncalibratable
+     (empty gate-0 window) - coefficient-bias artifacts cannot be made
+     subtle-but-detectable, independently motivating learned-texture surrogates.
 5. **Limitations** (FINDINGS 11, verbatim spirit)
 6. **Related work** (ITASORL.md Part I literature sections)
 7. **Reproducibility statement** (FINDINGS 12; artifacts/expB2/ promotion history;

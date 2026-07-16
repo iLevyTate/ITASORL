@@ -465,6 +465,34 @@ Rigor carried from the B-v3 audit (2026-07-10):
   per-seed artifacts by `scripts/audit_stats_recheck.py` (117 checks, all passing); all 15 cited arXiv
   IDs were resolved against arxiv.org with matching titles and authors. See `docs/AUDIT_2026-07.md`.
 
+- **2026-07-16 - CROSS-RECIPE TRANSFER PROBE (n=10, readout-only): THE WORLD-SIGNAL READS A
+  DIFFERENT SURROGATE FAMILY (RULE PASSES); THE CONSTANT-DRAG FAMILY IS UNCALIBRATABLE AND DROPPED.**
+  Executes the pre-registered spec `docs/superpowers/specs/2026-07-15-l3-crossrecipe-transfer-probe-design.md`
+  (frozen before any run; PR #51) against the SAVED `fullruns/l3_h8_heldout` agents; no training
+  anywhere. Committed artifact: `artifacts/l3_crossrecipe/summary.json`. GATE-0 CALIBRATION: the
+  `G_rff` family's round-1 D sweep {8..128} stepped over the band (0.975 at D=64, 0.624 at D=128);
+  the pre-registered bisection fallback landed **D=80** in-band (oracle 0.887, leakage pass,
+  untrained floor 0.538). The `G_cd` family has an EMPTY calibration window: by the eps where its
+  oracle reaches the band (eps=3.2: 0.854; eps=6.4: 0.907) the untrained mechanical floor exceeds
+  0.6 (0.859, 0.913) - a drag-coefficient bias large enough to detect is felt so grossly that any
+  recurrent state separates the worlds. DROPPED per the pre-stated rule (recorded, no transfer
+  claim, no penalty to the primary). Both cd calibration double-runs produced byte-identical JSONs.
+  INTEGRITY GATE (fourth determinism check): all 60 reloaded agents regenerated their standard
+  pools bit-identically against the saved dumps and the drift-0.45 pooled survival mean reproduced
+  the published **0.752** exactly. CHANNEL (PRIMARY, `G_rff` D=80): survival `transfer_rff_target`
+  = **0.684** (boot 90% CI [0.657, 0.710]; t 90% CI [0.654, 0.715], lower bound above the bar;
+  7/10 seeds >= 0.65, per-seed min 0.584), predictor 0.574 [0.554, 0.593] (0/10), untrained
+  mechanical floor 0.548 [0.538, 0.557] (0/10). Frozen rule (survival >= 0.65 AND > untrained +
+  0.05 = 0.598) PASSES on both clauses, machine-checked in the runner aggregate (`rff_rule_pass`
+  true, margin +0.034). READING: the world-identity direction fit against the trained MLP
+  fingerprint reads a different-recipe fingerprint (cosine-basis ridge texture) the agent never
+  lived with, survival-specifically; attenuated versus same-recipe transfer (0.773 -> 0.684), as
+  expected for a farther family. Scope, stated honestly: the reactive interpretation of the
+  common-garden entry above is UNCHANGED - this extends the generality of the reactive world-signal
+  across surrogate recipes, it does not revisit persistence. The cd drop is itself informative:
+  coefficient-bias artifacts cannot be made subtle-but-detectable in world P, independently
+  motivating the learned-texture construction of the L3 rung.
+
 ## 13. How to run (milestones, in order)
 
 1. **Build + calibrate the surrogate.** Train `G` on authentic rollouts; wrap as a World;

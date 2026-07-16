@@ -57,8 +57,12 @@ passes), so it is not an overfit to one artifact instance; but under a
 common-garden control that equalizes the felt dynamics, the signal does **not**
 persist (0.557, below the bar; late-tail at chance). The emergent state is best
 read as **reactive tracking of the currently-felt dynamics, not a persistent
-stored world-identity representation.** The conditions under which incidental
-encoding emerges are exactly the object of study.
+stored world-identity representation.** A cross-recipe probe (n = 10, section
+10.7) extends the generality one step further: the same direction also reads a
+*different surrogate family* (a random-Fourier-features ridge law; 0.684 vs
+untrained 0.548, pre-registered rule passes), so the reactive world-signal is
+recipe-general, not a signature of one function class. The conditions under
+which incidental encoding emerges are exactly the object of study.
 
 ---
 
@@ -74,7 +78,7 @@ substrate). Detection is measured against a **surrogate ladder**:
 | L0 | Identical re-implementation (control, must be at chance) | tested |
 | L1 | Observation discretization (a lattice / quantization tell) | tested |
 | L2 | Rollout drift (a slowly drifting dynamics coefficient) | tested |
-| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; held-out probe: transfer-generalizing but reactive, not a persistent representation; section 10) |
+| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; held-out probe: transfer-generalizing but reactive, not a persistent representation; cross-recipe probe: the signal also reads a different surrogate family, 0.684, rule passes; section 10) |
 | L4 | Adversarially-hardened surrogate | not started |
 
 Three experiments were planned. This cycle completed Experiment A for L1 and L2
@@ -317,7 +321,10 @@ inducing it (if possible) requires something more deliberate.
   qualifies the *nature* of the encoding: it transfers to an unseen same-recipe
   fingerprint (not an overfit to one artifact instance), but a common-garden
   control shows it is reactive tracking of the felt dynamics, not a persistent
-  stored world-identity representation.
+  stored world-identity representation. A cross-recipe probe (section 10.7)
+  extends the transfer half across surrogate families: the same direction reads a
+  gate-calibrated random-Fourier-features law (0.684, rule passes), so the
+  reactive signal is recipe-general.
 - **H2 (substrate-grounding via ablations)** and **H3 (emergence under
   selection)**: not yet tested.
 
@@ -378,7 +385,15 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    chance; rule fails). This resolves the reactive-vs-representational ambiguity
    (§9 caveats) toward REACTIVE: the state tracks the currently-felt dynamics, it
    does not hold a persistent world-identity tag.
-3. **Remaining objective variants.** Weighting the dynamics-relevant observation
+3. **Cross-recipe transfer probe: TESTED, POSITIVE (section 10.7).** Readout-only
+   against the saved hidden = 8 agents. The direction fit against the trained MLP
+   fingerprint reads a gate-calibrated random-Fourier-features ridge law the agent
+   never lived with (survival 0.684 vs untrained 0.548; pre-registered rule passes,
+   machine-checked), survival-specifically. The secondary constant-drag family
+   proved uncalibratable (empty gate-0 window) and was dropped per the pre-stated
+   rule. The reactive reading from item 2 is unchanged; its generality now spans
+   surrogate recipes, not just instances.
+4. **Remaining objective variants.** Weighting the dynamics-relevant observation
    dimensions and increasing capacity, though the capacity-ceiling result above makes a
    pooled-probe breakthrough from these unlikely at L2.
 
@@ -635,8 +650,8 @@ seeds ≥ 0.65), predictor 0.633 (3/10), untrained mechanical floor 0.569 (0/10)
 The pre-registered rule (survival ≥ 0.65 AND > untrained + 0.05) PASSES on both
 clauses, so the signal generalizes beyond the one artifact instance it was trained
 against. Scope, stated honestly: hidden = 7 is the same surrogate recipe at a
-different capacity, not a different surrogate family; cross-recipe transfer is out
-of scope for this run (spec 2026-07-14).
+different capacity, not a different surrogate family; cross-recipe transfer was out
+of scope for this run (spec 2026-07-14) and is closed by section 10.7.
 
 **Channel 2, common garden: NEGATIVE (informative).** Two groups run a 20-step
 prefix in different worlds (authentic vs the hidden = 8 surrogate), then continue
@@ -656,6 +671,52 @@ representation. This resolves the long-standing reactive-vs-representational
 ambiguity (§7.2, §9 caveats), and it resolves toward reactive: the emergent
 "world-discriminative state" is a byproduct of coping with the live dynamics, not
 an internal world-identity tag the state retains after the dynamics equalize.
+
+### 10.7 Cross-recipe transfer probe
+
+Done (`fullruns/l3_crossrecipe`, n = 10, spec frozen 2026-07-15 before any run;
+committed artifact `artifacts/l3_crossrecipe/summary.json`). Section 10.6's
+transfer channel left one named escape hatch: hidden = 7 is the *same recipe* at a
+different capacity, so "generalizes" could still mean "reads the MLP family's
+texture." This probe is readout-only against the SAVED hidden = 8 agents (no
+retraining): the pooled probe is refit on the regenerated standard pools, frozen,
+and scored on fresh pools against a held-out family with a genuinely different
+function class and fit procedure.
+
+**Gate-0 calibration.** The primary family `G_rff` (random-Fourier-features ridge
+velocity law: smooth global cosine basis, convex closed-form fit, versus the
+trained MLP's piecewise-linear units and Adam path) required the pre-registered
+bisection fallback: the round-1 D sweep stepped over the band (0.975 at D = 64,
+0.624 at D = 128), and bisection froze **D = 80** in-band (oracle 0.887, leakage
+pass, untrained floor 0.538). The secondary family `G_cd` (mis-set constant drag,
+owned in the spec as degenerate L2-regime) has an **empty calibration window**:
+at the eps where its oracle reaches the band (0.854 at eps = 3.2, 0.907 at
+eps = 6.4) the untrained mechanical floor exceeds 0.6 (0.859, 0.913). A
+drag-coefficient bias big enough to detect is felt so grossly that any recurrent
+state separates the worlds; the family was DROPPED per the pre-stated rule. This
+is itself informative: in world P, coefficient-bias artifacts cannot be made
+subtle-but-detectable, which independently motivates the learned-texture
+construction of the L3 rung.
+
+**Integrity gate (fourth determinism check).** All 60 saved agents regenerated
+their standard pools bit-identically against the saved dumps, and the drift-0.45
+pooled survival mean reproduced the published **0.752** exactly.
+
+**Channel (primary, `G_rff` D = 80): POSITIVE.** Survival `transfer_rff_target`
+= **0.684** (boot 90% CI [0.657, 0.710]; t-based 90% CI [0.654, 0.715], lower
+bound above the bar; 7/10 seeds ≥ 0.65, per-seed minimum 0.584), predictor 0.574
+[0.554, 0.593] (0/10), untrained mechanical floor 0.548 [0.538, 0.557] (0/10).
+The frozen rule (survival ≥ 0.65 AND > untrained + 0.05 = 0.598) PASSES on both
+clauses, machine-checked in the runner aggregate (`rff_rule_pass` true, margin
++0.034).
+
+**Reading.** The world-identity direction generalizes across surrogate *recipes*,
+not just instances: it reads a cosine-basis ridge fingerprint it was never fit
+against, survival-specifically (the predictor and untrained arms clear no bar),
+attenuated relative to same-recipe transfer (0.773 -> 0.684) as expected for a
+farther family. The common-garden verdict of section 10.6 is untouched: this
+extends the *generality* of the reactive world-signal; it says nothing new about
+persistence.
 
 ---
 
