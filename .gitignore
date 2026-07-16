@@ -208,3 +208,6 @@ expB2_run*.log
 artifacts/expB2/logs/
 # Claude Code local session state
 .claude/
+
+# Rendered film output: byte-reproducible from viz/ code + scene.json (verified deterministic).
+viz/out/

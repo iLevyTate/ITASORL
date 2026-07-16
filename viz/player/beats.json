@@ -1,6 +1,6 @@
 {
-  "duration_ms": 85000,
-  "fps": 30,
+  "duration_ms": 90000,
+  "fps": 24,
   "size": [1080, 1350],
   "numbers": {
     "oracle_l2": { "display": "0.99", "source": "docs/FINDINGS.md sec 2.2 (0.993)" },
@@ -12,7 +12,7 @@
       "id": "creature",
       "t0": 0,
       "t1": 10000,
-      "world": { "mode": "single", "zoom": [1.0, 1.05], "stage": 0 },
+      "world": { "mode": "single", "zoom": [1.0, 1.05], "stage": 0, "fan": "calm" },
       "caption": {
         "kicker": "A PATCH OF EARTH",
         "headline": "Raise a creature ((from nothing.))",
@@ -27,27 +27,38 @@
       "caption": {
         "kicker": "THE TRICK",
         "headline": "Sometimes its world is real. Sometimes it is a ((flawed copy.))",
-        "subline": "Same place, same rules - except one runs on a subtle stand-in physics. Can you tell? Neither can we, by eye."
+        "subline": "Same land, same food. But the copy's physics is a tiny neural net imitating the real rules - every step of motion lands a hair off. Can you tell? By eye, neither can we."
+      }
+    },
+    {
+      "id": "physics",
+      "t0": 25000,
+      "t1": 35000,
+      "world": { "mode": "physics", "stage": 1 },
+      "caption": {
+        "kicker": "WHAT ACTUALLY CHANGED",
+        "headline": "The world runs on rules. The copy runs on a ((guess.))",
+        "subline": "A physics engine is the world's rulebook: take this moment, compute the next. The copy's rulebook is a tiny neural net trained by watching the real one. Close - but never exact. A hair off, every single step."
       }
     },
     {
       "id": "observer",
-      "t0": 25000,
-      "t1": 40000,
-      "world": { "mode": "cloud", "zoom": [1.0, 1.0] },
-      "gauge": { "label": "outside observer / world detection (AUROC)", "from": 0.5, "to": 0.99, "display": "0.99", "sweep": [1500, 7000] },
+      "t0": 35000,
+      "t1": 45000,
+      "world": { "mode": "scan", "zoom": [1.0, 1.0] },
+      "gauge": { "label": "the outside observer - can it spot the copy?", "from": 0.5, "to": 0.99, "display": "0.99", "sweep": [1000, 5000] },
       "caption": {
         "kicker": "THE OUTSIDE OBSERVER",
         "headline": "From outside, the copy is ((obvious.))",
-        "subline": "A privileged observer reading the raw dynamics catches the fake almost every time."
+        "subline": "An observer replays the creature's raw motion and checks each step against the true physics. Every flag is a step that bent the wrong way. It catches the fake almost every time."
       }
     },
     {
       "id": "nocare",
-      "t0": 40000,
-      "t1": 55000,
-      "world": { "mode": "single", "zoom": [1.02, 1.06], "stage": 2 },
-      "gauge": { "label": "creature's mind / world signal (AUROC)", "from": 0.99, "to": 0.5, "display": "0.50", "sweep": [1200, 5200] },
+      "t0": 45000,
+      "t1": 60000,
+      "world": { "mode": "single", "zoom": [1.02, 1.06], "stage": 2, "fan": "calm", "glitch": true, "worldT0": 35000 },
+      "gauge": { "label": "the creature's mind - does it know?", "from": 0.99, "to": 0.5, "display": "0.50", "sweep": [1200, 5200] },
       "caption": {
         "kicker": "THE CREATURE'S MIND",
         "headline": "The creature ((never notices.))",
@@ -56,10 +67,10 @@
     },
     {
       "id": "survival",
-      "t0": 55000,
-      "t1": 75000,
-      "world": { "mode": "single", "zoom": [1.0, 1.08], "energy": true, "stage": 3 },
-      "gauge": { "label": "creature's mind / world signal (AUROC)", "from": 0.5, "to": 0.73, "display": "0.73", "sweep": [4000, 14000] },
+      "t0": 60000,
+      "t1": 80000,
+      "world": { "mode": "single", "zoom": [1.0, 1.08], "energy": true, "stage": 3, "fan": "alert", "glitch": true, "worldT0": 50000 },
+      "gauge": { "label": "the creature's mind - does it know?", "from": 0.5, "to": 0.73, "display": "0.73", "sweep": [4000, 14000] },
       "caption": {
         "kicker": "SURVIVAL PRESSURE",
         "headline": "Until its life ((depends on it.))",
@@ -68,8 +79,8 @@
     },
     {
       "id": "close",
-      "t0": 75000,
-      "t1": 85000,
+      "t0": 80000,
+      "t1": 90000,
       "world": { "mode": "none" },
       "endcard": {
         "headline": "Detectable is not learned. Survival changes that.",

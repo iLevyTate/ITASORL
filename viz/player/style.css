@@ -64,15 +64,26 @@ html, body {
 .pool-chip {
   position: absolute;
   top: 26px;
-  padding: 8px 18px;
+  padding: 10px 22px;
   border-radius: 999px;
   background: var(--substrate);
   box-shadow: inset 4px 4px 9px var(--shadow-dark), inset -4px -4px 9px var(--shadow-light);
   font-family: var(--font-mono);
-  font-size: 15px;
-  letter-spacing: 0.14em;
-  color: var(--secondary);
+  font-weight: 500;
+  font-size: 17px;
+  letter-spacing: 0.12em;
+  color: var(--ink);
   opacity: 0;
+}
+#chip-a { border-bottom: 3px solid #35B5A2; }
+#chip-b { border-bottom: 3px solid #E0526E; }
+.chip-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: var(--secondary);
 }
 #chip-a { left: 34px; }
 #chip-b { right: 34px; }
@@ -84,19 +95,19 @@ html, body {
   top: 1076px;
   width: 960px;
   border-radius: 22px;
-  padding: 22px 30px 26px;
+  padding: 16px 26px 18px;
   background: var(--substrate);
   box-shadow: inset 6px 6px 14px var(--shadow-dark), inset -6px -6px 14px var(--shadow-light);
   opacity: 0;
 }
 #gauge-label {
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
 }
-#gauge-row { display: flex; align-items: center; gap: 26px; margin-top: 12px; }
+#gauge-row { display: flex; align-items: center; gap: 22px; margin-top: 8px; }
 #gauge-track {
   position: relative;
   flex: 1;
@@ -120,24 +131,23 @@ html, body {
   background: var(--muted);
   opacity: 0.9;
 }
-#gauge-tick::after {
-  content: "bar";
-  position: absolute;
-  top: -20px;
-  left: -12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  color: var(--muted);
-}
 #gauge-value {
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: 44px;
+  font-size: 36px;
   color: var(--ink);
-  min-width: 132px;
+  min-width: 110px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+#gauge-scale {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
 }
 
 /* Caption zone. */
