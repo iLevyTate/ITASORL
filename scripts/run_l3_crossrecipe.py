@@ -79,6 +79,12 @@ def build_family(family: str, knob):
     return make_g_cd(eps=float(knob), params=P)
 
 
+def decision_rule_pass(survival_mean: float, untrained_mean: float) -> bool:
+    """The frozen primary decision rule (spec 2026-07-15): survival >= 0.65
+    AND survival > untrained floor + 0.05, evaluated on per-arm means."""
+    return bool(survival_mean >= 0.65 and survival_mean > untrained_mean + 0.05)
+
+
 def cfg():
     ap = argparse.ArgumentParser()
     ap.add_argument("--agents-dir", required=True)
@@ -99,6 +105,9 @@ def cfg():
 
 def main():
     a = cfg()
+    if not a.quick and (a.rff_d is not None or a.cd_eps is not None):
+        raise SystemExit("--rff-d/--cd-eps are smoke-only overrides; a full run must "
+                         "take its knobs from gate-0 JSONs (--rff-json/--cd-json)")
     dev = default_device() if a.device == "auto" else a.device
     if a.device == "cuda" and dev != "cuda":
         raise SystemExit("--device cuda requested but CUDA unavailable")
@@ -193,6 +202,10 @@ def main():
                 agg[f"{fam}_{arm}_per_seed"] = [round(float(x), 4) for x in v]
                 agg[f"{fam}_{arm}_mean"] = round(float(v.mean()), 4)
                 agg[f"{fam}_{arm}_n_ge_065"] = int((v >= 0.65).sum())
+        sm, um = agg.get(f"{fam}_survival_mean"), agg.get(f"{fam}_untrained_mean")
+        if sm is not None and um is not None:
+            agg[f"{fam}_rule_pass"] = decision_rule_pass(sm, um)
+            agg[f"{fam}_rule_margin"] = round(sm - max(0.65, um + 0.05), 4)
     with open(os.path.join(a.out_dir, "cells.json"), "w") as f:
         json.dump(results, f, indent=1)
     with open(os.path.join(a.out_dir, "aggregate.json"), "w") as f:

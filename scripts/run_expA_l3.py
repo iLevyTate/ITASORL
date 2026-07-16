@@ -69,6 +69,10 @@ def cfg():
                     help="surrogate family to calibrate; mlp is the frozen "
                          "GMotion path and stays byte-identical to the "
                          "pre-flag behavior")
+    ap.add_argument("--rff-ds", type=int, nargs="+", default=None,
+                    help="override the rff D sweep (bisection); default = frozen RFF_SWEEP")
+    ap.add_argument("--cd-epss", type=float, nargs="+", default=None,
+                    help="override the cd eps sweep (extension); default = frozen CD_SWEEP")
     return ap.parse_args()
 
 
@@ -87,7 +91,8 @@ def main():
                       for h in a.hiddens)
     else:
         from itasorl.surrogate_l3_families import gate0_candidates
-        candidates = gate0_candidates(a.family, params=P)
+        sweep = a.rff_ds if a.family == "rff" else a.cd_epss if a.family == "cd" else None
+        candidates = gate0_candidates(a.family, params=P, sweep=sweep)
 
     rows = []
     last_knob = "hidden"  # tracks the knob name for selection after the loop

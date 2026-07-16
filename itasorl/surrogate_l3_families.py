@@ -31,10 +31,14 @@ class GConstantDrag:
 def make_g_cd(*, eps: float, params) -> GConstantDrag:
     """c = drag0 * (1 + eps) where drag0 is world-P's uniform drag. Refuses
     non-uniform-drag worlds: there the law would need wetness, which the hook
-    deliberately cannot see, and the eps=0 identity check would be ill-defined."""
+    deliberately cannot see, and the eps=0 identity check would be ill-defined.
+    Rejects eps large enough to make the decay coefficient non-positive (c*dt >= 1)."""
     if params.k_land != params.k_water:
         raise ValueError("make_g_cd requires a uniform-drag world (k_land == k_water)")
-    return GConstantDrag(c=params.k_land * (1.0 + eps), dt=params.dt)
+    c = params.k_land * (1.0 + eps)
+    if c * params.dt >= 1.0:
+        raise ValueError(f"unstable constant-drag law: c*dt = {c * params.dt:.3f} >= 1")
+    return GConstantDrag(c=c, dt=params.dt)
 
 
 class GRff:
@@ -80,14 +84,16 @@ RFF_SWEEP = (8, 16, 32, 64, 128)          # spec: ascending, freeze FIRST in-ban
 CD_SWEEP = (0.05, 0.1, 0.2, 0.4, 0.8)     # spec: coarse grid, then bisect
 
 
-def gate0_candidates(family: str, *, params, **fit_kwargs):
+def gate0_candidates(family: str, *, params, sweep=None, **fit_kwargs):
     """Yield ((knob_name, knob_value), g) pairs for the gate-0 sweep.
+    `sweep` overrides the frozen default grid (sorted ascending so the
+    freeze-FIRST-in-band selection rule stays well-defined).
     fit_kwargs pass through to fit_g_rff (test-size overrides)."""
     if family == "rff":
-        for D in RFF_SWEEP:
-            yield ("D", D), fit_g_rff(D=D, params=params, **fit_kwargs)
+        for D in sorted(sweep) if sweep is not None else RFF_SWEEP:
+            yield ("D", int(D)), fit_g_rff(D=int(D), params=params, **fit_kwargs)
     elif family == "cd":
-        for eps in CD_SWEEP:
-            yield ("eps", eps), make_g_cd(eps=eps, params=params)
+        for eps in sorted(sweep) if sweep is not None else CD_SWEEP:
+            yield ("eps", float(eps)), make_g_cd(eps=float(eps), params=params)
     else:
         raise ValueError(f"unknown family: {family!r}")

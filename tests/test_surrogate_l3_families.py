@@ -78,3 +78,19 @@ def test_gate0_candidates_labels_and_callables():
         ("eps", 0.05), ("eps", 0.1), ("eps", 0.2), ("eps", 0.4), ("eps", 0.8)]
     out = cd[0][1](np.array([0.1, 0.1]), np.array([0.0, 0.0]))
     assert out.shape == (2,)
+
+
+def test_g_cd_rejects_unstable_eps():
+    import pytest
+    from itasorl.surrogate_l3_families import make_g_cd
+    with pytest.raises(ValueError, match="unstable"):
+        make_g_cd(eps=15.0, params=P)   # c*dt = 1.5*16*0.05 = 1.2 >= 1
+    make_g_cd(eps=6.4, params=P)        # c*dt = 0.555, fine
+
+
+def test_gate0_candidates_sweep_override_sorted():
+    from itasorl.surrogate_l3_families import gate0_candidates
+    cd = list(gate0_candidates("cd", params=P, sweep=[3.2, 1.6]))
+    assert [lab for lab, _ in cd] == [("eps", 1.6), ("eps", 3.2)]
+    rff = list(gate0_candidates("rff", params=P, sweep=[96], n_eps=2, steps=5))
+    assert [lab for lab, _ in rff] == [("D", 96)]
