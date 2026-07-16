@@ -164,6 +164,9 @@ def main():
                    "floor_tol": FLOOR_TOL, "drift": DRIFT,
                    "floor_seeds": a.floor_seeds, "rows": rows,
                    "regression_ok": regression_ok, "selected_hidden": selected}
+        if a.family != "mlp":
+            payload["selected"] = (None if selected is None
+                                   else {"family": a.family, last_knob: selected})
         with open(a.json, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
         print(f"saved {a.json}")
