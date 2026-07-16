@@ -56,16 +56,16 @@ resolve.*
 
 | # | Claim | Number | Doc section | Artifact | Figure |
 |---|-------|--------|-------------|----------|--------|
-| 1 | L0 control at chance (oracle) | AUROC 0.523 | FINDINGS 2.1 | run_expA.py output | expA_ceiling.png |
-| 2 | L1 detectable (oracle) | AUROC 1.000 | FINDINGS 2.1 | run_expA.py output | expA_ceiling.png |
-| 3 | L2 detectable (oracle) | AUROC 0.993 | FINDINGS 2.2 | run_expA_l2.py output | expA_L2_ceiling.png |
-| 4 | L2 not encoded (recurrent state) | 0.510 ± 0.039 @ drift 0.45 | FINDINGS 3.1 | run_expB_full.py output | expB_incidental.png |
-| 5 | L2 surprise channel weak | 0.596 ± 0.007 @ drift 0.45 | FINDINGS 3.2 | run_expB_surprise.py output | expB_channels.png |
-| 6 | No liftoff with horizon | 0.48-0.51 across 0/8/16 | FINDINGS 3.3 | fullruns/kstep_rerun_20260713.log (recorded rerun; see 3.3 correction) | expB_kstep.png |
-| 7 | L2 null robust (nonlinear probe) | 0.482 ± 0.031 | FINDINGS 3.4 | run_expB_nonlinear.py output | - |
+| 1 | L0 control at chance (oracle) | AUROC 0.523 | FINDINGS 2.1 | artifacts/expA/summary.json | expA_ceiling.png |
+| 2 | L1 detectable (oracle) | AUROC 1.000 | FINDINGS 2.1 | artifacts/expA/summary.json | expA_ceiling.png |
+| 3 | L2 detectable (oracle) | AUROC 0.993 | FINDINGS 2.2 | artifacts/expA/summary.json | expA_L2_ceiling.png |
+| 4 | L2 not encoded (recurrent state) | 0.510 ± 0.039 @ drift 0.45 | FINDINGS 3.1 | artifacts/expB/summary.json | expB_incidental.png |
+| 5 | L2 surprise channel weak | 0.596 ± 0.007 @ drift 0.45 | FINDINGS 3.2 | artifacts/expB/summary.json | expB_channels.png |
+| 6 | No liftoff with horizon | 0.48-0.51 across 0/8/16 | FINDINGS 3.3 | artifacts/expB/summary.json (recorded rerun; see 3.3 correction) | expB_kstep.png |
+| 7 | L2 null robust (nonlinear probe) | 0.482 ± 0.031 | FINDINGS 3.4 | artifacts/expB/summary.json | - |
 | 8 | Survival coupling does not rescue L2 | 0.523 ± 0.045 (replication) | FINDINGS 9 | artifacts/expB2/expB2_results.json | expB2_survival.png |
-| 9 | B-v3 regime negative at scale | 0.610, 90% CI [0.585, 0.634], n=10 | FINDINGS 7.1 | see PREREGISTRATION_Bv3.md trail | - |
-| 10 | L2 capacity ceiling below bar | 0.596, 90% CI [0.577, 0.616], n=10 | FINDINGS 7.1 | see PREREGISTRATION_Bv3.md trail | - |
+| 9 | B-v3 regime negative at scale | 0.610, 90% CI [0.585, 0.634], n=10 | FINDINGS 7.1 | artifacts/expB2/bv3_n10_summary.json | - |
+| 10 | L2 capacity ceiling below bar | 0.596, 90% CI [0.577, 0.616], n=10 | FINDINGS 7.1 | artifacts/expB2/sysid_ceiling_n10_summary.json | - |
 | 11 | L3 gate frozen in-band | oracle 0.928, floor 0.483 | FINDINGS 10.1 | PREREGISTRATION_L3.md sec. 12 | - |
 | 12 | L3 encoded by survival only | 0.752, t 90% CI [0.698, 0.807], 8/10 seeds | FINDINGS 10.2 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
 | 13 | L3 predictor baseline near chance | 0.573 [0.546, 0.599] | FINDINGS 10.2 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
@@ -78,18 +78,23 @@ resolve.*
 | 20 | Second capacity: behavior-independent signal replicates | 0.722 [0.678, 0.763], 8/10; quad 0.704 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
 | 21 | Second capacity: dissociation NOT met (artifact-conditional) | survival 0.737 [0.688, 0.780] vs predictor 0.714 [0.687, 0.740]; lead +0.023 < +0.05 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
 | 22 | Gate 0 re-validated per capacity; hidden=7 frozen | oracle 0.922, floor 0.566; hidden=8 regression exact (0.928/0.482); hidden=4 uninformative | FINDINGS 10.5 | PREREGISTRATION_L3.md sec. 12 + scripts/run_expA_l3.py | - |
-| 23 | Held-out fingerprint transfer: GENERALIZES | survival 0.773 [0.722, 0.824], 9/10 vs untrained floor 0.569; rule passes | FINDINGS 10.6 | fullruns/l3_h8_heldout/expB2_results.json | - |
-| 24 | Common-garden control: REACTIVE not persistent | survival cg_tail 0.557 [0.492, 0.622], 1/10 (below bar); late tail 0.492 at chance; rule fails | FINDINGS 10.6 | fullruns/l3_h8_heldout/expB2_results.json | - |
+| 23 | Held-out fingerprint transfer: GENERALIZES | survival 0.773 [0.722, 0.824], 9/10 vs untrained floor 0.569; rule passes | FINDINGS 10.6 | artifacts/expB2/heldout_l3_h8_summary.json | - |
+| 24 | Common-garden control: REACTIVE not persistent | survival cg_tail 0.557 [0.492, 0.622], 1/10 (below bar); late tail 0.492 at chance; rule fails | FINDINGS 10.6 | artifacts/expB2/heldout_l3_h8_summary.json | - |
 
 ## Known gaps before submission
 
-- Claims 4-7 cite script console output rather than committed JSON artifacts
-  (claim 6 now has a recorded rerun log and the FINDINGS 3.3 correction note;
-  claims 4, 5, 7 still trace to unrecorded original runs and deserve the same
-  recorded-rerun treatment before the paper freezes).
-- Claims 9-10 should get their run JSONs promoted into artifacts/ alongside the
-  L3 ones.
-- Row 23 must resolve (either direction) before the paper freezes; the paper
-  reports it as a generality check, not as a new headline. Rows 20-22 resolved
-  2026-07-14: the second capacity replicates the behavior-independent signal and
-  bounds the survival-specific claim to the subtler artifact.
+- Claims 1-7 resolved (2026-07-16): the recorded 06302026 e2e bundle's step
+  metrics (plus the 2026-07-13 k-step rerun and the across-seed stds recovered
+  from the bundle log) are promoted to `artifacts/expA/summary.json` and
+  `artifacts/expB/summary.json` by `scripts/promote_ab_summaries.py`.
+- Claims 9-10 resolved (2026-07-16): per-seed pooled targets promoted to
+  `artifacts/expB2/bv3_n10_summary.json` and
+  `artifacts/expB2/sysid_ceiling_n10_summary.json` by the same script;
+  `scripts/audit_stats_recheck.py` re-verifies every inventory number against
+  the committed artifacts.
+- Rows 23-24 resolved (spec 2026-07-14, per-seed summary committed as
+  `artifacts/expB2/heldout_l3_h8_summary.json`): transfer generalizes, the
+  common-garden control reads reactive; the paper reports both as generality
+  checks, not as a new headline. Rows 20-22 resolved 2026-07-14: the second
+  capacity replicates the behavior-independent signal and bounds the
+  survival-specific claim to the subtler artifact.

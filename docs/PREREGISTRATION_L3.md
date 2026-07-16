@@ -453,6 +453,18 @@ Rigor carried from the B-v3 audit (2026-07-10):
   the long-standing reactive-vs-representational ambiguity (section-11 caveats) toward reactive. This
   was the last owed post-hoc item; the L3 arc is complete.
 
+- **2026-07-16 - RESEARCH-INTEGRITY AUDIT: FREEZE-TIMING NOTE FOR THE HIDDEN=7 SELECTION.** A
+  commit-level audit of this log found: the capacity-fallback RULE was frozen in the original
+  pre-registration commit (`0217263`, 2026-07-10), strictly before the hidden=4 gate failure it was
+  later applied to. The specific "RE-FROZEN at hidden=7" statement, however, landed in the same
+  commit as the hidden=7 n=10 result artifact (`85229c2`, 2026-07-14), so the capacity selection and
+  its result are commit-simultaneous rather than sequential. The honest reading: hidden=7 was selected
+  by a rule frozen before the failure, but the selection itself has no committed timestamp preceding
+  the run. The per-timestep behavior-control spec has clean sequential timing (spec `1b5985e`
+  2026-07-12, results `bf8a74e` 2026-07-13). Every published number was re-verified against committed
+  per-seed artifacts by `scripts/audit_stats_recheck.py` (117 checks, all passing); all 15 cited arXiv
+  IDs were resolved against arxiv.org with matching titles and authors. See `docs/AUDIT_2026-07.md`.
+
 ## 13. How to run (milestones, in order)
 
 1. **Build + calibrate the surrogate.** Train `G` on authentic rollouts; wrap as a World;

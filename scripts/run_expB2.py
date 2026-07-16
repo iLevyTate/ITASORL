@@ -136,6 +136,39 @@ def config_fingerprint(base: dict) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
 
 
+def decide_h_b2(surv, pred, untr, bar: float = 0.65, sesoi: float = 0.05):
+    """Pre-registered primary verdict with a survivorship-precondition guard.
+
+    A non-finite pooled target means that seed's pool had too few survivors
+    (`too_few_survivors` in pooled_readout) - a broken precondition, not a
+    negative result - so any NaN forces the UNINFORMATIVE zone instead of
+    silently reading as "NOT met".
+
+    Returns (h_b2, zone, n_bad, finite survival values).
+    """
+    arrs = {"survival": np.asarray(surv, float),
+            "predictor": np.asarray(pred, float),
+            "untrained": np.asarray(untr, float)}
+    n_bad = sum(int(np.count_nonzero(~np.isfinite(x))) for x in arrs.values())
+    fin = {k: x[np.isfinite(x)] for k, x in arrs.items()}
+    if n_bad or any(x.size == 0 for x in fin.values()):
+        zone = (f"UNINFORMATIVE -> survivorship precondition failed in {n_bad} "
+                "decision cell(s) (too_few_survivors); adjudicate per the "
+                "pre-registered decision matrix before reading this as a result")
+        return False, zone, n_bad, fin["survival"]
+    s = fin["survival"].mean()
+    beats = (s >= fin["predictor"].mean() + sesoi
+             and s >= fin["untrained"].mean() + sesoi)
+    if s >= bar and beats:
+        return True, "MET  -> encoding induced (conditional on gates)", 0, fin["survival"]
+    if beats:
+        zone = ("NOT met  -> intermediate zone: beats both baselines by >= 0.05 but misses "
+                "the 0.65 bar; adjudicate with the pre-registered n=10 power extension")
+    else:
+        zone = "NOT met  -> strengthened negative (state readable, identity not encoded)"
+    return False, zone, 0, fin["survival"]
+
+
 def cell_file(cells_dir, drift: float, seed: int) -> Path:
     return Path(cells_dir) / f"cell_d{drift:.2f}_s{seed}.json"
 
@@ -524,7 +557,12 @@ def main():
 
     # ---- L0 equivalence gate on the survival agent (drift=0 must be at chance) ----
     if 0.0 in a.drifts:
-        l0 = res[0.0]["survival"]["pool_target"]
+        l0_raw = np.asarray(res[0.0]["survival"]["pool_target"], float)
+        l0 = l0_raw[np.isfinite(l0_raw)]
+        n_l0_bad = int(l0_raw.size - l0.size)
+        if n_l0_bad:
+            print(f"\nWARNING: {n_l0_bad}/{l0_raw.size} L0 cells non-finite "
+                  "(too_few_survivors) - L0 gate is UNINFORMATIVE, not passing")
         eq = equivalence_test(l0, h0=0.5, margin=0.05)
         rp = rope_test(l0, rope=(0.45, 0.55))
         print("\nL0 control (survival pooled target @ drift=0):")
@@ -536,9 +574,20 @@ def main():
 
     # ---- decision readout on the strongest drift ----
     dmax = max(a.drifts)
-    surv_t = np.array(res[dmax]["survival"]["pool_target"])
-    pred_t = np.array(res[dmax]["predictor"]["pool_target"])
-    untr_t = np.array(res[dmax]["untrained"]["pool_target"])
+    h_b2, zone, n_bad, surv_t = decide_h_b2(
+        res[dmax]["survival"]["pool_target"],
+        res[dmax]["predictor"]["pool_target"],
+        res[dmax]["untrained"]["pool_target"])
+    if n_bad:
+        print(f"\nWARNING: {n_bad} decision cell(s) non-finite (too_few_survivors) "
+              f"at drift={dmax:.2f}; stats below use finite seeds only")
+    pred_t = np.asarray(res[dmax]["predictor"]["pool_target"], float)
+    pred_t = pred_t[np.isfinite(pred_t)]
+    untr_t = np.asarray(res[dmax]["untrained"]["pool_target"], float)
+    untr_t = untr_t[np.isfinite(untr_t)]
+    # keep the display prints warning-free even if a whole arm was non-finite
+    surv_t, pred_t, untr_t = (x if x.size else np.array([float("nan")])
+                              for x in (surv_t, pred_t, untr_t))
     _, sm_lo, sm_hi = mean_ci(surv_t, level=0.90)
     surv_ceil = np.nanmean(np.array(res[dmax]["survival"]["pool_anchor_energy"], float))
     surv_ceil_drag = np.nanmean(np.array(res[dmax]["survival"]["pool_ceiling_drag"], float))
@@ -560,25 +609,17 @@ def main():
     print(f"  survivorship: mean deaths/pool auth={surv_da:.1f} surr={surv_ds:.1f} "
           f"(of {a.pool_n}) -> {'no asymmetry' if max(surv_da, surv_ds) < 0.05 * a.pool_n else 'CHECK asymmetry'}")
     # Pre-registered primary: survival >= 0.65 AND beats predictor and untrained by >= 0.05.
-    # Three zones per PREREGISTRATION_Bv3.md section 8: a result that clears both baseline
-    # margins but misses the 0.65 bar is NOT a strengthened negative - it is the
-    # underpowered intermediate zone the prereg adjudicates with the n=10 power extension.
-    beats_baselines = (surv_t.mean() >= pred_t.mean() + 0.05
-                       and surv_t.mean() >= untr_t.mean() + 0.05)
-    h_b2 = surv_t.mean() >= 0.65 and beats_baselines
-    if h_b2:
-        zone = "MET  -> encoding induced (conditional on gates)"
-    elif beats_baselines:
-        zone = ("NOT met  -> intermediate zone: beats both baselines by >= 0.05 but misses "
-                "the 0.65 bar; adjudicate with the pre-registered n=10 power extension")
-    else:
-        zone = "NOT met  -> strengthened negative (state readable, identity not encoded)"
+    # Three zones per PREREGISTRATION_Bv3.md section 8 (plus the UNINFORMATIVE zone when a
+    # non-finite cell shows the survivorship precondition failed); see decide_h_b2 above.
     print(f"  primary H_B2 (survival-induced encoding) {zone}")
     # Secondary: does the world-identity signal live in a VOLATILITY signature the LEVEL
     # probe throws away? target_var/full crossing 0.65 while the level target stays ~0.5
     # means the null was partly an operationalization artifact, not absent encoding.
-    surv_tv = np.nanmean(np.array(res[dmax]["survival"]["pool_target_var"], float))
-    surv_tf = np.nanmean(np.array(res[dmax]["survival"]["pool_target_full"], float))
+    def _finite_mean(vals) -> float:
+        x = np.asarray(vals, float)
+        return float(x[np.isfinite(x)].mean()) if np.isfinite(x).any() else float("nan")
+    surv_tv = _finite_mean(res[dmax]["survival"]["pool_target_var"])
+    surv_tf = _finite_mean(res[dmax]["survival"]["pool_target_full"])
     vol_hit = max(surv_tv, surv_tf) >= 0.65
     print(f"  volatility check: survival target_var={surv_tv:.3f} target_full={surv_tf:.3f} "
           f"(bar 0.65) -> {'VOLATILITY-ENCODED (level probe was mis-specified)' if vol_hit else 'no volatility encoding either'}")

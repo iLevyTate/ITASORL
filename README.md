@@ -107,7 +107,7 @@ capacity-ceiling checks.
 (a small net replacing the velocity law) rather than a hand-tuned knob, the **survival**
 agent, and at this fingerprint only the survival agent, encodes it. At a difficulty where an untrained net is at
 chance (about 0.49, and still only 0.52 under a nonlinear probe) and a prediction-only agent
-is near chance (about 0.57), the survival probe reads **0.752** (n = 10, honest 90% CI
+is near chance (about 0.57), the survival probe reads **0.752** (n = 10, honest t-based 90% CI
 **[0.698, 0.807]**, which excludes the pre-registered 0.65 bar; 8 of 10 seeds clear it). The
 dissociation is robust: it is not reward-mediated (world is not decodable from summed reward,
 AUROC 0.541, clean 10 of 10 seeds), not survivorship-biased (0 early deaths, every pool
@@ -118,8 +118,9 @@ behavior trace alone decodes the world at **0.803**, better than the state probe
 the obvious deflationary reading was that the probe reads behavior, not a representation. A
 pre-registered per-timestep control (dump every step's speed/energy/food/drag, residualize the
 recurrent state on the behavior trace in-fold, probe what is left) rejects that reading: the
-behavior-independent world-signal is **0.726** (90% CI **[0.685, 0.765]**, which excludes the
-0.65 bar; 9 of 10 seeds clear it; quadratic variant 0.721). The control is honest on its own
+behavior-independent world-signal is **0.726** (t-based 90% CI **[0.679, 0.772]**, which
+excludes the 0.65 bar; the seed-level bootstrap interval [0.685, 0.765] agrees; 9 of 10 seeds
+clear it; quadratic variant 0.721). The control is honest on its own
 negative controls: the untrained agent's state reads exact chance (0.498) under the same
 control even though untrained *behavior* decodes 0.645, and the prediction-only agent stays
 near chance (0.574). (An earlier, cruder per-episode-mean control had under-estimated the
@@ -132,13 +133,13 @@ mediation audit is reproducible code (`scripts/audit_behavior_mediation.py`; art
 `artifacts/expB2/`). *A pre-registered replication at a second calibrated capacity sharpens
 the claim.* The second in-band fingerprint (hidden = 7, selected by a frozen fallback rule
 after hidden = 4 failed its gates) passes every gate and replicates the behavior-independent
-world-signal almost exactly: **0.722** (90% CI [0.678, 0.763]) vs 0.726 at hidden = 8. But
+world-signal almost exactly: **0.722** (t-based 90% CI [0.672, 0.773]) vs 0.726 at hidden = 8. But
 that coarser artifact is one every trained agent picks up (predictor 0.714 vs survival 0.737,
 under the pre-registered +0.05 dissociation requirement), so the survival-*only* part of the
 claim is conditional on the subtler hidden = 8 artifact. What survives both capacities is a
 reward-clean, survivorship-clean, behavior-independent world-signal of about **0.72** in the
-survival agent's state. *A held-out probe (n = 10, `fullruns/l3_h8_heldout`) then sharpens what
-that signal is.* It splits: the world-identity direction learned against the trained fingerprint
+survival agent's state. *A held-out probe (n = 10, committed per-seed summary in
+`artifacts/expB2/heldout_l3_h8_summary.json`) then sharpens what that signal is.* It splits: the world-identity direction learned against the trained fingerprint
 still reads an unseen same-recipe fingerprint the agent never lived with (transfer **0.773** vs
 untrained floor 0.569; the pre-registered rule passes), so it is not an overfit to one artifact
 instance; but under a common-garden control that runs both groups through an identical tail after

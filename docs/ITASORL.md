@@ -419,8 +419,8 @@ Identifiers and lead authors are given below. The recent (2025-2026) entries wer
 - Soares (MIRI) - *Formalizing Two Problems of Realistic World-Models.* Naturalized induction and self-in-world modeling.
 
 **Evaluation awareness and emergent multi-agent behavior**
-- Nguyen, Hoang, Attubato & Hofstätter - *Probing (and Steering) Evaluation Awareness of Language Models.* arXiv:2507.01786 (Jul 2025). Linear probes separate test- vs. deploy-context in Llama-3.3-70B - method-level support for H4.
-- Xiong, Bhargava, Hong, Chang, Liu, Sharma & Zhu - *Probe-Rewrite-Evaluate (PRE).* arXiv:2509.00591 (Aug 2025). A linear-probe pipeline over residual-stream activations.
+- Nguyen, Hoang, Attubato & Hofstätter - *Probing and Steering Evaluation Awareness of Language Models.* arXiv:2507.01786 (Jul 2025). Linear probes separate test- vs. deploy-context in Llama-3.3-70B - method-level support for H4.
+- Xiong, Bhargava, Hong, Chang, Liu, Sharma & Zhu - *Probe-Rewrite-Evaluate: A Workflow for Reliable Benchmarks and Quantifying Evaluation Awareness.* arXiv:2509.00591 (Aug 2025). A linear-probe pipeline over residual-stream activations.
 - Xiao & Phuong - *Generalization Hacking: Models Can Game Reinforcement Learning by Preventing Behavioral Generalization.* arXiv:2606.12016 (Jun 2026). High reward ≠ genuine internalization.
 - Akkil, Kokku, Vikram, Abuelsaad, Vempaty & Nitta (Emergence AI) - *Emergence World: A Platform for Evaluating Long-Horizon Multi-Agent Autonomy.* arXiv:2606.08367 (Jun 2026). A 15-day cross-vendor study in which identical starting conditions produced outcomes ranging from stable governance to total collapse.
 - Habdank - *A Testable Framework for AI Alignment: Simulation Theology as an Engineered Worldview for Silicon-Based Agents.* arXiv:2602.16987 (Feb 2026).

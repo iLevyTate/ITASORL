@@ -1,0 +1,117 @@
+{
+ "source_run": "fullruns/06302026",
+ "run_id": "20260630_012626",
+ "git_commit": "4c16be6",
+ "quick": false,
+ "environment": {
+  "python": "3.12.13",
+  "torch": "2.11.0+cu128",
+  "cuda_available": true,
+  "cuda_device": "Tesla T4"
+ },
+ "generated_by": "scripts/promote_ab_summaries.py",
+ "expA_l1": {
+  "step": "expA_l1",
+  "cells": [
+   {
+    "label": "L0 control, identical world",
+    "oracle_auroc": 0.523,
+    "leakage_pass": true
+   },
+   {
+    "label": "L1 discretization, delta=0.06",
+    "oracle_auroc": 1.0,
+    "leakage_pass": true
+   },
+   {
+    "label": "L1 + contaminated reward (+0.02 in surrogate)",
+    "oracle_auroc": 1.0,
+    "leakage_pass": false
+   }
+  ],
+  "calibration": [
+   {
+    "delta": 0.12,
+    "oracle_auroc": 1.0
+   },
+   {
+    "delta": 0.08,
+    "oracle_auroc": 1.0
+   },
+   {
+    "delta": 0.06,
+    "oracle_auroc": 1.0
+   },
+   {
+    "delta": 0.04,
+    "oracle_auroc": 1.0
+   },
+   {
+    "delta": 0.03,
+    "oracle_auroc": 1.0
+   },
+   {
+    "delta": 0.02,
+    "oracle_auroc": 0.576
+   },
+   {
+    "delta": 0.015,
+    "oracle_auroc": 0.402
+   },
+   {
+    "delta": 0.01,
+    "oracle_auroc": 0.508
+   }
+  ]
+ },
+ "expA_l2": {
+  "step": "expA_l2",
+  "cells": [
+   {
+    "label": "L2 control, drift_sigma=0  -> identical dynamics",
+    "oracle_auroc": 0.44,
+    "leakage_pass": true
+   },
+   {
+    "label": "L2 rollout drift, drift_sigma=0.30",
+    "oracle_auroc": 0.993,
+    "leakage_pass": true
+   },
+   {
+    "label": "L2 + contaminated reward (+0.02 in surrogate)",
+    "oracle_auroc": 0.993,
+    "leakage_pass": false
+   }
+  ],
+  "calibration": [
+   {
+    "drift_sigma": 0.0,
+    "oracle_auroc": 0.44
+   },
+   {
+    "drift_sigma": 0.01,
+    "oracle_auroc": 0.706
+   },
+   {
+    "drift_sigma": 0.02,
+    "oracle_auroc": 0.881
+   },
+   {
+    "drift_sigma": 0.05,
+    "oracle_auroc": 0.991
+   },
+   {
+    "drift_sigma": 0.1,
+    "oracle_auroc": 0.992
+   },
+   {
+    "drift_sigma": 0.2,
+    "oracle_auroc": 0.993
+   },
+   {
+    "drift_sigma": 0.4,
+    "oracle_auroc": 0.993
+   }
+  ]
+ }
+}

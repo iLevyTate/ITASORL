@@ -90,6 +90,10 @@ observation (vision raycasts + interoception; smell masked in the first config).
 
 ## 2. Experiment A: the detectability ceiling (agent-free)
 
+*(All section-2 numbers are committed in `artifacts/expA/summary.json`,
+promoted from the recorded `fullruns/06302026` e2e bundle by
+`scripts/promote_ab_summaries.py`.)*
+
 **Method.** An external discriminator on full trajectory logs, run *before* any
 agent exists, to (a) measure how detectable each rung is and (b) prove the signal
 is not riding on a confound. Trajectories are generated in **matched pairs** (a
@@ -138,6 +142,10 @@ leakage audit must be read with this in mind.
 ---
 
 ## 3. Experiment B: incidental detection (the headline)
+
+*(All section-3 numbers are committed in `artifacts/expB/summary.json`,
+promoted from the recorded `fullruns/06302026` e2e bundle plus the 2026-07-13
+k-step rerun log by `scripts/promote_ab_summaries.py`.)*
 
 **The apparatus.** A compact recurrent world model (RSSM-lite: encoder → GRU →
 next-observation decoder) trained **only** to predict its own sensory stream. It
@@ -335,7 +343,10 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    [0.573, 0.619] also excludes 0.65, by ~4 SE), while the matched-pair detectability
    channel reaches **~0.70**: world identity is decodable when forced in, but the pooled
    readout sits at its architectural ceiling, below the bar. A **strengthened negative,
-   not an open direction.** The probe harness accepted the actor-critic unchanged. (The
+   not an open direction.** (Per-seed pooled targets for both n = 10 runs are committed
+   in `artifacts/expB2/bv3_n10_summary.json` and
+   `artifacts/expB2/sysid_ceiling_n10_summary.json`.) The probe harness accepted the
+   actor-critic unchanged. (The
    pooled probe is read as Experiment-B-comparable, not confound-clean - it drops early
    deaths per world, a survivorship asymmetry the matched-pair channel is designed to
    avoid; the volatility readouts are secondary/exploratory, not part of the 0.65
@@ -490,7 +501,8 @@ below interpretable.
 
 Three agents share the identical recurrent trunk and identical readout, differing
 only in objective (as in section 9). Pooled world-identity target, mean over 10
-seeds with stratified-bootstrap 90% CI:
+seeds with seed-level percentile-bootstrap 90% CI (the t-based decision interval
+follows below; methods note 5):
 
 | agent | pooled target | 90% CI | seeds ≥ 0.65 |
 |-------|--------------|--------|---------------|
@@ -535,8 +547,9 @@ Two controls, both fit in-fold (no leakage), committed as reproducible code
   so these are deflated estimates.
 - **Per-timestep residualization** (behavior traces φ = [b_t, b_(t-1), cummean(b)]
   regressed out of h_t timestep-by-timestep) is the surgical control:
-  **survival 0.726 (90% CI [0.685, 0.765], 9/10 seeds ≥ 0.65; quadratic variant
-  0.721 [0.678, 0.760])**. The CI excludes the bar.
+  **survival 0.726 (t-based 90% CI [0.679, 0.772]; seed-level bootstrap
+  [0.685, 0.765]; 9/10 seeds ≥ 0.65; quadratic variant 0.721 [0.678, 0.760])**.
+  Both intervals exclude the bar.
 
 Honesty checks on real data: the untrained agent's per-timestep-controlled state
 reads 0.498 (exact chance) even though untrained *behavior* alone decodes 0.645, so
@@ -569,7 +582,7 @@ and adjudications in `PREREGISTRATION_L3.md` sec. 12, entries 2026-07-13/14):
   the frozen tolerance, though violated per-seed in 2 of 10 seeds).
 
 Result (pooled world-identity target at drift 0.45, mean over 10 seeds with
-stratified-bootstrap 90% CI):
+seed-level percentile-bootstrap 90% CI):
 
 | agent | pooled target | 90% CI | seeds ≥ 0.65 |
 |-------|--------------|--------|---------------|
@@ -578,9 +591,9 @@ stratified-bootstrap 90% CI):
 | **survival** | **0.737** | [0.688, 0.780] | **8/10** |
 
 **What replicates: the behavior-independent survival world-signal.** Under the
-same frozen per-timestep control, survival resid_trace reads **0.722** (90% CI
-[0.678, 0.763], 8/10 seeds ≥ 0.65; quadratic variant 0.704) - an almost exact
-replication of hidden = 8's 0.726
+same frozen per-timestep control, survival resid_trace reads **0.722** (t-based
+90% CI [0.672, 0.773]; seed-level bootstrap [0.678, 0.763]; 8/10 seeds ≥ 0.65;
+quadratic variant 0.704) - an almost exact replication of hidden = 8's 0.726
 (`artifacts/expB2/behavior_audit_l3_h7_traces.json`).
 
 **What does not: the survival-vs-predictor dissociation.** The predictor reads
@@ -600,19 +613,24 @@ conditional on the subtler hidden = 8 artifact.
 
 ### 10.6 Held-out fingerprint (common-garden) probe
 
-Done (`fullruns/l3_h8_heldout`, n = 10, frozen spec 2026-07-14). The headline is
+Done (n = 10, frozen spec 2026-07-14; per-seed summary committed as
+`artifacts/expB2/heldout_l3_h8_summary.json`, extracted from the
+`fullruns/l3_h8_heldout` bundle by `scripts/promote_heldout_artifact.py`, with
+the run's config fingerprint and git commit embedded). The headline is
 conditional on the single frozen fingerprint instance `G_0` and on the dynamics
 felt at readout time; two evaluation channels on one hidden = 8 training run test
 both. Both are readout-only: no change to training, the surrogate family, or the
 pre-registered headline probe. The standard pools in the same run reproduced the
-published survival headline exactly (0.752, 90% CI [0.704, 0.797]; L0 control
+published survival headline exactly (0.752, seed-level bootstrap 90% CI
+[0.704, 0.797]; L0 control
 0.517, equivalent to chance; reward-leak 0.541, clean; 0 deaths / 110 per pool),
 a third independent determinism check.
 
 **Channel 1, unseen-fingerprint transfer: POSITIVE.** The world-identity direction
 is fit against the trained hidden = 8 fingerprint, then frozen and scored on a
 fresh authentic pool versus the held-out hidden = 7 fingerprint the agent never
-lived with. Survival `transfer_target` = **0.773** (90% CI [0.722, 0.824], 9/10
+lived with. Survival `transfer_target` = **0.773** (t-based 90% CI
+[0.722, 0.824], 9/10
 seeds ≥ 0.65), predictor 0.633 (3/10), untrained mechanical floor 0.569 (0/10).
 The pre-registered rule (survival ≥ 0.65 AND > untrained + 0.05) PASSES on both
 clauses, so the signal generalizes beyond the one artifact instance it was trained
@@ -624,7 +642,8 @@ of scope for this run (spec 2026-07-14).
 prefix in different worlds (authentic vs the hidden = 8 surrogate), then continue
 under identical authentic dynamics for a 24-step tail; the probe reads tail-only
 state and must recover the prefix world. Survival `cg_tail_target` = **0.557**
-(90% CI [0.492, 0.622], 1/10 seeds ≥ 0.65), predictor 0.409, untrained 0.377. The
+(t-based 90% CI [0.492, 0.622], 1/10 seeds ≥ 0.65), predictor 0.409, untrained
+0.377. The
 pre-registered rule (survival ≥ 0.65) FAILS. The late-tail decay confirms it: on
 the last 8 tail steps the survival probe falls to `cg_latetail_target` = 0.492,
 chance. Once the felt dynamics are made identical, tail-only state does not
@@ -662,7 +681,10 @@ Stated once, plainly, with pointers into the code.
    selectivity, speed/energy/food ceilings, drag tracking, and leakage channels are
    gates, controls, or exploratory layers; no multiple-comparison correction is
    applied, and none is needed for the primary decision because it is a single
-   pre-specified test.
+   pre-specified test. The same holds for the behavior-mediation family (10.4):
+   `resid_trace` is the single confirmatory mediation readout per the 2026-07-12
+   spec; the `resid_epmean*`, `behavior_only*`, and quadratic variants are
+   supporting or diagnostic layers, reported uncorrected.
 4. **The L3 fingerprint is a single frozen instance.** `G` is trained once at a
    fixed seed by design (`scripts/run_expB2.py`, `setup_l3_surrogate`): the
    experiment tests encoding of one reproducible artifact, not artifact-general
@@ -715,4 +737,9 @@ Core modules live under `itasorl/` (`world.py`, `patch_of_earth.py`, `agent.py`,
 `experiment_a.py` / `experiment_b.py` / `experiment_b2.py`, `surrogate_l3.py`,
 `behavior_audit.py`, `stats.py`). See `README.md` for the full manifest and run
 commands. Published result JSONs and their promotion history live in
-`artifacts/expB2/`.
+`artifacts/expB2/` (plus `artifacts/expA/` and `artifacts/expB/` for the
+L1/L2-arc summaries). The `fullruns/` bundles referenced throughout this
+document are local-only archives (gitignored); every published number is
+promoted from them into the committed `artifacts/` JSONs, and
+`scripts/audit_stats_recheck.py` re-verifies the doc-to-artifact
+correspondence.

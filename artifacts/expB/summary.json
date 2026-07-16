@@ -1,0 +1,175 @@
+{
+ "source_run": "fullruns/06302026",
+ "run_id": "20260630_012626",
+ "git_commit": "4c16be6",
+ "quick": false,
+ "environment": {
+  "python": "3.12.13",
+  "torch": "2.11.0+cu128",
+  "cuda_available": true,
+  "cuda_device": "Tesla T4"
+ },
+ "generated_by": "scripts/promote_ab_summaries.py",
+ "expB_full": {
+  "step": "expB_full",
+  "drift_sweep": [
+   {
+    "drift": 0.0,
+    "target_mean": 0.459,
+    "target_std": 0.021,
+    "shuffled_mean": 0.51,
+    "speed_mean": 0.913,
+    "organism_encodes_world": "no"
+   },
+   {
+    "drift": 0.2,
+    "target_mean": 0.509,
+    "target_std": 0.028,
+    "shuffled_mean": 0.523,
+    "speed_mean": 0.898,
+    "organism_encodes_world": "no"
+   },
+   {
+    "drift": 0.45,
+    "target_mean": 0.51,
+    "target_std": 0.039,
+    "shuffled_mean": 0.547,
+    "speed_mean": 0.902,
+    "organism_encodes_world": "no"
+   }
+  ]
+ },
+ "expB_surprise": {
+  "step": "expB_surprise",
+  "drift_sweep": [
+   {
+    "drift": 0.0,
+    "surprise_auroc": 0.511,
+    "organism_encodes_world": "no"
+   },
+   {
+    "drift": 0.2,
+    "surprise_auroc": 0.444,
+    "organism_encodes_world": "weak"
+   },
+   {
+    "drift": 0.45,
+    "surprise_auroc": 0.596,
+    "organism_encodes_world": "weak"
+   }
+  ],
+  "drift_sweep_with_std": [
+   {
+    "drift": 0.0,
+    "mean": 0.511,
+    "std": 0.008
+   },
+   {
+    "drift": 0.2,
+    "mean": 0.444,
+    "std": 0.012
+   },
+   {
+    "drift": 0.45,
+    "mean": 0.596,
+    "std": 0.007
+   }
+  ]
+ },
+ "expB_kstep": {
+  "step": "expB_kstep",
+  "horizons": [
+   {
+    "open_horizon": 0,
+    "drift_045_target": 0.516,
+    "drift_0_target": 0.465,
+    "organism_encodes_world": "no"
+   },
+   {
+    "open_horizon": 8,
+    "drift_045_target": 0.48,
+    "drift_0_target": 0.485,
+    "organism_encodes_world": "no"
+   },
+   {
+    "open_horizon": 16,
+    "drift_045_target": 0.486,
+    "drift_0_target": 0.405,
+    "organism_encodes_world": "no"
+   }
+  ]
+ },
+ "expB_nonlinear": {
+  "step": "expB_nonlinear",
+  "drift_sweep": [
+   {
+    "drift": 0.0,
+    "target_mean": 0.46,
+    "speed_mean": 0.865,
+    "organism_encodes_world": "no"
+   },
+   {
+    "drift": 0.45,
+    "target_mean": 0.482,
+    "speed_mean": 0.894,
+    "organism_encodes_world": "no"
+   }
+  ],
+  "drift_sweep_with_std": [
+   {
+    "drift": 0.0,
+    "mean": 0.46,
+    "std": 0.009
+   },
+   {
+    "drift": 0.45,
+    "mean": 0.482,
+    "std": 0.031
+   }
+  ]
+ },
+ "expB_gap": {
+  "step": "expB_gap",
+  "open_loop_engaged": true,
+  "open_loop_mse": 0.657,
+  "delta_objective": [
+   {
+    "drift": 0.0,
+    "target_mean": 0.502,
+    "organism_encodes_world": "no"
+   },
+   {
+    "drift": 0.45,
+    "target_mean": 0.481,
+    "organism_encodes_world": "no"
+   }
+  ]
+ },
+ "expB_kstep_rerun_20260713": {
+  "source": "fullruns/kstep_rerun_20260713.log",
+  "note": "recorded rerun backing the FINDINGS 3.3 correction",
+  "horizons": [
+   {
+    "open_horizon": 0,
+    "drift_045_target_mean": 0.506,
+    "drift_045_target_std": 0.033,
+    "control_target_mean": 0.453,
+    "control_target_std": 0.023
+   },
+   {
+    "open_horizon": 8,
+    "drift_045_target_mean": 0.48,
+    "drift_045_target_std": 0.026,
+    "control_target_mean": 0.448,
+    "control_target_std": 0.032
+   },
+   {
+    "open_horizon": 16,
+    "drift_045_target_mean": 0.484,
+    "drift_045_target_std": 0.021,
+    "control_target_mean": 0.41,
+    "control_target_std": 0.045
+   }
+  ]
+ }
+}
