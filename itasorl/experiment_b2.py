@@ -942,19 +942,16 @@ def save_agent_bundle(path: str, agent: RecurrentActorCritic, norm: RunningNorm)
                 "norm": {"mean": norm.mean, "var": norm.var, "count": norm.count}}, path)
 
 
-def load_agent_bundle(path: str, device: str) -> tuple["RecurrentActorCritic", "RunningNorm"]:
-    """Inverse of save_agent_bundle. Returns (frozen inference-mode agent on
-    `device`, frozen norm). weights_only=False: the bundle contains numpy
-    arrays in "norm"."""
-    blob = torch.load(path, map_location="cpu", weights_only=False)
+def load_agent_bundle(path: str, device: str = "cpu"):
+    """Rebuild (agent, norm) from save_agent_bundle output. Returns them frozen."""
+    # weights_only=False is required: the bundle holds a plain dict of numpy
+    # arrays (norm state), which weights_only=True rejects. Own artifacts only.
+    blob = torch.load(path, map_location=device, weights_only=False)
     agent = RecurrentActorCritic(**blob["ctor"]).to(device)
     agent.load_state_dict(blob["state_dict"])
-    agent.train(False)
     norm = RunningNorm(blob["ctor"]["obs_dim"])
-    norm.mean = np.asarray(blob["norm"]["mean"], np.float64)
-    norm.var = np.asarray(blob["norm"]["var"], np.float64)
-    norm.count = float(blob["norm"]["count"])
-    return agent, norm
+    norm.mean, norm.var, norm.count = blob["norm"]["mean"], blob["norm"]["var"], blob["norm"]["count"]
+    return agent.train(False), norm.freeze()
 
 
 def readout(agent, norm, params, drift_sigma, *, n_pairs=60, prefix_steps=20, branch_steps=24,

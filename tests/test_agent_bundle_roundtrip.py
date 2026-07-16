@@ -26,6 +26,7 @@ def test_roundtrip_bit_exact(tmp_path):
     assert np.array_equal(norm.var, norm2.var)
     assert norm.count == norm2.count
     assert agent2.training is False  # frozen for deterministic readout
+    assert norm2.frozen is True  # reloaded norm must never mutate
 
     obs = torch.zeros(1, 20)
     prev = torch.zeros(1, 4)
