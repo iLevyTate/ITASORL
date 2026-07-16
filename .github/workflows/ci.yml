@@ -61,6 +61,27 @@ jobs:
             echo "No tests found yet — skipping pytest."
           fi
 
+  audit:
+    name: Stats recheck (published numbers vs committed artifacts)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Recompute every published number from committed artifacts
+        run: python scripts/audit_stats_recheck.py
+
   shell:
     name: Shellcheck Ralph loop
     runs-on: ubuntu-latest
