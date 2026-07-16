@@ -67,6 +67,9 @@ def main() -> None:
             continue
         drift, seed, agent = m["drift"], int(m["seed"]), m["agent"]
         with np.load(f) as npz:
+            if "Ha" not in npz:  # heldout-eval sibling dumps (_h7transfer/_cg) lack pool keys
+                print(f"  skip (not a pooled-states dump): {os.path.basename(f)}")
+                continue
             res = audit_cell(dict(npz), seed=seed)
         if not res:
             print(f"  skip (too few survivors): {os.path.basename(f)}")
