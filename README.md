@@ -93,7 +93,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
 | Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: transfers to an unseen fingerprint subtle-to-coarse (0.773) but not coarse-to-subtle (0.638, frozen rule fails) and is reactive, not a persistent representation; cross-recipe probe: also reads a different surrogate family (0.684, rule passes)** |
-| Experiment C (emergence under selection) / Ladder L4 | not started |
+| Experiment C (emergence under selection) / Ladder L4 | not started (pre-registration design-complete: [`docs/PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md)) |
 
 ### Key result
 
@@ -189,10 +189,15 @@ class. See
 |   `-- audit_behavior_mediation.py  behavior-mediation audit on dumped states
 |-- docs/
 |   |-- ITASORL.md              research plan
+|   |-- ITASORL_world_spec.md   world specification ("A Patch of Earth" v0)
 |   |-- FINDINGS.md             empirical results
+|   |-- LEARNING.md             running lab notebook / lessons log
+|   |-- PAPER_OUTLINE.md        paper outline + claims inventory
 |   |-- PREREGISTRATION.md      B-v2 pre-registration
 |   |-- PREREGISTRATION_Bv3.md  B-v3 pre-registration
 |   |-- PREREGISTRATION_L3.md   L3 pre-registration + deviation log
+|   |-- PREREGISTRATION_C.md    Experiment C pre-registration (design-complete)
+|   |-- AUDIT_2026-07.md        research-integrity audit
 |   `-- figures/                result figures (.png) + provenance README
 |-- artifacts/expB2/            published B-v2/L3 JSON/PNG (committed)
 |-- fullruns/                   e2e run bundles (gitignored; default output)
@@ -207,6 +212,10 @@ class. See
 - [`docs/ITASORL.md`](docs/ITASORL.md): the research plan, core question, literature white-space, hypotheses (H1 to H4), experiments (A/B/C), the surrogate ladder, validity audit, statistics, and engineering architecture.
 - [`docs/ITASORL_world_spec.md`](docs/ITASORL_world_spec.md): the world specification, "A Patch of Earth" v0, the 2.5D representation, fields and forcing, dynamics, ecology, the ~146-dim observation, ladder attachment, and confound management.
 - [`docs/FINDINGS.md`](docs/FINDINGS.md): empirical results from the first build-and-test cycle.
+- [`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md): the paper outline and a claims inventory linking every headline number to its committed artifact.
+- [`docs/LEARNING.md`](docs/LEARNING.md): the running lab notebook (methods lessons, dead ends, decisions).
+- [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md), [`PREREGISTRATION_Bv3.md`](docs/PREREGISTRATION_Bv3.md), [`PREREGISTRATION.md`](docs/PREREGISTRATION.md), [`PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md): pre-registrations (with deviation logs) for the B-v2, B-v3, L3, and (design-complete) C experiments.
+- [`docs/AUDIT_2026-07.md`](docs/AUDIT_2026-07.md): a skeptical research-integrity audit (numbers, statistics, pre-registration timing, citations).
 
 ### Figures
 

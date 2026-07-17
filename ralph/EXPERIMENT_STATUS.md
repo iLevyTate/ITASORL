@@ -3,23 +3,38 @@
 Ralph reads this **every run** before choosing work. Update it when new
 `fullruns/` appear, canonical artifacts change, or conclusions shift.
 
-Last updated: **2026-07-10** (post n=10 sysid-aux CEILING; L2/pooled ceiling now decisively below 0.65)
+Last updated: **2026-07-17** (doc-sync during the repository quality audit: this
+snapshot had lagged at 2026-07-10 / pre-L3; brought current with the completed L3 arc.
+Numbers below are the ones verified by `scripts/audit_stats_recheck.py` and
+`docs/FINDINGS.md` §10.)
 
 ---
 
-## Core claim (unchanged)
+## Core claim (updated at L3)
 
-**Detectable ≠ learned.** Outside oracles read L2 drift trivially (~0.99 AUROC).
-Organisms trained only on prediction stay at chance for world identity (~0.51).
-Survival pressure (B-v2) does **not** reach the pre-registered encoding bar (0.65).
-The identifiable, policy-relevant B-v3 regime (per-episode constant drag) lifts the
-survival probe to 0.610 at n=10, still below 0.65. The pre-registered sysid-aux ceiling
-confirms this is near-architectural: even with the survival trunk supervised directly on
-drag, the n=10 pooled probe reaches only 0.596 (90% CI [0.577, 0.616], upper bound below
-0.65), while the matched-pair detectability channel reaches ~0.70. Identity is decodable
-when forced in; the pooled persistent-direction readout simply saturates below the bar.
-The n=10 ceiling CI now excludes 0.65 decisively (the n=3 CI [0.576, 0.667] had straddled
-it), so the "L2 null holds under scale" gate is met and L3 is green-lit.
+**Detectable ≠ learned — at L2.** Outside oracles read L2 drift trivially (~0.99 AUROC),
+yet organisms trained only on prediction stay at chance for world identity (~0.51), and
+survival pressure (B-v2 / the identifiable B-v3 regime) never reaches the pre-registered
+0.65 bar (B-v2 0.523, B-v3 0.610 at n=10). The sysid-aux ceiling shows this is
+near-architectural: even a trunk supervised directly on drag saturates the pooled readout
+at 0.596 [0.577, 0.616] while the matched-pair channel reaches ~0.70. Identity is
+decodable-when-forced but not pooled-persistent.
+
+**L3 partially reverses this.** When the surrogate is a *learned-dynamics fingerprint*
+(a small net replacing the velocity law) rather than a hand-tuned drag knob, the survival
+agent's pooled probe reads **0.752** (t 90% CI [0.698, 0.807], 8/10 seeds; L0 control
+0.517), and a reward-clean, survivorship-clean, per-timestep **behavior-independent**
+world-signal of **~0.73** (resid_trace 0.726 [0.685, 0.765]) clears the bar. Caveats that
+narrow the claim: (1) survival-*specificity* holds only at the subtler hidden=8 artifact —
+at hidden=7 every trained agent picks it up (predictor 0.714 vs survival 0.737); (2) a
+held-out probe shows the direction transfers to an unseen same-recipe (0.773) and a
+different-recipe (cross-recipe 0.684) fingerprint but a common-garden control leaves
+tail-only state at chance (0.557, late tail 0.492), so the signal is **reactive tracking
+of the felt dynamics, not a persistent stored representation**; (3) held-out transfer is
+direction-dependent (reverse 0.638 fails the bar). Honest headline: L3 induces a reactive,
+artifact-conditional, behavior-independent world-signal — the first reversal of the L2
+nulls, but not an abstract persistent world-identity direction. See `docs/FINDINGS.md`
+§10 and `docs/PREREGISTRATION_L3.md` §12.
 
 ---
 
@@ -112,15 +127,18 @@ Narrative: `docs/FINDINGS.md` §7 (next steps), §9 (B-v2).
 2. **Power:** RESOLVED (07062026): the n=10 regime extension ran (RTX 4050, 337 min);
    survival 0.610 +/- 0.047, 90% CI [0.585, 0.634] excludes 0.65, and L0 TOST/ROPE pass
    at n=10 (equivalent to chance).
-3. **Reactive vs representational:** Agent may exploit felt drag without encoding
-   persistent world identity; held-out / common-garden probe not yet implemented.
-   (07062026: identity target 0.610 > drag-tracking ceiling 0.487 is suggestive of a
-   persistent signal, but the held-out probe remains the clean test. 07072026 sysid-aux
-   ceiling: pooled saturates ~0.62 even when supervised while matched-pair reaches ~0.80,
-   consistent with a decodable-but-not-pooled-persistent signal.)
-4. **L3 artifact:** Generative fingerprint (§7.2) not built; highest-interest
-   direction if L2 null holds under scale. Gate now MET (n=10 null + sysid-aux ceiling
-   confirmation); scope spec pending human sign-off in BACKLOG Questions.
+3. **Reactive vs representational:** RESOLVED (2026-07-14) toward **reactive**. The
+   L3 held-out/common-garden probe (`artifacts/expB2/heldout_l3_h8_summary.json`) shows
+   the world-signal transfers to unseen fingerprints (0.773 same-recipe, 0.684
+   cross-recipe) but does not survive a common-garden control (tail-only 0.557, late tail
+   0.492 at chance) — so the agent tracks the currently-felt dynamics rather than storing a
+   persistent world-identity representation. FINDINGS §10.6–10.7.
+4. **L3 artifact:** DONE. The generative-fingerprint surrogate (`itasorl/surrogate_l3.py`
+   `G_motion`, `l3` world hook) was built, oracle-gated (AUROC in [0.85, 0.95]), and run at
+   two calibrated capacities (hidden=8, hidden=7) at n=10; survival pooled 0.752 with a
+   behavior-independent ~0.73. FINDINGS §10, PREREGISTRATION_L3 §12. Remaining open science:
+   H2 substrate-grounding ablations, H3 / Experiment C (emergence under selection; prereg
+   design-complete, `docs/PREREGISTRATION_C.md`), and Ladder L4 (adversarial; stub).
 
 ---
 

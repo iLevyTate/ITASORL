@@ -23,6 +23,11 @@ classifiers = [
 # Mirrors requirements.txt (the CI installs from requirements.txt; keep both in sync).
 dependencies = [
     "numpy>=1.24",
+    # scipy is decision-relevant, not merely transitive via scikit-learn:
+    # itasorl/stats.py TOST uses scipy.stats.t and silently degrades to a normal
+    # approximation without it (anti-conservative at n <= 10). Keep in sync with
+    # requirements.txt.
+    "scipy>=1.10",
     "scikit-learn>=1.3",
     "matplotlib>=3.7",
     "torch>=2.0",

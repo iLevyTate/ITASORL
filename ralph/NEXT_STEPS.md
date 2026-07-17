@@ -31,9 +31,9 @@ Mark status: `[ready]` Ralph can implement · `[blocked]` needs human · `[done]
 
 | Status | Item | Rationale |
 |--------|------|-----------|
-| `[blocked]` | n = 10 B-v2 extension via `scripts/run_expB2_n10.sh`. | Needs free RAM + GPU + human; tightens CI on 0.523 vs 0.65. |
-| `[blocked]` | Held-out fixed-dynamics / common-garden probe for B-v2. | Product decision on design; Ralph can draft API + stub in `experiment_b2.py` only if spec is written to BACKLOG Questions first. |
-| `[blocked]` | L3 generative fingerprint scaffold. | Large feature; needs human scope in Questions before coding. |
+| `[done]` | n = 10 extension. | Done for B-v3 (0.610) and both L3 capacities (h8 0.752, h7 0.737) at n=10. FINDINGS §7.1, §10. |
+| `[done]` | Held-out / common-garden probe. | Built and run for L3 (`heldout_l3_h8_summary.json`): transfer 0.773, common-garden reactive 0.557; reverse + cross-recipe follow-ups also done. FINDINGS §10.6–10.7. |
+| `[done]` | L3 generative fingerprint scaffold. | `itasorl/surrogate_l3.py` (`G_motion`) + `l3` world hook + oracle gate; run at hidden=8/7. FINDINGS §10. |
 
 ---
 

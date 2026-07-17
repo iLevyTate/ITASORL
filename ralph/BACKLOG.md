@@ -33,7 +33,9 @@ P0 | experiment_b.py + agent.py | `run_expB_gap.py` & `run_expB_kstep.py` crashe
 
 ## Questions / needs a human
 <!-- Ambiguous or product-decision items Ralph should NOT decide alone. -->
-- **Local seed-0 B-v2 diagnostic** (300 updates): compare lab GPU vs Colab T4 for seed 0 survival @ drift 0.45 (0.586). Command: `python scripts/run_expB2.py --seeds 0 --out-dir results/replicate-seed0-diagnostic`. ~1 hr GPU. Approve before Ralph or human runs.
-- **n=10 B-v2 extension**: `bash scripts/run_expB2_n10.sh`; needs free RAM (4 GB+) and CUDA. Approve before running.
-- **Held-out / common-garden probe design** for reactive-vs-representational ambiguity; write spec here before Ralph implements.
-- **L3 generative fingerprint scope**; write spec before scaffold work.
+- **Local seed-0 B-v2 diagnostic** (300 updates): compare lab GPU vs Colab T4 for seed 0 survival @ drift 0.45 (0.586). Command: `python scripts/run_expB2.py --seeds 0 --out-dir results/replicate-seed0-diagnostic`. ~1 hr GPU. Approve before Ralph or human runs. (A seed-0 diagnostic bundle now exists under `results/replicate-seed0-diagnostic/`.)
+- ~~**n=10 B-v2 extension**~~ DONE: n=10 completed for B-v3 (0.610) and both L3 capacities. FINDINGS §7.1, §10.
+- ~~**Held-out / common-garden probe design**~~ DONE: spec `docs/superpowers/specs/2026-07-14-l3-heldout-common-garden-probe-design.md`; run + follow-ups in FINDINGS §10.6–10.7.
+- ~~**L3 generative fingerprint scope**~~ DONE: built and run (`itasorl/surrogate_l3.py`, PREREGISTRATION_L3 §12).
+
+Next open human-gated questions: H2 substrate-grounding ablation design, and Experiment C / L4 (prereg design-complete in `docs/PREREGISTRATION_C.md`; needs GPU-time sign-off before any run).
