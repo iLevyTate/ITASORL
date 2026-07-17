@@ -93,10 +93,13 @@ def setup_l3_heldout_surrogate(**train_kwargs) -> None:
     _L3_GMOTION_HELDOUT = train_g_motion(**train_kwargs)
 
 
-def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int) -> PatchOfEarthV0:
+def make_world(params: WorldParams | None, drift_sigma: float, ray_steps: int,
+               food_override: dict | None = None) -> PatchOfEarthV0:
     w = PatchOfEarthV0(params or WorldParams(), drift_sigma=drift_sigma, drift_mode=DRIFT_MODE)
     w.ray_steps = ray_steps
-    for k, v in {**SURVIVAL_METAB, **SURVIVAL_FOOD}.items():  # override before reset()
+    # food_override is an ADDITIVE merge (control-arm world-invariant layout); None ->
+    # byte-identical to the frozen SURVIVAL_FOOD layout every other experiment depends on.
+    for k, v in {**SURVIVAL_METAB, **SURVIVAL_FOOD, **(food_override or {})}.items():
         setattr(w, k, v)
     if DRIFT_MODE == "l3" and drift_sigma > 0.0 and _L3_GMOTION is not None:
         w._g_motion = _L3_GMOTION  # surrogate (drift_sigma>0) uses learned dynamics; authentic does not
@@ -156,14 +159,15 @@ class RunningNorm:
 def collect_episodes_ac(agent: RecurrentActorCritic, norm: RunningNorm, params, drift_sigma,
                         n_eps: int, max_steps: int, device: str, seed_base: int,
                         ray_steps: int = 5, deterministic: bool = False, update_norm: bool = True,
-                        shaping_coef: float = 0.0, gamma: float = 0.99):
+                        shaping_coef: float = 0.0, gamma: float = 0.99,
+                        food_override: dict | None = None):
     """Run n_eps parallel envs to death/max_steps. Returns padded torch tensors on
     `device` for the A2C update plus per-episode scalars. h0 is zero per episode.
 
     shaping_coef>0 adds potential-based food-approach shaping to the TRAINING reward
     (optimal-policy-preserving); `ret`/lengths still report the TRUE task outcome."""
     A = agent.act_dim
-    envs = [make_world(params, drift_sigma, ray_steps) for _ in range(n_eps)]
+    envs = [make_world(params, drift_sigma, ray_steps, food_override) for _ in range(n_eps)]
     obs = np.stack([e.reset(_seeds(seed_base + i)).obs for i, e in enumerate(envs)]).astype(np.float64)
     active = np.ones(n_eps, bool)
     h = agent.initial_state(n_eps, device)
