@@ -86,9 +86,9 @@ substrate). Detection is measured against a **surrogate ladder**:
 Three experiments were planned. This cycle completed Experiment A for L1 and L2
 (and later the L3 oracle gate, section 10.1), the first full arc of Experiment B,
 the survival-coupled B-v2/B-v3 arc (section 9), and the L3 arc (section 10).
-Experiment C (emergence under selection) has run its first pilot: a
-pre-registered null (no emergent world-detector under selection at the pilot
-design), recorded in section 13.
+Experiment C (emergence under selection) has run its first pilot; the recorded
+null is **invalidated by two since-fixed measurement bugs** (see the correction
+in section 13.C) and a re-run on fixed code is pending, so H3 is currently open.
 
 The world is **"A Patch of Earth" v0**, a 2.5D, deterministic, dissipative,
 Earth-*like* (authored, not data-driven) environment with a ~146-dimensional
@@ -330,15 +330,16 @@ inducing it (if possible) requires something more deliberate.
   gate-calibrated random-Fourier-features law (0.684, rule passes), so the
   reactive signal is recipe-general.
 - **H2 (substrate-grounding via ablations)**: not yet tested.
-- **H3 (emergence under selection).** First pilot returned a pre-registered null
-  (section 13). A paired-lineage selection run with a world-invariant control arm
-  did not build a heritable world-detector: the treatment-minus-control emergence
-  contrast was +0.020 (t-based 90% CI [-0.052, +0.092], spanning 0) and the
-  treatment's final detection AUROC 0.568 stayed below the 0.65 floor, so none of
-  the three pre-registered conditions fired. Selection was demonstrably effective
-  (authentic-world death rate fell from ~0.58 toward 0.15 to 0.28 and fitness rose
-  in every arm), but it routed that gain through survival behavior rather than
-  through world-identity detection.
+- **H3 (emergence under selection).** OPEN — the first pilot's recorded null is
+  **invalidated** (section 13.C): the run executed on pre-fix code carrying two
+  since-fixed measurement defects (the fitness/panel legs ran on the default
+  world rather than world P, and the common-garden AUROC estimator split matched
+  pairs across CV folds, biasing detection AUROCs toward 0). The pilot's
+  qualitative mechanism observations (selection effective, gains routed through
+  survival behavior) used unaffected series, but the emergence contrast and the
+  AUROC-floor comparison are not valid measurements. A re-run on fixed code with
+  the identical pre-registered configuration is pending; H3 has no valid pilot
+  result until it lands.
 
 ---
 
@@ -842,6 +843,13 @@ correspondence.
 
 ## 13. Experiment C: emergence of a world-detector under selection (milestone-3 pilot)
 
+> **CORRECTION (2026-07-18).** The pilot recorded below ran on pre-fix code with
+> two measurement defects that sit directly on the pre-registered estimand; its
+> quantitative result (the null) is **invalidated**. See section 13.C at the end
+> of this section before citing any number below. A re-run on fixed code is
+> pending; the original record is preserved unedited per the append-only
+> convention.
+
 *(All section-13 numbers are committed in
 `artifacts/expC/emergence_pilot_summary.json`, promoted from the gitignored
 `fullruns/expC_milestone3/emergence_pilot.json` by
@@ -981,3 +989,49 @@ untapped incentive, yet its absence is only a lower bound, because the scripted
 controller under-expresses what a recurrent forager can use. Distinguishing (1) from
 (2) is the open question a section 8 redesign must pre-register before any further
 run.
+
+### 13.C Correction: the pilot's quantitative result is invalidated (2026-07-18)
+
+A systematic code audit (PR #63, fix commit `1633bca`) found two defects that
+were live in the code the pilot ran on (`git_commit 9758202`, recorded in
+`artifacts/expC/emergence_pilot_summary.json`); both sit directly on the
+pre-registered estimand, so the section-13 emergence numbers are not valid
+measurements.
+
+**Defect 1 — wrong world (config).** `scripts/run_expC_milestone3.py` omitted
+`params=P` from both the fitness seam (`mixed_world_fitness`) and the detection
+panel (`common_garden_panel`), so every authentic leg ran on the DEFAULT world
+(k_land 0.20, k_water 0.60, gravity 1.0) while the frozen L3 surrogate was
+trained on world P (1.5 / 1.5 / 0.4) as pre-registered. The authentic-versus-
+surrogate contrast therefore included the entire P-versus-default parameter gap
+rather than isolating the velocity law, and the artifact's `"world": "P(...)"`
+field is false provenance. The pilot's own mortality asymmetry is the visible
+symptom: authentic-leg gen-0 death rate ~0.58 versus surrogate-leg ~0.01 —
+two legs that should differ only in the velocity law were different worlds.
+
+**Defect 2 — biased AUROC estimator.** `cg_probe` assigned each episode its own
+CV group, so GroupKFold split the two members of a matched pair across folds
+whenever the surviving pair count was not a multiple of 5. Split twins let the
+probe read the train twin's label off the near-identical test twin, biasing
+AUROC toward 0 (bit-identical L0 pairs score 0.000 instead of 0.500; verified
+empirically in the fix's regression tests). With 110 requested pairs and the
+~0.58 authentic death rate above, surviving pair counts were essentially never
+multiples of 5, so the gen-0/final detection AUROCs, the L0 floors, and the
+contrast built from them were all computed with the biased estimator.
+
+**What survives.** The mechanism-level observations that used unaffected series
+remain informative but are now read on the wrong world: fitness rose in every
+arm (gate-2 checks), mortality fell under selection, and seed-0 evolution was
+bit-reproducible. The follow-on payoff-steepness sweep (end of section 13) is
+NOT invalidated — it passes `params=P` throughout and uses the scripted-oracle
+payoff, which never touches the affected probe — but its framing inherits the
+pilot null as premise, so its "controller expressiveness" routing is
+provisional until the re-run lands.
+
+**Disposition.** H3 returns to OPEN. The pre-registered pilot is being re-run
+on fixed code (`main` at or after `1633bca`) with the identical configuration
+(N=48, G=30, seeds 0-2, sigma=0.03, q=0.5, panel 110/20/24, frozen L3 h=8).
+The re-run's summary will be promoted through the same
+`promote_expC_summary.py` + `audit_stats_recheck.py` gate and recorded as a new
+subsection; the numbers above stay as the historical record of the invalid run.
+This correction was recorded BEFORE the re-run's outcome was known.

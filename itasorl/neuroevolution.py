@@ -43,7 +43,10 @@ def mutate_policy(
     with torch.no_grad():
         for p in child.parameters():
             noise = rng.standard_normal(size=tuple(p.shape)) * sigma
-            p.add_(torch.as_tensor(noise, dtype=p.dtype))
+            # device=p.device: noise is still DRAWN on the host from the keyed rng
+            # (bit-reproducible regardless of device), only added on p's device -
+            # a CPU tensor add_ against a CUDA-resident parameter would raise.
+            p.add_(torch.as_tensor(noise, dtype=p.dtype, device=p.device))
     return child
 
 

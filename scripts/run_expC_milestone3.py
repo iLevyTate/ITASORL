@@ -73,12 +73,12 @@ def build_population(n, *, embed, hidden, seed0):
 
 
 def run_arm(pop0, food_override, *, generations, sigma, drift_sigma, n_eps, max_steps,
-            seed_base, rng_seed, quantile):
+            seed_base, rng_seed, quantile, device="cpu"):
     """Evolve one arm from a COPY of the shared gen-0 population. The fixed
     reproduction threshold is the `quantile` of this arm's gen-0 fitness (matched
     selection intensity, see module docstring). Returns final pop + fitness series."""
     fit_kw = dict(drift_sigma=drift_sigma, n_eps_per_world=n_eps, max_steps=max_steps,
-                  seed_base=seed_base, food_override=food_override, params=P)
+                  seed_base=seed_base, food_override=food_override, params=P, device=device)
     gen0_fit = mixed_world_fitness(pop0, **fit_kw)
     threshold = float(np.quantile(gen0_fit, quantile))
     fit = partial(mixed_world_fitness, **fit_kw)
@@ -111,7 +111,14 @@ def main():
     ap.add_argument("--panel-seed-base", type=int, default=930_000)
     ap.add_argument("--base-seed-base", type=int, default=320_000)
     ap.add_argument("--json", default="fullruns/expC_milestone3/emergence_pilot.json")
+    ap.add_argument("--device", default="cpu", choices=["cpu", "cuda"],
+                    help="Device for agent forward passes. The world sim is numpy on "
+                         "CPU either way, so cuda helps only if the nets are large "
+                         "enough to amortize transfer overhead; benchmark one seed "
+                         "both ways before committing to a device.")
     args = ap.parse_args()
+    if args.device == "cuda" and not torch.cuda.is_available():
+        raise SystemExit("--device cuda requested but torch.cuda.is_available() is False")
 
     t0 = time.time()
     control_food = {"n_pellets": args.ctrl_n_pellets, "reach": args.ctrl_reach}
@@ -131,9 +138,10 @@ def main():
     # (and the "world" field below would be false provenance).
     panel_kw = dict(drift_sigma=args.drift_sigma, n_pairs=args.panel_pairs,
                     prefix_steps=args.panel_prefix, tail_steps=args.panel_tail,
-                    seed_base=args.panel_seed_base, params=P)
+                    seed_base=args.panel_seed_base, params=P, device=args.device)
     arm_kw = dict(generations=args.generations, sigma=args.sigma, drift_sigma=args.drift_sigma,
-                  n_eps=args.n_eps, max_steps=args.max_steps, quantile=args.q)
+                  n_eps=args.n_eps, max_steps=args.max_steps, quantile=args.q,
+                  device=args.device)
 
     per_seed = []
     gen0_aurocs, final_t_aurocs, final_c_aurocs = [], [], []
@@ -142,6 +150,8 @@ def main():
         pop_seed = 500 + s * 50
         seed_base = args.base_seed_base + s * 10_000
         pop0 = build_population(args.n, embed=args.embed, hidden=args.hidden, seed0=pop_seed)
+        for a_ in pop0:
+            a_.to(args.device)
 
         panel_gen0 = common_garden_panel(pop0, 0, **panel_kw)  # shared by both arms
         final_t, thr_t, series_t = run_arm(pop0, None, seed_base=seed_base, rng_seed=s, **arm_kw)
@@ -182,6 +192,8 @@ def main():
     # determinism: rerun the first seed's treatment arm, assert bit-identical fitness series
     s0 = args.seeds[0]
     pop0 = build_population(args.n, embed=args.embed, hidden=args.hidden, seed0=500 + s0 * 50)
+    for a_ in pop0:
+        a_.to(args.device)
     _, _, series_repro = run_arm(pop0, None, seed_base=args.base_seed_base + s0 * 10_000,
                                  rng_seed=s0, **arm_kw)
     bit_repro = (series_repro == per_seed[0]["fit_series_treat"])
