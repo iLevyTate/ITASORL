@@ -86,7 +86,9 @@ substrate). Detection is measured against a **surrogate ladder**:
 Three experiments were planned. This cycle completed Experiment A for L1 and L2
 (and later the L3 oracle gate, section 10.1), the first full arc of Experiment B,
 the survival-coupled B-v2/B-v3 arc (section 9), and the L3 arc (section 10).
-Experiment C (emergence under selection) is not started.
+Experiment C (emergence under selection) has run its first pilot: a
+pre-registered null (no emergent world-detector under selection at the pilot
+design), recorded in section 13.
 
 The world is **"A Patch of Earth" v0**, a 2.5D, deterministic, dissipative,
 Earth-*like* (authored, not data-driven) environment with a ~146-dimensional
@@ -327,8 +329,16 @@ inducing it (if possible) requires something more deliberate.
   extends the transfer half across surrogate families: the same direction reads a
   gate-calibrated random-Fourier-features law (0.684, rule passes), so the
   reactive signal is recipe-general.
-- **H2 (substrate-grounding via ablations)** and **H3 (emergence under
-  selection)**: not yet tested.
+- **H2 (substrate-grounding via ablations)**: not yet tested.
+- **H3 (emergence under selection).** First pilot returned a pre-registered null
+  (section 13). A paired-lineage selection run with a world-invariant control arm
+  did not build a heritable world-detector: the treatment-minus-control emergence
+  contrast was +0.020 (t-based 90% CI [-0.052, +0.092], spanning 0) and the
+  treatment's final detection AUROC 0.568 stayed below the 0.65 floor, so none of
+  the three pre-registered conditions fired. Selection was demonstrably effective
+  (authentic-world death rate fell from ~0.58 toward 0.15 to 0.28 and fitness rose
+  in every arm), but it routed that gain through survival behavior rather than
+  through world-identity detection.
 
 ---
 
@@ -827,3 +837,108 @@ document are local-only archives (gitignored); every published number is
 promoted from them into the committed `artifacts/` JSONs, and
 `scripts/audit_stats_recheck.py` re-verifies the doc-to-artifact
 correspondence.
+
+---
+
+## 13. Experiment C: emergence of a world-detector under selection (milestone-3 pilot)
+
+*(All section-13 numbers are committed in
+`artifacts/expC/emergence_pilot_summary.json`, promoted from the gitignored
+`fullruns/expC_milestone3/emergence_pilot.json` by
+`scripts/promote_expC_summary.py` and re-verified by
+`scripts/audit_stats_recheck.py`. Pre-registration: `docs/PREREGISTRATION_C.md`.)*
+
+**The question.** The L3 arc found a *reactive* world-signal: the survival-trained
+agent tracks the felt dynamics but does not carry a persistent, stored
+world-identity representation (section 10.6). Experiment C asks the next question
+directly: if lineages are placed under Darwinian selection in a world where
+knowing the world's identity *pays*, does selection build a persistent, heritable
+world-detector that was not there at generation 0?
+
+**Design (two-arm paired-lineage).** Both arms share one gen-0 population and
+evolve under threshold-triggered reproduction (`itasorl/neuroevolution.py`),
+scored by lifetime foraging return over a mixed authentic-plus-surrogate lifetime
+(`itasorl/experiment_c.py`, `mixed_world_fitness`). The arms differ only in the
+food layout:
+
+- **Treatment.** Frozen sparse-and-far `SURVIVAL_FOOD`: pellets sit beyond reach,
+  so the agent must coast, the velocity law matters, and correctly reading which
+  world it is in has instrumental fitness value.
+- **Control (the claim).** A dense-and-near, world-invariant layout
+  (`food_override = {n_pellets: 80, reach: 0.25}`): food underfoot means no
+  coasting, so the velocity law is never exercised and detecting the world buys
+  approximately zero fitness. World identity is held out of the reward and the
+  observation in both arms; only its *instrumental value* differs, so a
+  treatment-over-control emergence is attributable to selection for detection, not
+  to leakage.
+
+Detection is measured every generation by a fixed common-garden panel
+(`common_garden_panel`): world-identity AUROC off the pooled recurrent-tail
+states, with survival reported as a **separate** series (the keystone control that
+avoids a "detects better vs. lived longer to log more data" confound) and an L0
+authentic-vs-authentic floor.
+
+**Estimand (pre-registered, sec. 6/10).** Per lineage seed,
+`Delta = AUROC(final) - AUROC(gen0)`; the reported effect is the
+treatment-minus-control contrast of those deltas. `emergence_claim` fires only
+when ALL three conditions hold: the t-based contrast CI excludes 0, the mean
+contrast reaches the SESOI (0.05), and the treatment's mean final AUROC clears the
+0.65 floor. Seeds are the replication unit, so both intervals are across-seed.
+
+**Configuration.** N = 48, G = 30, 3 lineage seeds (0, 1, 2), sigma = 0.03,
+q = 0.5, n_eps = 2, max_steps = 80, embed = 8, hidden = 8; frozen L3 surrogate
+`G_motion` (hidden = 8, seed = 0) in world P(k_land = 1.5, k_water = 1.5,
+gravity = 0.4); common-garden panel 110 pairs, prefix 20, tail 24. Wall time
+25,194 s (~7 h, memory-throttled). Seed-0 treatment evolution is bit-reproducible.
+
+**Result: pre-registered NULL.** The emergence claim does not fire; none of the
+three conditions is met.
+
+| Quantity | Value |
+|----------|-------|
+| Mean contrast (treatment - control) | **+0.020** |
+| Contrast t-based 90% CI | **[-0.052, +0.092]** (spans 0) |
+| Contrast bootstrap 90% CI | [-0.007, +0.048] |
+| Per-seed contrast | -0.028, +0.033, +0.055 |
+| Mean final treatment AUROC | **0.568** (floor 0.65) |
+| Per-seed final treatment AUROC | 0.530, 0.570, 0.604 |
+| `ci_excludes_zero` / `meets_sesoi` / `meets_auroc_floor` | False / False / False |
+
+**Mechanism: selection had grip, but did not route it through detection.** This is
+not an underpowered null in which nothing moved. Fitness rose in every arm-run
+(fitness delta treatment +0.61, +1.36, +0.95; control +2.79, +3.60, +3.63; both
+gate-2 fitness-move checks pass), and selection cut authentic-world mortality
+hard: the authentic-world death rate fell from ~0.58 at gen 0 to 0.15-0.38 by the
+final treatment generation (0.281, 0.375, 0.146) while the surrogate-world death
+rate stayed near 0 throughout. Selection was effective; it simply improved
+survival behavior rather than world-identity detection, which barely moved off its
+gen-0 chance level (per-seed gen-0 AUROC 0.505, 0.499, 0.496). This is consistent
+with the gate-1 diagnosis that the detection payoff is locally flat near the
+behavioral optimum, so a world-detector is not the cheapest fitness gain available.
+
+**A pre-registration deviation, documented.** The pilot fixes each arm's
+reproduction threshold at the median (q = 0.5) of *its own* gen-0 fitness, rather
+than a shared absolute threshold. This matched-intensity choice is not in the
+frozen prereg; the run proved it necessary, because the two arms occupy disjoint
+fitness regimes (per-arm thresholds treatment -2.01 / -0.10 / -0.59 versus control
++0.29 / +5.75 / +6.04). A shared threshold would have applied grossly unequal
+selection pressure and confounded the contrast. This deviation must be confirmed
+before any confirmatory-scale run; it is moot for the decision below because the
+pilot is not being scaled.
+
+**Decision: record the negative; do not scale this design.** The pre-registered
+bars are point estimates (SESOI mean >= 0.05, floor AUROC >= 0.65). The observed
++0.020 and 0.568 miss both, and adding seeds only shrinks the CI around those
+points; it cannot move them, so scaling would only power up a scientifically
+trivial effect. Fitness had converged by roughly generation 5-10 in most arm-runs,
+so more generations are unlikely to help either. The path forward is a design that
+*steepens* the detection payoff (while keeping world identity out of reward and
+observation, so only its instrumental value rises), which is a separate
+pre-registration cycle, not a rerun of this one.
+
+**Caveats.** The common-garden panel was scored at gen 0 and the final generation
+only, not every generation, so "fitness plateaued, therefore detection plateaued"
+is an inference from the endpoints, not a measured per-generation detection
+trajectory. Three seeds give df = 2, so the t-CI is wide by design; the null here
+is read from the point estimates missing the bars, not from CI width alone. All
+results are conditional on the pilot design, world P, and the frozen L3 surrogate.
