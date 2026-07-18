@@ -1,8 +1,9 @@
 """ITASORL - Experiment C milestone-3 EMERGENCE pilot (docs/PREREGISTRATION_C.md sec. 13.3).
 
 The first run that actually asks Experiment C's question: does Darwinian selection
-build a PERSISTENT, heritable world-identity detector where within-life learning (the
-L3 arc) found only a reactive one? Two arms, paired per lineage:
+build (or, per the corrected L3 reading of FINDINGS 10.6.1, AMPLIFY) a persistent,
+heritable world-identity detector beyond what within-life learning produces?
+Two arms, paired per lineage:
 
   * TREATMENT: the frozen sparse/far SURVIVAL_FOOD layout. Pellets sit beyond `reach`,
     so a policy must build velocity and coast to forage - which makes the ONE primitive
@@ -56,8 +57,10 @@ import itasorl.experiment_b2 as b2
 from itasorl.agent_ac import RecurrentActorCritic
 from itasorl.experiment_c import (common_garden_panel, emergence_contrast,
                                    mixed_world_fitness)
+from itasorl.experiment_c_gate1 import Layout, gate1_exploitability
 from itasorl.neuroevolution import evolve
 from itasorl.patch_of_earth import PatchOfEarthV0
+from itasorl.stats import equivalence_test
 from itasorl.world import WorldParams
 
 P = WorldParams(k_land=1.5, k_water=1.5, gravity=0.4)  # gate-0 / organism world
@@ -74,25 +77,37 @@ def build_population(n, *, embed, hidden, seed0):
 
 
 def run_arm(pop0, food_override, *, generations, sigma, drift_sigma, n_eps, max_steps,
-            seed_base, rng_seed, quantile, device="cpu"):
+            seed_base, rng_seed, quantile, device="cpu", panel_fn=None, panel_every=0):
     """Evolve one arm from a COPY of the shared gen-0 population. The fixed
     reproduction threshold is the `quantile` of this arm's gen-0 fitness (matched
-    selection intensity, see module docstring). Returns final pop + fitness series."""
+    selection intensity, see module docstring). If `panel_fn`/`panel_every` are
+    set, the common-garden panel runs INSIDE evolution every `panel_every`
+    generations (gate 3's "across generations" and gate 4's "every few
+    generations" cadence; gen 0 is measured once, shared, by the caller).
+    Returns (final_pop, threshold, fitness series, per-generation panels)."""
     fit_kw = dict(drift_sigma=drift_sigma, n_eps_per_world=n_eps, max_steps=max_steps,
                   seed_base=seed_base, food_override=food_override, params=P, device=device)
     gen0_fit = mixed_world_fitness(pop0, **fit_kw)
     threshold = float(np.quantile(gen0_fit, quantile))
     fit = partial(mixed_world_fitness, **fit_kw)
+    observe = None
+    if panel_fn is not None and panel_every > 0:
+        def observe(pop, g):
+            if g > 0 and g % panel_every == 0:
+                return panel_fn(pop, g)
+            return {"skipped": True, "gen": g}
     final_pop, history = evolve(copy.deepcopy(pop0), fit, generations=generations,
                                 threshold=threshold, sigma=sigma,
-                                rng=np.random.default_rng(rng_seed))
+                                rng=np.random.default_rng(rng_seed), observe=observe)
     series = [round(r["mean_fitness"], 8) for r in history]
     # per-generation qualifier counts: the effective selection intensity per arm.
     # The frozen gen-0 quantile threshold matches intensity at gen 0 only; this
     # series is what a confirmatory run must adjudicate to show the arms stayed
     # matched (2026-07-18 audit: computed by evolve but previously discarded).
     qualifiers = [int(r["n_qualifiers"]) for r in history]
-    return final_pop, threshold, series, qualifiers
+    panels = [r["panel"] for r in history
+              if "panel" in r and not r["panel"].get("skipped")]
+    return final_pop, threshold, series, qualifiers, panels
 
 
 def main():
@@ -122,6 +137,11 @@ def main():
                          "CPU either way, so cuda helps only if the nets are large "
                          "enough to amortize transfer overhead; benchmark one seed "
                          "both ways before committing to a device.")
+    ap.add_argument("--panel-every", type=int, default=10,
+                    help="Run the common-garden panel inside evolution every K "
+                         "generations (gates 3/4's cadence; 0 = endpoints only, "
+                         "the invalid pilot's behavior). Freeze the chosen K in "
+                         "the PREREGISTRATION_C amendments before the run.")
     args = ap.parse_args()
     if args.device == "cuda" and not torch.cuda.is_available():
         raise SystemExit("--device cuda requested but torch.cuda.is_available() is False")
@@ -142,6 +162,22 @@ def main():
     b2.setup_l3_surrogate(hidden=args.l3_hidden, seed=args.l3_seed, params=P)
     print(f"[expC m3] frozen L3 map installed ({time.time()-t0:.0f}s)", flush=True)
 
+    # Gate 1 (PREREGISTRATION_C sec. 7): the surrogate-specific payoff must be
+    # exploitable via world identity in the treatment geometry and decoupled in
+    # the control, measured by the scripted oracle against THIS frozen map,
+    # BEFORE the generational run. Recorded and adjudicated in the output; a
+    # failure routes the whole run to UNINFORMATIVE per the sec. 8 matrix.
+    gate1 = gate1_exploitability(
+        treatment=Layout(reach_range=0.25, horizon=30, name="treatment"),
+        control=Layout(reach_range=0.05, horizon=1, name="control"),
+        seeds=list(range(7000, 7010)), drift_sigma=1.0, drift_mode="l3",
+        thrusts=np.linspace(0.0, 1.0, 21), params=P, ray_steps=5,
+        g_motion=b2._L3_GMOTION, rng=np.random.default_rng(0))
+    print(f"[expC m3] gate1: treat gap={gate1['treatment_gap_mean']:.5f} "
+          f"CI90={[round(x, 5) for x in gate1['treatment_ci90']]} "
+          f"ctrl gap={gate1['control_gap_mean']:.5f} -> passes={gate1['passes_gate1']}",
+          flush=True)
+
     # params=P: the fitness lifetimes and the detection panel must run on the SAME
     # world the frozen L3 map was trained on, or the auth-vs-surrogate contrast
     # includes the whole P-vs-default parameter gap instead of the velocity law
@@ -149,11 +185,13 @@ def main():
     panel_kw = dict(drift_sigma=args.drift_sigma, n_pairs=args.panel_pairs,
                     prefix_steps=args.panel_prefix, tail_steps=args.panel_tail,
                     seed_base=args.panel_seed_base, params=P, device=args.device)
+    panel_fn = lambda pop, g: common_garden_panel(pop, g, **panel_kw)  # noqa: E731
     arm_kw = dict(generations=args.generations, sigma=args.sigma, drift_sigma=args.drift_sigma,
                   n_eps=args.n_eps, max_steps=args.max_steps, quantile=args.q,
-                  device=args.device)
+                  device=args.device, panel_fn=panel_fn, panel_every=args.panel_every)
 
     per_seed = []
+    all_panels: list = []
     gen0_aurocs, final_t_aurocs, final_c_aurocs = [], [], []
     for s in args.seeds:
         ts = time.time()
@@ -164,12 +202,14 @@ def main():
             a_.to(args.device)
 
         panel_gen0 = common_garden_panel(pop0, 0, **panel_kw)  # shared by both arms
-        final_t, thr_t, series_t, quals_t = run_arm(pop0, None, seed_base=seed_base,
-                                                    rng_seed=s, **arm_kw)
-        final_c, thr_c, series_c, quals_c = run_arm(pop0, control_food, seed_base=seed_base,
-                                                    rng_seed=s, **arm_kw)
+        final_t, thr_t, series_t, quals_t, mid_t = run_arm(pop0, None, seed_base=seed_base,
+                                                           rng_seed=s, **arm_kw)
+        final_c, thr_c, series_c, quals_c, mid_c = run_arm(pop0, control_food, seed_base=seed_base,
+                                                           rng_seed=s, **arm_kw)
         panel_t = common_garden_panel(final_t, args.generations, **panel_kw)
         panel_c = common_garden_panel(final_c, args.generations, **panel_kw)
+        seed_panels = [panel_gen0, *mid_t, panel_t, *mid_c, panel_c]
+        all_panels.extend(seed_panels)
 
         a0 = panel_gen0["cg_tail_target"]
         at = panel_t["cg_tail_target"]
@@ -188,6 +228,8 @@ def main():
             "l0_final_ctrl": panel_c["l0_auroc"],
             "survival_gen0": panel_gen0["survival"],
             "survival_final_treat": panel_t["survival"], "survival_final_ctrl": panel_c["survival"],
+            "panels_mid_treat": mid_t, "panels_mid_ctrl": mid_c,
+            "panel_gen0": panel_gen0, "panel_final_treat": panel_t, "panel_final_ctrl": panel_c,
         })
         print(f"[expC m3] seed {s}: AUROC gen0={a0:.3f} treat={at:.3f} ctrl={ac:.3f} "
               f"| fit d_treat={series_t[-1]-series_t[0]:+.3f} d_ctrl={series_c[-1]-series_c[0]:+.3f} "
@@ -211,13 +253,9 @@ def main():
     pop0 = build_population(args.n, embed=args.embed, hidden=args.hidden, seed0=500 + s0 * 50)
     for a_ in pop0:
         a_.to(args.device)
-    _, _, series_repro, _ = run_arm(pop0, None, seed_base=args.base_seed_base + s0 * 10_000,
-                                    rng_seed=s0, **arm_kw)
+    _, _, series_repro, _, _ = run_arm(pop0, None, seed_base=args.base_seed_base + s0 * 10_000,
+                                       rng_seed=s0, **{**arm_kw, "panel_fn": None})
     bit_repro = (series_repro == per_seed[0]["fit_series_treat"])
-    gate2_treat = any(d["fit_delta_treat"] > 0 for d in per_seed)
-    gate2_ctrl = any(d["fit_delta_ctrl"] > 0 for d in per_seed)
-    print(f"[expC m3] determinism (seed {s0} treat): reproducible-to-8-decimals={bit_repro}  "
-          f"gate2 fitness-moves treat={gate2_treat} ctrl={gate2_ctrl}", flush=True)
 
     try:  # run-time provenance: the commit the run actually executed on
         run_commit = subprocess.run(
@@ -225,6 +263,59 @@ def main():
             cwd=os.path.dirname(os.path.abspath(__file__))).stdout.strip()
     except Exception:
         run_commit = "unknown"
+
+    # Gate 2 in the registered per-arm form (sec. 7: fitness must increase in the
+    # treatment arm): ALL seeds, per arm. The pilot's weaker any() form is kept
+    # alongside for comparability with the invalidated record.
+    gate2_treat = all(d["fit_delta_treat"] > 0 for d in per_seed)
+    gate2_ctrl = all(d["fit_delta_ctrl"] > 0 for d in per_seed)
+    gate2_treat_any = any(d["fit_delta_treat"] > 0 for d in per_seed)
+    gate2_ctrl_any = any(d["fit_delta_ctrl"] > 0 for d in per_seed)
+    print(f"[expC m3] determinism (seed {s0} treat): reproducible-to-8-decimals={bit_repro}  "
+          f"gate2 fitness-moves treat={gate2_treat} ctrl={gate2_ctrl}", flush=True)
+
+    # ---- Gate battery adjudication (PREREGISTRATION_C sec. 7: ALL must pass
+    # before the emergence contrast is interpreted; sec. 8 routes failures to
+    # UNINFORMATIVE). Gate 0 (surrogate band re-validation) runs externally via
+    # scripts/run_expA_l3.py and is recorded here as an external prerequisite.
+    l0_vals = [p["l0_auroc"] for p in all_panels if np.isfinite(p.get("l0_auroc", float("nan")))]
+    g3 = equivalence_test(l0_vals, h0=0.5, margin=0.05) if len(l0_vals) >= 2 else None
+    gate3_pass = bool(g3.equivalent) if g3 is not None else False
+    gate4_pass = bool(all_panels) and all(p.get("leak_clean", False) for p in all_panels)
+    gate5_pass = bool(all_panels) and all(p.get("speed_control_pass", False) for p in all_panels)
+    gates = {
+        "gate0_surrogate_band": {"status": "external",
+                                 "note": "re-validate via scripts/run_expA_l3.py before launch"},
+        "gate1_exploitability": {k: gate1[k] for k in
+                                 ("treatment_gap_mean", "treatment_ci90", "control_gap_mean",
+                                  "passes_treatment", "passes_control", "passes_gate1")},
+        "gate2_fitness_moves": {"treat_all_seeds": bool(gate2_treat), "ctrl_all_seeds": bool(gate2_ctrl),
+                                "treat_any_seed": bool(gate2_treat_any), "ctrl_any_seed": bool(gate2_ctrl_any)},
+        "gate3_l0_tost": ({"n": g3.n, "mean": g3.mean, "p": g3.p_value, "pass": gate3_pass}
+                          if g3 is not None else {"pass": False, "note": "too few L0 panel values"}),
+        "gate4_leakage": {"pass": gate4_pass,
+                          "n_panels": len(all_panels),
+                          "worst_reward_leak_dev": (max((abs(p["leakage"].get("reward_sum", 0.5) - 0.5)
+                                                         for p in all_panels if p.get("leakage")),
+                                                        default=float("nan")))},
+        "gate5_speed_control": {"pass": gate5_pass,
+                                "min": min((p.get("speed_control", float("nan")) for p in all_panels),
+                                           default=float("nan"))},
+    }
+    gates_pass_all = bool(gate1["passes_gate1"] and gate2_treat and gate3_pass
+                          and gate4_pass and gate5_pass)
+    if not gates_pass_all:
+        failed = [n for n, ok in [("gate1", gate1["passes_gate1"]), ("gate2", gate2_treat),
+                                  ("gate3", gate3_pass), ("gate4", gate4_pass),
+                                  ("gate5", gate5_pass)] if not ok]
+        routing = f"UNINFORMATIVE (sec. 8: failed {', '.join(failed)}; contrast not interpretable)"
+    elif est["emergence_claim"]:
+        routing = "EMERGENCE (all gates pass; sec. 8 row 1)"
+    else:
+        routing = ("no emergence claim at this n (all gates pass; adjudicate the negative "
+                   "per the frozen sec. 8 matrix and the pre-registered futility rule)")
+    print(f"[expC m3] GATES pass_all={gates_pass_all} -> {routing}", flush=True)
+
     out = {
         "world": "P(k_land=1.5, k_water=1.5, gravity=0.4)",
         "surrogate": f"frozen L3 G_motion (hidden={args.l3_hidden}, seed={args.l3_seed})",
@@ -232,6 +323,9 @@ def main():
         "config": vars(args), "control_food": control_food,
         "per_seed": per_seed,
         "estimand": est,
+        "gates": gates,
+        "gates_pass_all": gates_pass_all,
+        "routing": routing,
         "gate2_fitness_moves_treat": bool(gate2_treat),
         "gate2_fitness_moves_ctrl": bool(gate2_ctrl),
         "determinism_bit_reproducible": bool(bit_repro),

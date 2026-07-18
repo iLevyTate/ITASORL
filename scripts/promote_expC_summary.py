@@ -97,6 +97,11 @@ def main() -> int:
             "emergence_claim": est["emergence_claim"],
         },
         "gates": {
+            # full sec.-7 battery (post-invalidation runs record it; the invalid
+            # pilot carried only gate 2 + determinism, which are kept for compat)
+            **run.get("gates", {}),
+            "gates_pass_all": run.get("gates_pass_all"),
+            "routing": run.get("routing"),
             "gate2_fitness_moves_treat": run["gate2_fitness_moves_treat"],
             "gate2_fitness_moves_ctrl": run["gate2_fitness_moves_ctrl"],
             "determinism_bit_reproducible": run["determinism_bit_reproducible"],

@@ -26,8 +26,10 @@ from typing import Any
 import numpy as np
 
 from .agent_ac import RecurrentActorCritic
-from .experiment_b2 import (RunningNorm, cg_probe, collect_episodes_ac,
-                            common_garden_rollout)
+from .experiment_a import grouped_auroc
+from .experiment_b2 import (RunningNorm, _episode_feature, cg_probe,
+                            collect_episodes_ac, common_garden_rollout,
+                            leakage_audit_b2)
 from .stats import mean_ci
 from .world import WorldParams
 
@@ -153,21 +155,27 @@ def mixed_world_fitness(
 def _pooled_common_garden(
     sample: Population, drift_sigma: float, *, params, ray_steps, device, norm,
     n_pairs, prefix_steps, tail_steps, seed_base,
-) -> tuple[list, list]:
+) -> tuple[list, list, list, list]:
     """Run the shared-prefix authentic-vs-``drift_sigma`` common garden for every
-    sampled policy and POOL the surviving tail states into one detection sample."""
+    sampled policy and POOL the surviving tail states (and per-pair tail stats,
+    for the gate battery) into one detection sample."""
     auth: list = []
     surr: list = []
+    auth_st: list = []
+    surr_st: list = []
     for agent in sample:
         agent.train(False)
         n = norm or RunningNorm(agent.obs_dim)
-        a, s = common_garden_rollout(
+        a, s, ast, sst = common_garden_rollout(
             agent, n, params, drift_sigma, n_pairs=n_pairs, prefix_steps=prefix_steps,
             tail_steps=tail_steps, ray_steps=ray_steps, device=device, seed_base=seed_base,
+            return_stats=True,
         )
         auth.extend(a)
         surr.extend(s)
-    return auth, surr
+        auth_st.extend(ast)
+        surr_st.extend(sst)
+    return auth, surr, auth_st, surr_st
 
 
 def _survival_by_world(
@@ -231,14 +239,30 @@ def common_garden_panel(
                  n_pairs=n_pairs, prefix_steps=prefix_steps, tail_steps=tail_steps,
                  seed_base=seed_base)
 
-    auth, surr = _pooled_common_garden(sample, drift_sigma, **cg_kw)
+    auth, surr, a_st, s_st = _pooled_common_garden(sample, drift_sigma, **cg_kw)
     det = cg_probe(auth, surr, late_k=late_k)
-    a0, s0 = _pooled_common_garden(sample, 0.0, **cg_kw)
+    a0, s0, _, _ = _pooled_common_garden(sample, 0.0, **cg_kw)
     l0 = cg_probe(a0, s0, late_k=late_k)
     survival = _survival_by_world(
         sample, drift_sigma, params=params, ray_steps=ray_steps, device=device, norm=norm,
         n_eps=surv_n_eps, max_steps=surv_max_steps, seed_base=surv_seed_base,
     )
+    # Gate battery on the SAME pooled tails (PREREGISTRATION_C sec. 7 gates 4-5):
+    #   gate 4 - leakage: world identity must not be decodable from tail reward
+    #     (length/lifetime are constant for surviving pairs by construction, so
+    #     those channels sit at 0.5 structurally; reward_sum is the live channel);
+    #   gate 5 - positive control: the probe must read a known signal (median
+    #     tail speed) at >= 0.75, or a chance detection value is uninformative.
+    # Pair members share a group id (matched pairs, same rule as cg_probe).
+    leak: dict[str, Any] = {}
+    speed_control = float("nan")
+    if len(a_st) >= 5:
+        g = np.concatenate([np.arange(len(a_st)), np.arange(len(s_st))])
+        leak = leakage_audit_b2(a_st, s_st, groups=g)
+        X = np.stack([_episode_feature(H) for H in auth + surr])
+        spd = np.array([e["speed"] for e in a_st + s_st])
+        if float(np.ptp(spd)) > 1e-9:
+            speed_control = grouped_auroc(X, (spd > np.median(spd)).astype(int), g)
     return {
         "gen": int(gen),
         "cg_n_pairs": det["cg_n_pairs"],
@@ -247,6 +271,11 @@ def common_garden_panel(
         "cg_tail_hi": det["cg_tail_hi"],
         "cg_latetail_target": det["cg_latetail_target"],
         "l0_auroc": l0["cg_tail_target"],
+        "l0_latetail": l0["cg_latetail_target"],
         "l0_n_pairs": l0["cg_n_pairs"],
         "survival": survival,
+        "leakage": {k: v for k, v in leak.items() if k != "margin"},
+        "leak_clean": bool(leak.get("clean", False)),
+        "speed_control": float(speed_control),
+        "speed_control_pass": bool(speed_control >= 0.75) if np.isfinite(speed_control) else False,
     }

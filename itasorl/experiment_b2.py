@@ -890,19 +890,26 @@ def transfer_readout(agent, norm, params, drift_sigma, Ha_train, Hs_train, *,
 
 def common_garden_rollout(agent, norm, params, drift_sigma, *, n_pairs=110,
                           prefix_steps=20, tail_steps=24, ray_steps=5,
-                          device=None, seed_base=930_000) -> tuple[list, list]:
+                          device=None, seed_base=930_000, return_stats: bool = False):
     """Common-garden channel (spec 2026-07-14): PAIRED episodes from identical
     seeds run their prefix in the authentic vs the surrogate world, then BOTH
     continue under authentic dynamics (fresh authentic world restored from each
     prefix's final snapshot, drift_w forced to 0). Returns (auth_tails,
     surr_tails): lists of (tail_steps, hidden) arrays, tail-only states. A pair
     is dropped if EITHER member dies in prefix or tail (symmetric, so
-    survivorship cannot create asymmetry)."""
+    survivorship cannot create asymmetry).
+
+    return_stats=True additionally returns (auth_stats, surr_stats): per
+    surviving pair, dicts with label / tail mean speed / tail reward_sum /
+    length / lifetime - the inputs the Experiment-C gate battery needs
+    (leakage_audit_b2 and the speed positive control) without a second rollout."""
     device = device or default_device()
     auth_tails, surr_tails = [], []
+    auth_stats, surr_stats = [], []
     for p in range(n_pairs):
         seeds = _seeds(seed_base + p)
         pair = []
+        stats = []
         for dsig in (0.0, drift_sigma):
             w = make_world(params, dsig, ray_steps)
             w.reset(seeds)
@@ -921,6 +928,7 @@ def common_garden_rollout(agent, norm, params, drift_sigma, *, n_pairs=110,
                     break
             if died:
                 pair.append(None)
+                stats.append(None)
                 continue
             tail = make_world(params, 0.0, ray_steps)   # common garden: authentic dynamics
             # reset only populates tail._rng for the key filter below;
@@ -931,11 +939,20 @@ def common_garden_rollout(agent, norm, params, drift_sigma, *, n_pairs=110,
             # can restore only the RNG slots that exist in the tail world
             snap["rng"] = {k: v for k, v in snap["rng"].items() if k in tail._rng}
             tail.set_state({**snap, "drift_w": 0.0})
-            Ht, _, _, alive = _run_branch(agent, norm, tail, h, prev, tail_steps, device)
-            pair.append(Ht if (alive and len(Ht) == tail_steps) else None)
+            Ht, spd_t, rew_t, alive = _run_branch(agent, norm, tail, h, prev, tail_steps, device)
+            ok = alive and len(Ht) == tail_steps
+            pair.append(Ht if ok else None)
+            stats.append({"label": 0 if len(stats) == 0 else 1,
+                          "speed": float(np.mean(spd_t)) if spd_t else 0.0,
+                          "reward_sum": float(np.sum(rew_t)) if rew_t else 0.0,
+                          "length": int(len(Ht)), "lifetime": int(ok)} if ok else None)
         if pair[0] is not None and pair[1] is not None:
             auth_tails.append(pair[0])
             surr_tails.append(pair[1])
+            auth_stats.append(stats[0])
+            surr_stats.append(stats[1])
+    if return_stats:
+        return auth_tails, surr_tails, auth_stats, surr_stats
     return auth_tails, surr_tails
 
 

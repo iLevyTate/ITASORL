@@ -1,9 +1,9 @@
 # Pre-Registration - ITASORL Experiment C (Emergence of Detection under Selection)
 
-**Status:** DESIGN-COMPLETE, not yet committed. All decisions are resolved (section 12);
-the decision rule, gates, and configuration are specified. "Frozen" in the project sense
-(a commit predating the run) happens on commit. Nothing here authorizes a multi-generational
-run; that starts only after this doc is committed and milestone 1 (section 13) passes.
+**Status:** FROZEN at commit `0887200` (2026-07-16), pre-dating the pilot. The pilot's
+recorded result was invalidated by two measurement defects (FINDINGS 13.C); a re-run on
+fixed code is pending and is additionally governed by section 14 (Amendments) below,
+which must be ratified and committed BEFORE the re-run launches.
 
 **Date drafted / decisions resolved:** 2026-07-16.
 
@@ -194,7 +194,8 @@ deliberately small so a first signal is reachable across sessions with cell-leve
 - **Population:** N = 48, fixed carrying capacity (threshold-triggered reproduction).
 - **Generations:** G = 30 (pilot); extension to G = 60 only if the pilot shows a non-flat,
   non-decisive trend.
-- **Episode horizon:** max_steps = 80 (matches B-v3/L3), N_ray reduced per section-14 staging.
+- **Episode horizon:** max_steps = 80 (matches B-v3/L3), N_ray reduced (ray_steps=5, the
+  B-v3/L3 staging convention).
 - **Mutation:** Option P weight-perturbation sigma frozen after a pilot that targets a
   per-generation fitness gain in a sensible band (avoid both no-selection and collapse).
 - **Common-garden panel:** fixed 110 matched pairs at 24 steps (reuse L3 pooled panel size),
@@ -268,40 +269,103 @@ records here before milestone 1.
 4. **Adjudicate + decide on scale.** Apply the frozen decision rule; if the pilot trend is promising but
    not decisive, decide the persistent-host commitment for the n=0..9 / G=60 extension.
 
-## 14. Proposed amendments for the post-invalidation re-run (2026-07-18 - DRAFT, not yet frozen)
+## 14. Amendments for the post-invalidation re-run (DRAFT - ratify and commit before launch)
 
-*Appended by the 2026-07-18 methodology audit, before the re-run and therefore
-outcome-blind with respect to it. These are PROPOSALS: none is binding until
-the run owner reviews, edits, and re-freezes them in a dated entry here. The
-original sections 1-13 are unchanged. Rationale for each lives in the audit
-record (the invalidated pilot is FINDINGS section 13/13.C).*
+*Two independent 2026-07-18 methodology audits converged on this section, both
+outcome-blind with respect to the re-run. The pilot recorded in FINDINGS
+section 13 is invalid (13.C). None of the items below is binding until the run
+owner reviews them, removes the DRAFT marker, and commits; none may change
+after the re-run starts. Items marked [DECISION] need an explicit call before
+ratification. The original sections 1-13 are unchanged.*
 
-1. **Persistence estimand.** The pilot adjudicated emergence on the full-tail
-   `cg_tail_target` (per the section-5 feature spec). The full-tail mean weights
-   early tail steps where residual reactive state from the just-felt prefix
-   lingers, so a slow-decaying reactive signal could satisfy the claim. Proposal:
-   report `cg_tail_target` as registered AND pre-register `cg_latetail_target`
-   (last 8 tail steps) as a co-primary persistence condition - an emergence claim
-   requires the late-tail to clear the floor too.
-2. **Selection-intensity matching must be adjudicated, not assumed.** The
-   per-arm gen-0 quantile threshold (the disclosed pilot deviation) leaves the
-   per-generation qualifier fraction free to diverge between arms (the pilot's
-   control arm selected ~3x harder on fitness delta). The runner now persists
-   `n_qualifiers_treat/ctrl` per generation; proposal: freeze an
-   intensity-matching check (e.g., mean qualifier-fraction difference between
-   arms below a stated tolerance) as a validity gate for the contrast.
-3. **Missing panel gates from section 7.** The pilot panel computed detection +
-   L0 floor + separate survival only; the leakage battery ("re-run every few
-   generations") and a panel-level speed positive control (>= 0.75) were never
-   implemented. Proposal: implement both before the re-run, or amend section 7
-   to state what replaces them (the L0 floor plus offline dump re-probing).
-4. **Gate-1 scope honesty.** The gate-1 control leg cannot fail by construction
-   at the default layout (see the 2026-07-18 note in
-   `itasorl/experiment_c_gate1.py`); control-arm fitness-neutrality rests on
-   `scripts/derisk_expC_control.py`. Proposal: the re-run's gate checklist cites
-   the de-risk sensitivity explicitly and treats gate-1 as treatment-leg-only.
-5. **Reproducibility wording.** Determinism checks compare fitness series
-   rounded to 8 decimals and never re-derive the panel AUROC; claims should say
-   "reproducible to 8 decimals", and a CUDA run should add a CPU-parity spot
-   check on one seed. (The runner now enables
+**Premise update (2026-07-19).** The L3 common-garden re-score (FINDINGS
+10.6.1) has since RESOLVED the persistence question this document inherited as
+background: the corrected numbers show a modest PERSISTENT world-signal
+(forward 0.666, reverse 0.684, both clearing the frozen rule), not the
+"reactive only" reading section 1 assumes. Experiment C's question is
+therefore now "does selection AMPLIFY a modest persistent detector that
+within-life learning already produces", not "does selection create one where
+none exists". This reframing strengthens, not weakens, the design (a non-zero
+gen-0 persistence level gives the contrast room to move in both directions),
+but the re-run's write-up must use the amplification framing.
+
+1. **Persistence estimand (co-primary late-tail).** The pilot adjudicated
+   emergence on the full-tail `cg_tail_target`, whose early steps carry
+   residual reactive state from the just-felt prefix, so a slow-decaying
+   reactive signal could satisfy the claim. `cg_latetail_target` (last 8 tail
+   steps) is elevated to a CO-PRIMARY persistence condition, reported with the
+   same contrast construction: an emergence claim requires the late-tail
+   contrast to agree in direction.
+2. **Threshold rule and selection-intensity matching.** Reproduction threshold
+   = the q = 0.5 quantile (median) of EACH arm's own gen-0 fitness (ratifies
+   the disclosed pilot deviation; single scalar q applied symmetrically).
+   Contingencies: (a) the per-arm rule is justified only if the two arms'
+   gen-0 fitness regimes are disjoint ON WORLD P (the pilot's justification
+   was measured on the wrong world) - the runner records both distributions;
+   if their supports overlap by more than 25%, revert to the registered shared
+   absolute threshold and record which rule fired; (b) matching at gen 0 does
+   not guarantee matched intensity across generations (the pilot's control arm
+   selected ~3x harder on fitness delta) - the runner persists
+   `n_qualifiers_treat/ctrl` per generation, and a mean qualifier-fraction
+   difference between arms above 0.15 marks the contrast
+   intensity-confounded (validity flag, reported with the estimand). A
+   q-robustness check at q = 0.25 on one seed is reported descriptively.
+3. **Gate battery (sections 7 gates 1-5): IMPLEMENTED in-run.** As of this
+   amendment the runner computes and adjudicates the full battery
+   (`scripts/run_expC_milestone3.py`): gate 1 via the scripted-oracle
+   `gate1_exploitability` at margin 0.005 against the in-process frozen map;
+   gate 2 in the per-arm ALL-seeds form (the pilot's weaker any() form is
+   reported alongside); gate 3 as TOST (margin 0.05) over the pooled
+   per-panel L0 AUROCs; gate 4 as the pair-grouped leakage battery on the
+   pooled panel tails (reward_sum is the live channel; length/lifetime are
+   constant for surviving pairs by construction); gate 5 as the panel speed
+   positive control >= 0.75. Gate 0 is re-validated externally
+   (`scripts/run_expA_l3.py`) before launch and its oracle AUROC recorded in
+   the run config. Any gate failure routes the run to UNINFORMATIVE per
+   section 8.
+4. **[DECISION] Gate-1 scope and treatment geometry.** The gate-1 control leg
+   cannot fail by construction at the default layout (see the 2026-07-18 note
+   in `itasorl/experiment_c_gate1.py`); control-arm fitness-neutrality rests
+   on `scripts/derisk_expC_control.py`, so gate 1 is read as
+   treatment-leg-only with the de-risk sensitivity cited. Moreover gate 1
+   FAILS at the current frozen treatment geometry (gap 0.00228 < margin
+   0.005). The corrected steepness sweep indicates reach 0.15 / horizon
+   80-class layouts clear the margin. Ratify one of: (a) re-freeze the
+   treatment layout to the steepest certified cell so gate 1 can pass, or
+   (b) keep the frozen layout and accept that the re-run is a
+   gates-and-machinery pilot that cannot adjudicate emergence.
+5. **Panel cadence (amends "each generation", sections 5/7/10).** The full
+   panel runs at gen 0 (shared), every 10 generations inside evolution
+   (`--panel-every 10`), and at the final generation of each arm. Gate 3's
+   "across all generations" and gate 4's "every few generations" clauses are
+   correspondingly weakened to this cadence; the section-10 generational
+   AUROC curve is measured at this resolution.
+6. **Runtime configuration (frozen; previously unregistered).** Policy nets
+   embed = 8, hidden = 8, world_model=False; n_eps_per_world = 2;
+   max_steps = 80; drift_sigma = 1.0 in l3 mode (installs the frozen map;
+   magnitude unused); mutation sigma = 0.03 (the milestone-1 calibration,
+   recorded late - a disclosed documentation deviation); panel 110 pairs x
+   prefix 20 x tail 24 PER INDIVIDUAL, pooled across the population (the
+   effective detection sample is up to N x 110 surviving pairs; the "110
+   matched pairs" phrasing in sections 5/9 describes the per-individual
+   panel, not the pooled sample size).
+7. **Futility / extension rule (replaces the invalid section-13
+   point-estimate argument).** Three zones on the contrast leg, adjudicated
+   on the t-based 90% CI: EMERGENCE if the lower bound > 0 and mean >= 0.05
+   and the floor leg passes (unchanged); FUTILE only if the upper bound
+   < 0.05; otherwise INCONCLUSIVE, triggering the pre-committed extension to
+   the n at which the observed across-seed sd gives a one-sided MDE <= 0.05
+   (expected n ~ 8-10). The n = 3 re-run is explicitly a gates-plus-variance
+   pilot; its contrast is decision-relevant only in the EMERGENCE and FUTILE
+   zones.
+8. **Panel niche asymmetry (interpretive caveat, recorded now).** The panel
+   uses the sparse/far layout for both arms; the control arm evolves on
+   dense/near and is therefore scored out-of-distribution. This biases the
+   contrast TOWARD emergence, so it cannot explain a null; any POSITIVE
+   contrast must be accompanied by the supplementary dense-panel readout for
+   both arms before it is claimed.
+9. **Reproducibility wording.** Determinism checks compare fitness series
+   rounded to 8 decimals and never re-derive the panel AUROC; claims say
+   "reproducible to 8 decimals", and a CUDA run adds a CPU-parity spot check
+   on one seed. (The runner enables
    `torch.use_deterministic_algorithms(True, warn_only=True)`.)
