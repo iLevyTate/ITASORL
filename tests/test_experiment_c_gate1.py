@@ -133,6 +133,52 @@ def test_gate1_bootstrap_ci_is_reproducible():
     assert r1["control_ci90"] == r2["control_ci90"]
 
 
+def test_reach_normalized_gap_is_gap_as_fraction_of_reach():
+    """The raw value-of-world-identity gap is in payoff (distance) units, so it
+    inflates mechanically with the reach distance; comparing steepness across
+    layouts of different reach needs a scale-free metric. reach_normalized_gap
+    divides the gap by the reach distance, giving 'fraction of the intended reach a
+    world-blind controller forfeits'. Two layouts with the SAME fractional
+    steepness must score equal even when their raw gaps differ by the reach ratio."""
+    from itasorl.experiment_c_gate1 import reach_normalized_gap
+
+    assert reach_normalized_gap(0.02, 0.25) == 0.08
+    assert reach_normalized_gap(0.0, 0.5) == 0.0
+    # scale-free: a 2x reach with a 2x raw gap is equally steep.
+    assert reach_normalized_gap(0.02, 0.25) == reach_normalized_gap(0.04, 0.5)
+    # degenerate reach cannot be normalized against.
+    assert np.isnan(reach_normalized_gap(0.02, 0.0))
+
+
+def test_steepness_sweep_grids_and_ranks_both_ways():
+    """The payoff-steepness sweep grids (reach x horizon) and, for each cell, records
+    the mean value-of-world-identity gap plus its reach-normalized twin. It must rank
+    two ways because the two metrics answer different questions: raw gap is what the
+    fitness margin and the pilot baseline (0.0023) are denominated in, but raw gap
+    inflates mechanically with reach, so the best-RAW cell and the best-STEEPNESS cell
+    can be different cells - the sweep has to surface both so a redesign is not fooled
+    into 'bigger only because farther'."""
+    from itasorl.experiment_c_gate1 import steepness_sweep
+
+    # a synthetic gap table decoupled from the L3 map, engineered so the raw-max cell
+    # (0.5, 50) differs from the steepness-max cell (0.2, 50).
+    table = {(0.2, 10): 0.02, (0.2, 50): 0.03, (0.5, 10): 0.01, (0.5, 50): 0.05}
+    r = steepness_sweep([0.2, 0.5], [10, 50],
+                        lambda lay: table[(lay.reach_range, lay.horizon)],
+                        baseline_gap=0.0023)
+
+    assert len(r["cells"]) == 4, "full cartesian grid"
+    by_key = {(c["reach"], c["horizon"]): c for c in r["cells"]}
+    assert by_key[(0.2, 50)]["gap"] == 0.03
+    assert by_key[(0.2, 50)]["norm_gap"] == 0.03 / 0.2
+    assert by_key[(0.5, 50)]["ratio_to_baseline"] == 0.05 / 0.0023
+
+    # raw-max vs steepness-max are DIFFERENT cells - the reason the sweep ranks twice.
+    assert (r["best_by_gap"]["reach"], r["best_by_gap"]["horizon"]) == (0.5, 50)
+    assert (r["best_by_norm_gap"]["reach"], r["best_by_norm_gap"]["horizon"]) == (0.2, 50)
+    assert r["baseline_gap"] == 0.0023
+
+
 def test_l3_surrogate_replaces_law_while_authentic_stays_analytic():
     """The real gate-1 certification runs against the frozen L3 map, not the cheap
     regime stand-in. Under drift_mode='l3' the SURROGATE world's velocity update is

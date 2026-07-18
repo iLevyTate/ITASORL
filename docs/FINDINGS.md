@@ -942,3 +942,42 @@ is an inference from the endpoints, not a measured per-generation detection
 trajectory. Three seeds give df = 2, so the t-CI is wide by design; the null here
 is read from the point estimates missing the bars, not from CI width alone. All
 results are conditional on the pilot design, world P, and the frozen L3 surrogate.
+
+**Follow-on de-risk: can layout geometry steepen the payoff? No.** The decision
+above routes the next step to "a design that steepens the detection payoff." Before
+paying for that redesign, a cheap check asks whether the steepening is reachable
+just by retuning the food-and-reach geometry inside the existing scripted-oracle
+paradigm. `scripts/run_expC_gate1_sweep.py`
+(`itasorl.experiment_c_gate1.steepness_sweep`) grids the gate-1
+value-of-world-identity gap, measured by the scripted momentum-to-target oracle
+against the same frozen L3 map, over a pre-specified reach-by-horizon lattice, with
+the from-rest control floor held at exactly zero. No cell in the family produced a
+gap materially larger than the flat pilot value: the largest raw gaps were only a
+small multiple of a near-zero baseline, and once normalized for reach distance (raw
+gap inflates mechanically with how far the target sits) none was steeper than the
+pilot cell. The lattice is flat across the whole family, so layout geometry is not
+the lever. The sweep is bit-reproducible; its full grid lives in the gitignored
+`fullruns/expC_gate1_sweep/steepness.json`.
+
+**What this implies for the redesign.** The bottleneck is controller expressiveness,
+not layout. A constant-thrust single-pellet reach can only express a thin slice of
+the drag coupling, whereas a recurrent forager reaches a much larger
+authentic-versus-surrogate payoff gap than any scripted cell in this sweep. Two
+readings remain open, and the sweep discriminates against only one of them:
+
+1. The instrumental incentive to detect exists for a capable controller but is not
+   expressible by the scripted oracle, so a redesign should steepen the payoff
+   through a richer task and controller rather than through food geometry.
+2. A persistent, heritable detector is simply not needed. Because the world is
+   continuously re-observable, the reactive detection the gen-0 population already
+   has (the reactive reading established in sections 6 and 10) captures the
+   available fitness, and selection has no gradient toward storing world identity.
+   On this reading the pilot null is the scientific result, not a design artifact to
+   engineer away.
+
+The sweep rules out the cheapest rescue, retuning the layout, but does not decide
+between (1) and (2): a large scripted gap would have been sufficient evidence of an
+untapped incentive, yet its absence is only a lower bound, because the scripted
+controller under-expresses what a recurrent forager can use. Distinguishing (1) from
+(2) is the open question a section 8 redesign must pre-register before any further
+run.

@@ -24,6 +24,7 @@ gap (bootstrap CI must include 0) rather than assuming it.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Any, Callable
 
@@ -117,6 +118,58 @@ def value_of_world_identity(
         "best_auth_thrust": float(thrusts[int(auth_curve.argmax())]),
         "best_surr_thrust": float(thrusts[int(surr_curve.argmax())]),
         "best_blind_thrust": float(thrusts[int(avg.argmax())]),
+    }
+
+
+def reach_normalized_gap(gap: float, reach_range: float) -> float:
+    """Value-of-world-identity gap as a fraction of the reach distance.
+
+    The raw ``gap`` from ``value_of_world_identity`` is in payoff (distance) units,
+    so it scales with how far the target sits and cannot be compared across layouts
+    of different reach. Dividing by ``reach_range`` yields a scale-free steepness -
+    the fraction of the intended reach a world-blind controller forfeits by not
+    knowing the world - so a payoff-steepness sweep can rank layouts fairly.
+    ``nan`` for a non-positive reach (nothing to normalize against)."""
+    if reach_range <= 0.0:
+        return float("nan")
+    return gap / reach_range
+
+
+def steepness_sweep(
+    reaches: Sequence[float],
+    horizons: Sequence[int],
+    mean_gap_of: Callable[["Layout"], float],
+    *,
+    baseline_gap: float,
+) -> dict[str, Any]:
+    """Grid the value-of-world-identity gap over a (reach x horizon) layout lattice.
+
+    ``mean_gap_of`` maps a ``Layout`` to its mean gap across evaluation seeds (injected
+    so the expensive L3 map lives in the caller, not here). Each cell also carries the
+    reach-normalized gap and the gap as a multiple of ``baseline_gap`` (the pilot's
+    primary-treatment gap, ~0.0023) so a candidate config can be read as 'Nx the flat
+    pilot'. Ranked TWO ways on purpose: ``best_by_gap`` (raw payoff, what the fitness
+    margin cares about) and ``best_by_norm_gap`` (scale-free steepness, which guards
+    against a gap that is large only because the reach is far). Deterministic given a
+    deterministic ``mean_gap_of``."""
+    cells = []
+    for r in reaches:
+        for h in horizons:
+            lay = Layout(reach_range=float(r), horizon=int(h), name=f"r{r}_h{h}")
+            gap = float(mean_gap_of(lay))
+            cells.append({
+                "reach": float(r),
+                "horizon": int(h),
+                "name": lay.name,
+                "gap": gap,
+                "norm_gap": reach_normalized_gap(gap, float(r)),
+                "ratio_to_baseline": gap / baseline_gap if baseline_gap > 0.0 else float("nan"),
+            })
+    return {
+        "cells": cells,
+        "best_by_gap": max(cells, key=lambda c: c["gap"]),
+        "best_by_norm_gap": max(cells, key=lambda c: c["norm_gap"]),
+        "baseline_gap": float(baseline_gap),
     }
 
 
