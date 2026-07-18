@@ -441,7 +441,26 @@ def main() -> int:
                    f > 0.6 for o, f in zip(g0["cd"]["sweep_oracle"],
                                            g0["cd"]["sweep_floor"]) if o >= 0.85))
 
+    # Estimator sanity gate: once a corrected cg re-score is promoted
+    # (artifacts/expB2/cg_rescore*.json), its drift-0 L0 floors MUST sit in the
+    # chance band - a floor outside [0.4, 0.6] means a broken estimator and the
+    # audit FAILS, so the July-18 bias class can never silently pass this gate
+    # again. (No-op until a re-score artifact exists.)
+    import glob as _glob
+    for rp in sorted(_glob.glob(os.path.join(ARTROOT, "expB2", "*cg_rescore*.json"))):
+        with open(rp, encoding="utf-8") as fh:
+            rs = json.load(fh)
+        for key, agg in rs.get("aggregate", {}).items():
+            if key.startswith("d0.00_"):
+                check_true(f"cg re-score L0 floor in chance band ({os.path.basename(rp)}:{key})",
+                           0.4 <= agg["cg_tail_mean"] <= 0.6)
+
     print("== FINDINGS Exp C: emergence pilot (milestone 3, N=48 G=30 3 seeds) ==")
+    # NOTE (2026-07-18): this block re-verifies the INVALIDATED pilot artifact
+    # (git_commit 9758202, pre-fix; FINDINGS 13.C) as a historical record. The
+    # re-run's summary will be gated as a separate artifact when promoted.
+    print("  [invalidation marker] Exp C checks verify the invalidated pilot's "
+          "historical record; re-run pending (FINDINGS 13.C)")
     with open(os.path.join(ARTROOT, "expC", "emergence_pilot_summary.json"),
               encoding="utf-8") as fh:
         ec = json.load(fh)

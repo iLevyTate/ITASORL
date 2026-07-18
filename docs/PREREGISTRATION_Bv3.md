@@ -130,6 +130,19 @@ sysid-aux CEILING (PR #14) as the capacity reference.
   target; the raw target is what every published B-v3 verdict used. For a
   below-bar null this is the anti-conservative (honest) choice; recorded here
   so the discrepancy in the frozen text is on the record rather than silent.
+- **2026-07-18 (recorded late; audit finding): post-freeze apparatus fix.**
+  The regime-mode matched-pair channel silently ran with the drag offset
+  disabled (a plain `set_state` restored the prefix's `drift_w = 0.0`,
+  collapsing `mp_target` to exactly 0.5 in every cell); fixed the day after
+  registration (2026-07-02, commit `a3fac1a`) by keeping the surrogate's
+  reset-drawn `drift_w` across the restore. The n = 10 run (`820849f`)
+  post-dates the fix, so its numbers are unaffected. Logged here because the
+  freeze promise requires it, not because any published number changes.
+- **2026-07-18 (same audit): unpromoted gates.** The n = 10 run's gate values
+  (engagement, L0 TOST, speed positive control, leakage) were never promoted
+  into `artifacts/expB2/bv3_n10_summary.json`; promoting them from the
+  `fullruns/07062026` bundle is an open task before the B-v3 verdict is cited
+  as gate-complete.
 
 ## 13. How to run
 

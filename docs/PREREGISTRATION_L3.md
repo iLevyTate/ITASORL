@@ -547,6 +547,12 @@ Rigor carried from the B-v3 audit (2026-07-10):
   unaffected and stand. This entry is recorded BEFORE the re-score's outcome is known; the
   "REACTIVE" adjudication is provisional until it lands.
 
+- **2026-07-18 - OPERATIVE-ESTIMAND ERRATA.** Section 6 registers the "selectivity-corrected
+  AUROC" as the estimand; every adjudication (0.752, 0.737, 0.726, 0.722 vs the 0.65 bar)
+  used the raw pooled/resid target with the shuffled probe as a gate-style control. No
+  verdict could have flipped (shuffled at chance throughout); the operative definition is
+  the raw target adjudicated at the bar, selectivity reported as a control.
+
 ## 13. How to run (milestones, in order)
 
 1. **Build + calibrate the surrogate.** Train `G` on authentic rollouts; wrap as a World;
