@@ -503,26 +503,36 @@ def probe_world_identity(auth_eps: list, surr_eps: list, seed: int = 0) -> dict:
     X = np.stack([_episode_feature(e["H"]) for e in eps])
     y = np.array([e["label"] for e in eps])
     spd = np.array([e["speed"] for e in eps])
+    # The two members of pair i share seed, prefix, and branch state, so they are NOT
+    # independent episodes: give them one group id so GroupKFold never splits a pair
+    # across folds. (Split twins let the probe read the train twin's label off the
+    # near-identical test twin, biasing AUROC toward 0 whenever the pair count is not
+    # a multiple of n_splits.)
+    g = np.concatenate([np.arange(len(auth_eps)), np.arange(len(surr_eps))])
     rng = np.random.default_rng(seed)
     return {
-        "target": probe_auroc(X, y),                                   # H4: decode world identity
-        "shuffled": probe_auroc(X, rng.permutation(y)),                # negative control
-        "speed": probe_auroc(X, (spd > np.median(spd)).astype(int)),   # positive control
+        "target": grouped_auroc(X, y, g),                                   # H4: decode world identity
+        "shuffled": grouped_auroc(X, rng.permutation(y), g),                # negative control
+        "speed": grouped_auroc(X, (spd > np.median(spd)).astype(int), g),   # positive control
         "n": len(eps),
     }
 
 
-def leakage_audit_b2(auth_eps: list, surr_eps: list, margin: float = 0.1) -> dict:
+def leakage_audit_b2(auth_eps: list, surr_eps: list, margin: float = 0.1,
+                     groups: np.ndarray | None = None) -> dict:
     """Confound battery: world identity must NOT be decodable from reward/length/lifetime.
     A clean target probe with these near 0.5 proves it reads the artifact, not 'I lived
-    longer'. `margin` is the tolerated |AUROC-0.5|; the run uses a tighter 0.05 (see
-    readout), the default stays 0.1 for tiny-n smoke/tests."""
+    longer'. `margin` is the tolerated |AUROC-0.5|; the run gate is this default 0.1
+    (see readout's docstring for why tighter would false-alarm on the matched-pair path).
+    `groups`: pass a shared pair id per pair member when the episodes are matched pairs
+    (see probe_world_identity); default treats episodes as independent."""
     eps = auth_eps + surr_eps
     y = np.array([e["label"] for e in eps])
+    g = groups if groups is not None else np.arange(len(eps))
 
     def channel(key):
         v = np.array([e[key] for e in eps], np.float64).reshape(-1, 1)
-        return probe_auroc(v, y)
+        return grouped_auroc(v, y, g)
 
     audit = {k: channel(k) for k in ("reward_sum", "length", "lifetime")}
     audit["max_abs_dev"] = max(abs(a - 0.5) for a in audit.values())
@@ -704,10 +714,14 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
     return H, np.asarray(spd)
 
 
-def _auroc_with_ci(X, y, seed: int = 0) -> tuple[float, float, float]:
+def _auroc_with_ci(X, y, seed: int = 0, groups: np.ndarray | None = None) -> tuple[float, float, float]:
     """5-fold grouped CV AUROC plus a stratified-bootstrap 95% CI from its out-of-fold
-    predictions (no model refit)."""
-    auc, yv, pv = grouped_auroc(X, y, np.arange(len(y)), return_oof=True)
+    predictions (no model refit). `groups` defaults to one group per row (independent
+    episodes); matched-pair callers pass a shared pair id for the two members so
+    GroupKFold never splits a pair across folds."""
+    if groups is None:
+        groups = np.arange(len(y))
+    auc, yv, pv = grouped_auroc(X, y, groups, return_oof=True)
     if yv.size == 0:
         return auc, float("nan"), float("nan")
     lo, hi = auroc_ci(yv, pv, seed=seed)
@@ -923,12 +937,15 @@ def cg_probe(auth_tails: list, surr_tails: list, *, late_k: int = 8, seed: int =
     if n < 5:
         return out
     y = np.concatenate([np.zeros(n), np.ones(n)]).astype(int)
+    # Matched pairs share the prefix world state: same group id for both members so
+    # GroupKFold keeps each pair in one fold (see probe_world_identity).
+    g = np.concatenate([np.arange(n), np.arange(n)])
     X = np.stack([_episode_feature(H) for H in auth_tails + surr_tails])
     k = min(late_k, auth_tails[0].shape[0])
     Xl = np.stack([_episode_feature(H[-k:]) for H in auth_tails + surr_tails])
-    tgt, lo, hi = _auroc_with_ci(X, y, seed=seed)
+    tgt, lo, hi = _auroc_with_ci(X, y, seed=seed, groups=g)
     out.update(cg_tail_target=tgt, cg_tail_lo=lo, cg_tail_hi=hi,
-               cg_latetail_target=probe_auroc(Xl, y))
+               cg_latetail_target=grouped_auroc(Xl, y, g))
     return out
 
 
@@ -972,7 +989,8 @@ def readout(agent, norm, params, drift_sigma, *, n_pairs=60, prefix_steps=20, br
                                           prefix_steps=prefix_steps, branch_steps=branch_steps,
                                           ray_steps=ray_steps, device=device, seed_base=seed_base)
     pr = probe_world_identity(a, s, seed=seed)
-    lk = leakage_audit_b2(a, s, margin=leak_margin)
+    g = np.concatenate([np.arange(len(a)), np.arange(len(s))])
+    lk = leakage_audit_b2(a, s, margin=leak_margin, groups=g)
     return {**pr, "leakage_clean": lk["clean"], "leakage_max_dev": lk["max_abs_dev"],
             "leakage": lk, "n_pairs": len(a)}
 

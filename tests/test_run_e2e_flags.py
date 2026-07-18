@@ -200,3 +200,19 @@ def test_find_auto_resume_no_sync_root(monkeypatch, tmp_path):
     run_e2e.apply_profile(args)
     assert run_e2e.find_auto_resume(args, None) is None
     assert run_e2e.find_auto_resume(args, tmp_path / "nope") is None
+
+
+def test_expand_skip_returns_canonical_step_names():
+    """Regression: expand_skip lowercased names but the run loop compares against
+    the mixed-case step names from experiment_steps(), so --skip expB2 (and the
+    experiments_no_b2 profile) silently skipped nothing."""
+    step_names = {s for s, _, _ in run_e2e.experiment_steps(quick=False, b2_out=Path("."))}
+    assert "expB2" in run_e2e.expand_skip(["expB2"])
+    assert "expB2" in run_e2e.expand_skip(["EXPB2"])  # case-insensitive in
+    # aliases expand to canonical names the loop can actually match
+    assert run_e2e.expand_skip(["expA"]) == {"expA_l1", "expA_l2"}
+    assert run_e2e.expand_skip(["expb"]) <= step_names
+    assert run_e2e.expand_skip(["experiments"]) == step_names
+    # the experiments_no_b2 profile's whole purpose
+    prof = run_e2e.PROFILES["experiments_no_b2"]
+    assert "expB2" in run_e2e.expand_skip(prof["skip_steps"])

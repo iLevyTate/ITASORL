@@ -61,6 +61,40 @@ def _synthetic_tails(rng, n, T, hid, offset_fn):
     return auth, surr
 
 
+def test_cg_probe_pair_groups_keep_l0_floor_at_chance():
+    """Regression: pair members must share ONE CV group. With per-episode groups,
+    GroupKFold split twins across folds whenever the surviving pair count was not a
+    multiple of n_splits (5), and the probe read the train twin's label off the
+    near-identical test twin - bit-identical L0 tails scored AUROC 0.000 instead of
+    0.5 (e.g. any heldout run where common_garden_rollout dropped a few pairs)."""
+    rng = np.random.default_rng(0)
+    T, hid = 12, 8
+    for n_pairs in (23, 24, 25):  # 25 was accidentally safe; 23/24 hit the bug
+        auth = [rng.normal(0, 1, (T, hid)).astype(np.float32) for _ in range(n_pairs)]
+        surr = [a.copy() for a in auth]  # exact L0 twins: true AUROC is 0.5
+        r = cg_probe(auth, surr, late_k=4, seed=0)
+        assert abs(r["cg_tail_target"] - 0.5) < 0.05, \
+            f"L0 floor off chance at n_pairs={n_pairs}: {r['cg_tail_target']}"
+        assert abs(r["cg_latetail_target"] - 0.5) < 0.05, \
+            f"L0 late-tail off chance at n_pairs={n_pairs}: {r['cg_latetail_target']}"
+
+
+def test_probe_world_identity_pair_groups_keep_l0_at_chance():
+    """Same regression for the SECONDARY matched-pair readout: identical twin pairs
+    at a pair count that is not a multiple of 5 must probe at chance, not 0."""
+    from itasorl.experiment_b2 import probe_world_identity
+    rng = np.random.default_rng(1)
+    n, T, hid = 23, 12, 8
+    auth, surr = [], []
+    for _ in range(n):
+        H = rng.normal(0, 1, (T, hid)).astype(np.float32)
+        spd = float(rng.uniform(0.1, 1.0))
+        auth.append({"H": H, "label": 0, "speed": spd})
+        surr.append({"H": H.copy(), "label": 1, "speed": spd})
+    r = probe_world_identity(auth, surr, seed=0)
+    assert abs(r["target"] - 0.5) < 0.05, f"L0 target off chance: {r['target']}"
+
+
 def test_cg_probe_persistent_vs_reactive():
     rng = np.random.default_rng(0)
     T = 24

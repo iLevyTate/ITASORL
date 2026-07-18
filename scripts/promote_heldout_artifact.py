@@ -97,7 +97,9 @@ def main() -> int:
         "cells": rows,
         "aggregate": aggregate,
     }
-    os.makedirs(os.path.dirname(args.out), exist_ok=True)
+    d = os.path.dirname(args.out)
+    if d:  # bare filename -> dirname "" -> makedirs would raise after all cells parsed
+        os.makedirs(d, exist_ok=True)
     tmp = args.out + ".tmp"
     with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(out, fh, indent=1)

@@ -190,20 +190,26 @@ def resolve_dump_states(extra: list[str], run_dir: Path) -> list[str]:
 
 
 def expand_skip(raw: list[str]) -> set[str]:
+    """Expand --skip names/aliases to the CANONICAL step names the run loop compares
+    against. Matching is case-insensitive, but the returned names keep the exact
+    casing of experiment_steps() (e.g. "expb2" -> "expB2") - the loop's `name in skip`
+    check is case-sensitive."""
+    step_names = {s for s, _, _ in experiment_steps(quick=False, b2_out=Path("."))}
     aliases = {
         "pytest": {"pytest"},
-        "experiments": {s for s, _, _ in experiment_steps(quick=False, b2_out=Path("."))},
-        "expA": {"expA_l1", "expA_l2"},
-        "expB": {"expB_smoke", "expB_full", "expB_surprise", "expB_kstep",
+        "experiments": set(step_names),
+        "expa": {"expA_l1", "expA_l2"},
+        "expb": {"expB_smoke", "expB_full", "expB_surprise", "expB_kstep",
                  "expB_gap", "expB_nonlinear"},
     }
+    canonical = {s.lower(): s for s in step_names}
     out: set[str] = set()
     for item in raw:
         key = item.strip().lower()
         if key in aliases:
             out |= aliases[key]
         else:
-            out.add(key)
+            out.add(canonical.get(key, key))
     return out
 
 

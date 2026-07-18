@@ -128,7 +128,9 @@ def main():
         "panel_final": panel_final,
         "wall_seconds": round(time.time() - t0, 1),
     }
-    os.makedirs(os.path.dirname(args.json), exist_ok=True)
+    d = os.path.dirname(args.json)
+    if d:  # bare filename -> dirname "" -> makedirs would raise after the whole run
+        os.makedirs(d, exist_ok=True)
     with open(args.json, "w") as f:
         json.dump(out, f, indent=2)
     print(f"[expC m1] DONE in {out['wall_seconds']}s -> {args.json}", flush=True)
