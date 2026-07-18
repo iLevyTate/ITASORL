@@ -59,7 +59,10 @@ subtler fingerprint fails the bar at 0.638, section 10.6); but under a
 common-garden control that equalizes the felt dynamics, the signal does **not**
 persist (0.557, below the bar; late-tail at chance). The emergent state is best
 read as **reactive tracking of the currently-felt dynamics, not a persistent
-stored world-identity representation.** A cross-recipe probe (n = 10, section
+stored world-identity representation** — *a reading that is PROVISIONAL pending
+re-scoring: the common-garden numbers were computed with the since-fixed biased
+estimator of section 13.C (see the correction banner in section 10.6); the
+transfer numbers are unaffected.* A cross-recipe probe (n = 10, section
 10.7) extends the generality one step further: the same direction also reads a
 *different surrogate family* (a random-Fourier-features ridge law; 0.684 vs
 untrained 0.548, pre-registered rule passes), so the reactive world-signal is
@@ -325,7 +328,9 @@ inducing it (if possible) requires something more deliberate.
   qualifies the *nature* of the encoding: it transfers to an unseen same-recipe
   fingerprint (not an overfit to one artifact instance), but a common-garden
   control shows it is reactive tracking of the felt dynamics, not a persistent
-  stored world-identity representation. A cross-recipe probe (section 10.7)
+  stored world-identity representation (PROVISIONAL — the common-garden channel
+  is being re-scored with the fixed estimator, see the section 10.6 correction
+  banner). A cross-recipe probe (section 10.7)
   extends the transfer half across surrogate families: the same direction reads a
   gate-calibrated random-Fourier-features law (0.684, rule passes), so the
   reactive signal is recipe-general.
@@ -397,7 +402,9 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    carry the prefix world (survival 0.557, below the 0.65 bar; late-tail 0.492 at
    chance; rule fails). This resolves the reactive-vs-representational ambiguity
    (§9 caveats) toward REACTIVE: the state tracks the currently-felt dynamics, it
-   does not hold a persistent world-identity tag.
+   does not hold a persistent world-identity tag. *(PROVISIONAL: the cg channel
+   was scored with the since-fixed biased estimator — see the section 10.6
+   correction banner; the transfer channel stands.)*
 3. **Cross-recipe transfer probe: TESTED, POSITIVE (section 10.7).** Readout-only
    against the saved hidden = 8 agents. The direction fit against the trained MLP
    fingerprint reads a gate-calibrated random-Fourier-features ridge law the agent
@@ -640,6 +647,23 @@ frozen capacities. The survival-*specific* "encoding induced" verdict is
 conditional on the subtler hidden = 8 artifact.
 
 ### 10.6 Held-out fingerprint (common-garden) probe
+
+> **CORRECTION IN PROGRESS (2026-07-18, recorded before the re-score's outcome
+> is known).** The common-garden channel numbers in this section (cg_tail 0.557,
+> late-tail 0.492; reverse-run 0.598/0.489) were computed with the pre-fix
+> pair-splitting `cg_probe` estimator invalidated in section 13.C (bias toward
+> AUROC 0 whenever the surviving pair count is not a multiple of 5). The
+> committed artifacts carry the signature: drift-0.00 cg floors of 0.001-0.27
+> instead of ~0.5, and cg pair counts of 96-110 (non-multiples of 5 in most
+> cells). The cg-channel NEGATIVE — and therefore the "reactive, not
+> persistent" adjudication — is **provisional pending re-scoring** of the saved
+> `_cg.npz` tail dumps with the fixed estimator
+> (`scripts/reanalyze_cg_states.py`); the frozen 2026-07-14/15 decision rules
+> are unchanged and will re-adjudicate the corrected numbers. The TRANSFER
+> channel (0.773 forward / 0.638 reverse / 0.684 cross-recipe) is unaffected:
+> it uses the frozen-fit train/test estimator with no CV grouping. The
+> matched-pair mp_target numbers are fold-safe by accident (pair counts 60/25,
+> multiples of 5, and that path drops no pairs) and stand.
 
 Done (n = 10, frozen spec 2026-07-14; per-seed summary committed as
 `artifacts/expB2/heldout_l3_h8_summary.json`, extracted from the

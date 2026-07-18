@@ -30,7 +30,9 @@ at hidden=7 every trained agent picks it up (predictor 0.714 vs survival 0.737);
 held-out probe shows the direction transfers to an unseen same-recipe (0.773) and a
 different-recipe (cross-recipe 0.684) fingerprint but a common-garden control leaves
 tail-only state at chance (0.557, late tail 0.492), so the signal is **reactive tracking
-of the felt dynamics, not a persistent stored representation**; (3) held-out transfer is
+of the felt dynamics, not a persistent stored representation** (PROVISIONAL — the
+common-garden numbers are being re-scored with the fixed estimator, FINDINGS §10.6
+correction banner); (3) held-out transfer is
 direction-dependent (reverse 0.638 fails the bar). Honest headline: L3 induces a reactive,
 artifact-conditional, behavior-independent world-signal — the first reversal of the L2
 nulls, but not an abstract persistent world-identity direction. See `docs/FINDINGS.md`
@@ -127,7 +129,10 @@ Narrative: `docs/FINDINGS.md` §7 (next steps), §9 (B-v2).
 2. **Power:** RESOLVED (07062026): the n=10 regime extension ran (RTX 4050, 337 min);
    survival 0.610 +/- 0.047, 90% CI [0.585, 0.634] excludes 0.65, and L0 TOST/ROPE pass
    at n=10 (equivalent to chance).
-3. **Reactive vs representational:** RESOLVED (2026-07-14) toward **reactive**. The
+3. **Reactive vs representational:** PROVISIONAL (was: RESOLVED 2026-07-14 toward
+   reactive) — the common-garden numbers below were scored with the since-fixed
+   pair-splitting estimator (FINDINGS §10.6 correction banner, 2026-07-18) and are
+   being re-scored from the saved `_cg.npz` dumps; the frozen rules re-adjudicate. The
    L3 held-out/common-garden probe (`artifacts/expB2/heldout_l3_h8_summary.json`) shows
    the world-signal transfers to unseen fingerprints (0.773 same-recipe, 0.684
    cross-recipe) but does not survive a common-garden control (tail-only 0.557, late tail

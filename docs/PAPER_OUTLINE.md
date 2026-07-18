@@ -46,7 +46,8 @@ resolve.*
      fingerprint resolved (FINDINGS 10.6): transfer generalizes (0.773 vs
      untrained 0.569) but the common-garden control shows the signal is
      reactive, not a persistent representation (0.557, below bar; late tail
-     0.492 at chance); cross-recipe resolved (FINDINGS 10.7): the direction
+     0.492 at chance) — PROVISIONAL pending estimator-fix re-score, FINDINGS
+     §10.6 correction banner; cross-recipe resolved (FINDINGS 10.7): the direction
      also reads a different surrogate family (RFF ridge, 0.684 vs untrained
      0.548, rule passes), while the constant-drag family proved uncalibratable
      (empty gate-0 window) - coefficient-bias artifacts cannot be made
@@ -98,7 +99,8 @@ resolve.*
   the committed artifacts.
 - Rows 23-24 resolved (spec 2026-07-14, per-seed summary committed as
   `artifacts/expB2/heldout_l3_h8_summary.json`): transfer generalizes, the
-  common-garden control reads reactive; the paper reports both as generality
-  checks, not as a new headline. Rows 20-22 resolved 2026-07-14: the second
+  common-garden control reads reactive (row 24's reactive reading is
+  PROVISIONAL pending the estimator-fix re-score, FINDINGS §10.6 correction);
+  the paper reports both as generality checks, not as a new headline. Rows 20-22 resolved 2026-07-14: the second
   capacity replicates the behavior-independent signal and bounds the
   survival-specific claim to the subtler artifact.

@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: transfers to an unseen fingerprint subtle-to-coarse (0.773) but not coarse-to-subtle (0.638, frozen rule fails) and is reactive, not a persistent representation; cross-recipe probe: also reads a different surrogate family (0.684, rule passes)** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: transfers to an unseen fingerprint subtle-to-coarse (0.773) but not coarse-to-subtle (0.638, frozen rule fails); the "reactive, not persistent" common-garden reading is PROVISIONAL pending re-scoring with a fixed estimator (FINDINGS §10.6 correction); cross-recipe probe: also reads a different surrogate family (0.684, rule passes)** |
 | Experiment C (emergence under selection) / Ladder L4 | not started (pre-registration design-complete: [`docs/PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md)) |
 
 ### Key result
@@ -148,7 +148,9 @@ per-seed summary in `artifacts/expB2/heldout_l3_h7_reverse_summary.json`) fails 
 artifacts, not bidirectionally. And under a common-garden control that runs both groups through an identical tail after
 differing prefixes, tail-only state does not carry the prefix world (**0.557**, below the 0.65 bar;
 the late tail decays to chance, 0.492). So the L3 world-signal is best read as reactive tracking of
-the currently-felt dynamics, not a persistent stored world-identity representation. A cross-recipe
+the currently-felt dynamics, not a persistent stored world-identity representation — *provisional:
+the common-garden numbers were scored with a since-fixed biased estimator and are being re-scored
+(see the correction banner in FINDINGS §10.6); the transfer numbers are unaffected.* A cross-recipe
 probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
 surrogate *families*: the same direction reads a gate-calibrated random-Fourier-features ridge law
 the agent never lived with (**0.684** vs untrained floor 0.548; the pre-registered rule passes,

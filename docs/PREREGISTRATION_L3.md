@@ -534,6 +534,19 @@ Rigor carried from the B-v3 audit (2026-07-10):
   coefficient-bias artifacts cannot be made subtle-but-detectable in world P, independently
   motivating the learned-texture construction of the L3 rung.
 
+- **2026-07-18 - CORRECTION (OUTCOME-BLIND): COMMON-GARDEN CHANNEL RE-SCORING UNDER THE
+  FIXED ESTIMATOR.** The 2026-07-14/16 held-out and reverse-run adjudications' common-garden
+  channel (cg_tail 0.557 / late-tail 0.492; reverse 0.598/0.489) was computed with the
+  pre-fix pair-splitting `cg_probe` (per-episode CV groups; bias toward AUROC 0 whenever the
+  surviving pair count is not a multiple of 5 — fixed in commit `1633bca`; see FINDINGS
+  13.C). The committed artifacts carry the bias signature (drift-0 cg floors 0.001-0.27;
+  pair counts 96-110). The cg channel is being re-scored from the saved `_cg.npz` tail dumps
+  with the fixed estimator (`scripts/reanalyze_cg_states.py`); the frozen decision rules are
+  UNCHANGED and will re-adjudicate the corrected numbers. The transfer channel (frozen-fit
+  train/test, no CV) and the mp channel (pair counts 60/25, fold-safe; no pair drops) are
+  unaffected and stand. This entry is recorded BEFORE the re-score's outcome is known; the
+  "REACTIVE" adjudication is provisional until it lands.
+
 ## 13. How to run (milestones, in order)
 
 1. **Build + calibrate the surrogate.** Train `G` on authentic rollouts; wrap as a World;

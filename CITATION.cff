@@ -18,9 +18,11 @@ abstract: >-
   surrogate (L3) is incidentally encoded by survival-trained agents, with a
   behavior-independent component that clears the pre-registered bar
   (survival-specificity holds at the subtler of two tested fingerprints). A
-  held-out probe shows the signal generalizes across fingerprint instances but
-  reads as reactive tracking of the felt dynamics, not a persistent stored
-  world-identity representation.
+  held-out probe shows the signal generalizes across fingerprint instances; a
+  common-garden control read the signal as reactive tracking of the felt
+  dynamics rather than a persistent stored world-identity representation, a
+  reading currently provisional pending re-scoring with a corrected estimator
+  (see FINDINGS section 10.6).
 keywords:
   - artificial-life
   - reinforcement-learning
