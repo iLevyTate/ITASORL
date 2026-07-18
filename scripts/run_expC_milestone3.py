@@ -45,6 +45,7 @@ import argparse
 import copy
 import json
 import os
+import subprocess
 import time
 from functools import partial
 
@@ -86,7 +87,12 @@ def run_arm(pop0, food_override, *, generations, sigma, drift_sigma, n_eps, max_
                                 threshold=threshold, sigma=sigma,
                                 rng=np.random.default_rng(rng_seed))
     series = [round(r["mean_fitness"], 8) for r in history]
-    return final_pop, threshold, series
+    # per-generation qualifier counts: the effective selection intensity per arm.
+    # The frozen gen-0 quantile threshold matches intensity at gen 0 only; this
+    # series is what a confirmatory run must adjudicate to show the arms stayed
+    # matched (2026-07-18 audit: computed by evolve but previously discarded).
+    qualifiers = [int(r["n_qualifiers"]) for r in history]
+    return final_pop, threshold, series, qualifiers
 
 
 def main():
@@ -119,6 +125,10 @@ def main():
     args = ap.parse_args()
     if args.device == "cuda" and not torch.cuda.is_available():
         raise SystemExit("--device cuda requested but torch.cuda.is_available() is False")
+    # best-effort determinism enforcement (docs/ITASORL.md reference recipe);
+    # warn_only so an op without a deterministic CUDA kernel degrades loudly
+    # instead of crashing the run
+    torch.use_deterministic_algorithms(True, warn_only=True)
 
     t0 = time.time()
     control_food = {"n_pellets": args.ctrl_n_pellets, "reach": args.ctrl_reach}
@@ -154,8 +164,10 @@ def main():
             a_.to(args.device)
 
         panel_gen0 = common_garden_panel(pop0, 0, **panel_kw)  # shared by both arms
-        final_t, thr_t, series_t = run_arm(pop0, None, seed_base=seed_base, rng_seed=s, **arm_kw)
-        final_c, thr_c, series_c = run_arm(pop0, control_food, seed_base=seed_base, rng_seed=s, **arm_kw)
+        final_t, thr_t, series_t, quals_t = run_arm(pop0, None, seed_base=seed_base,
+                                                    rng_seed=s, **arm_kw)
+        final_c, thr_c, series_c, quals_c = run_arm(pop0, control_food, seed_base=seed_base,
+                                                    rng_seed=s, **arm_kw)
         panel_t = common_garden_panel(final_t, args.generations, **panel_kw)
         panel_c = common_garden_panel(final_c, args.generations, **panel_kw)
 
@@ -169,6 +181,7 @@ def main():
             "seed": s, "threshold_treat": thr_t, "threshold_ctrl": thr_c,
             "auroc_gen0": a0, "auroc_final_treat": at, "auroc_final_ctrl": ac,
             "fit_series_treat": series_t, "fit_series_ctrl": series_c,
+            "n_qualifiers_treat": quals_t, "n_qualifiers_ctrl": quals_c,
             "fit_delta_treat": round(series_t[-1] - series_t[0], 6),
             "fit_delta_ctrl": round(series_c[-1] - series_c[0], 6),
             "l0_gen0": panel_gen0["l0_auroc"], "l0_final_treat": panel_t["l0_auroc"],
@@ -189,22 +202,33 @@ def main():
           f"ci_excl_0={est['ci_excludes_zero']} sesoi={est['meets_sesoi']} "
           f"floor={est['meets_auroc_floor']} -> CLAIM={est['emergence_claim']}", flush=True)
 
-    # determinism: rerun the first seed's treatment arm, assert bit-identical fitness series
+    # determinism: rerun the first seed's treatment arm and compare the fitness
+    # series ROUNDED TO 8 DECIMALS - this is tolerance-reproducibility, not a
+    # bit-level guarantee (sub-1e-8 nondeterminism, e.g. CUDA reduction order,
+    # would not be caught; the panel AUROC is not re-derived here). The stored
+    # flag keeps its historical name for artifact/gate compatibility.
     s0 = args.seeds[0]
     pop0 = build_population(args.n, embed=args.embed, hidden=args.hidden, seed0=500 + s0 * 50)
     for a_ in pop0:
         a_.to(args.device)
-    _, _, series_repro = run_arm(pop0, None, seed_base=args.base_seed_base + s0 * 10_000,
-                                 rng_seed=s0, **arm_kw)
+    _, _, series_repro, _ = run_arm(pop0, None, seed_base=args.base_seed_base + s0 * 10_000,
+                                    rng_seed=s0, **arm_kw)
     bit_repro = (series_repro == per_seed[0]["fit_series_treat"])
     gate2_treat = any(d["fit_delta_treat"] > 0 for d in per_seed)
     gate2_ctrl = any(d["fit_delta_ctrl"] > 0 for d in per_seed)
-    print(f"[expC m3] determinism (seed {s0} treat): bit-reproducible={bit_repro}  "
+    print(f"[expC m3] determinism (seed {s0} treat): reproducible-to-8-decimals={bit_repro}  "
           f"gate2 fitness-moves treat={gate2_treat} ctrl={gate2_ctrl}", flush=True)
 
+    try:  # run-time provenance: the commit the run actually executed on
+        run_commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True,
+            cwd=os.path.dirname(os.path.abspath(__file__))).stdout.strip()
+    except Exception:
+        run_commit = "unknown"
     out = {
         "world": "P(k_land=1.5, k_water=1.5, gravity=0.4)",
         "surrogate": f"frozen L3 G_motion (hidden={args.l3_hidden}, seed={args.l3_seed})",
+        "git_commit_at_run": run_commit,
         "config": vars(args), "control_food": control_food,
         "per_seed": per_seed,
         "estimand": est,

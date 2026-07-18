@@ -17,9 +17,19 @@ primitive that separates the worlds - the velocity update at
 
 The control layout exploits an exact mechanical fact: from ``vel=0`` the first
 integrated step is ``a*dt`` regardless of drag, so a from-rest short-horizon
-reach is world-invariant BY CONSTRUCTION for the ar1/regime surrogates. Under the
-L3 learned map that invariance is not guaranteed, so gate 1 MEASURES the control
-gap (bootstrap CI must include 0) rather than assuming it.
+reach is world-invariant BY CONSTRUCTION for the ar1/regime surrogates.
+
+Honesty note (2026-07-18 audit): the control gap is structurally zero under the
+L3 learned map too, for a different reason - at ``reach=0.05, horizon=1`` a
+single from-rest step can never overshoot the target, so both worlds' payoff
+curves are monotone in thrust and share ``argmax = 1.0``, forcing
+``oracle == blind`` exactly. ``passes_control`` therefore cannot fail at the
+default control layout and certifies nothing; the gate's discriminating power
+lives entirely in the treatment leg (``passes_treatment``, a genuine one-sided
+existence test). Note also that this gate's control LAYOUT is not the
+milestone-3 experiment's control ARM (dense/near food, reach=0.25) - control-arm
+fitness-neutrality there rests on the separate de-risk sensitivity check
+(``scripts/derisk_expC_control.py``), not on this gate.
 """
 
 from __future__ import annotations

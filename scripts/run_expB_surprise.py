@@ -46,8 +46,18 @@ print("Prediction-error (surprise) probe: authentic-only world model, tested aut
 for d in DRIFTS:
     print(f"  drift={d:.2f}   surprise-probe AUROC = {np.mean(res[d]):.3f} ± {np.std(res[d]):.3f}")
 
-# combined comparison figure (hidden-state numbers from the prior full run, same pipeline/config)
-hs = {0.0: 0.460, 0.2: 0.509, 0.45: 0.510}
+# combined comparison figure. The recurrent-state curve comes from the committed
+# expB_full artifact so the figure cannot silently go stale against a rerun
+# (2026-07-18 audit: it was a hardcoded dict from the prior full run); the
+# literal fallback keeps the script runnable from a bare checkout state.
+try:
+    import json
+    with open("artifacts/expB/summary.json", encoding="utf-8") as _fh:
+        _sweep = json.load(_fh)["expB_full"]["drift_sweep"]
+    hs = {row["drift"]: row["target_mean"] for row in _sweep}
+    assert all(d in hs for d in DRIFTS)
+except Exception:
+    hs = {0.0: 0.460, 0.2: 0.509, 0.45: 0.510}  # prior full run, same pipeline/config
 sp = [np.mean(res[d]) for d in DRIFTS]; spe = [np.std(res[d]) for d in DRIFTS]
 plt.figure(figsize=(7.2, 4.4))
 plt.errorbar(DRIFTS, sp, yerr=spe, fmt="o-", color="#c05621", capsize=4, lw=2, label="prediction-error (surprise) probe")

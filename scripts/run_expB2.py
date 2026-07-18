@@ -30,6 +30,7 @@ import _bootstrap  # noqa: F401
 import argparse
 import hashlib
 import json
+import math
 import os
 import subprocess
 from pathlib import Path
@@ -159,14 +160,34 @@ def decide_h_b2(surv, pred, untr, bar: float = 0.65, sesoi: float = 0.05):
     s = fin["survival"].mean()
     beats = (s >= fin["predictor"].mean() + sesoi
              and s >= fin["untrained"].mean() + sesoi)
+    # PREREGISTRATION_L3 sec. 10: the "clears / misses 0.65" adjudication follows
+    # the t-based 90% CI on the per-seed values, not the bare mean (added
+    # 2026-07-18 - the audit found the pipeline verdict used the mean alone,
+    # weaker than the frozen rule; borderline runs now land inconclusive).
+    sv = fin["survival"]
+    if sv.size >= 2 and float(sv.std(ddof=1)) > 0.0:
+        from scipy.stats import t as student_t
+        se = float(sv.std(ddof=1)) / math.sqrt(sv.size)
+        q = float(student_t.ppf(0.95, sv.size - 1))
+        t_lo, t_hi = s - q * se, s + q * se
+    else:  # single seed or zero variance: interval degenerates to the mean
+        t_lo = t_hi = s
+    ci_note = f" [t90 CI ({t_lo:.3f}, {t_hi:.3f}) vs bar {bar:.2f}]"
     if s >= bar and beats:
-        return True, "MET  -> encoding induced (conditional on gates)", 0, fin["survival"]
+        if t_lo >= bar:
+            return True, "MET  -> encoding induced (conditional on gates)" + ci_note, 0, sv
+        zone = ("NOT met  -> mean clears the 0.65 bar but the t-based 90% CI "
+                "straddles it; inconclusive under the pre-registered interval "
+                "adjudication (PREREGISTRATION_L3 sec. 10)" + ci_note)
+        return False, zone, 0, sv
     if beats:
         zone = ("NOT met  -> intermediate zone: beats both baselines by >= 0.05 but misses "
-                "the 0.65 bar; adjudicate with the pre-registered n=10 power extension")
+                "the 0.65 bar; adjudicate with the pre-registered n=10 power extension"
+                + ci_note)
     else:
-        zone = "NOT met  -> strengthened negative (state readable, identity not encoded)"
-    return False, zone, 0, fin["survival"]
+        zone = ("NOT met  -> strengthened negative (state readable, identity not encoded)"
+                + ci_note)
+    return False, zone, 0, sv
 
 
 def cell_file(cells_dir, drift: float, seed: int) -> Path:

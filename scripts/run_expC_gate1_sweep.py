@@ -52,8 +52,13 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--hidden", type=int, default=8, help="frozen L3 capacity (gate-0 headline)")
     ap.add_argument("--seed", type=int, default=0, help="L3 training seed (gate-0 bit-identical)")
-    ap.add_argument("--seeds", type=int, nargs="+", default=list(range(7000, 7006)),
-                    help="per-cell layout evaluation seeds (kept small - the sweep is descriptive)")
+    ap.add_argument("--seeds", type=int, nargs="+", default=list(range(7100, 7106)),
+                    help="per-cell layout evaluation seeds (kept small - the sweep is "
+                         "descriptive). Deliberately DISJOINT from run_expC_gate1's "
+                         "certification seeds (7000-7009): certifying a sweep-selected "
+                         "layout on the seeds it was selected on would inherit the "
+                         "selection maximum (winner's curse). The recorded 2026-07-17 "
+                         "sweep used 7000-7005, before this guard.")
     ap.add_argument("--reaches", type=float, nargs="+", default=[0.15, 0.25, 0.35, 0.5, 0.75])
     ap.add_argument("--horizons", type=int, nargs="+", default=[20, 30, 40, 60, 80])
     ap.add_argument("--ctrl-reach", type=float, default=0.05)
