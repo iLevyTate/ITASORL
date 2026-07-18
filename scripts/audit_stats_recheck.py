@@ -404,6 +404,66 @@ def main() -> int:
                    f > 0.6 for o, f in zip(g0["cd"]["sweep_oracle"],
                                            g0["cd"]["sweep_floor"]) if o >= 0.85))
 
+    print("== FINDINGS Exp C: emergence pilot (milestone 3, N=48 G=30 3 seeds) ==")
+    with open(os.path.join(ARTROOT, "expC", "emergence_pilot_summary.json"),
+              encoding="utf-8") as fh:
+        ec = json.load(fh)
+    cells = sorted(ec["cells"], key=lambda r: r["seed"])
+    gen0 = np.array([c["gen0_auroc"] for c in cells])
+    ft = np.array([c["final_treat_auroc"] for c in cells])
+    fc = np.array([c["final_ctrl_auroc"] for c in cells])
+    d_treat = ft - gen0
+    d_ctrl = fc - gen0
+    contrast = d_treat - d_ctrl
+    est = ec["estimand"]
+    # per-seed deltas/contrast reproduce the stored estimand from raw AUROCs
+    check_true("Exp C per-seed delta_treat reproduces stored",
+               all(abs(a - b) <= 1e-9 for a, b in zip(d_treat, est["delta_treat"])))
+    check_true("Exp C per-seed delta_ctrl reproduces stored",
+               all(abs(a - b) <= 1e-9 for a, b in zip(d_ctrl, est["delta_ctrl"])))
+    check_true("Exp C per-seed contrast reproduces stored",
+               all(abs(a - b) <= 1e-9 for a, b in zip(contrast, est["contrast"])))
+    for got, exp in zip(contrast, [-0.028, 0.033, 0.055]):
+        check(f"Exp C per-seed contrast ({exp:+.3f})", float(got), exp)
+    for got, exp in zip(ft, [0.530, 0.570, 0.604]):
+        check(f"Exp C per-seed final treat AUROC ({exp:.3f})", float(got), exp)
+    # headline contrast + both interval types, recomputed from the per-seed cells
+    check("Exp C mean contrast (+0.020)", float(contrast.mean()), 0.020)
+    check_true("Exp C mean contrast reproduces stored",
+               abs(float(contrast.mean()) - est["mean_contrast"]) <= 1e-9)
+    tlo, thi = t_ci(list(contrast))
+    check("Exp C contrast t lo (-0.052)", tlo, -0.052)
+    check("Exp C contrast t hi (+0.092)", thi, 0.092)
+    check_true("Exp C t-CI reproduces stored",
+               abs(tlo - est["t_ci90"][0]) <= 1e-9 and abs(thi - est["t_ci90"][1]) <= 1e-9)
+    blo, bhi = mean_ci(list(contrast))[1:]
+    check("Exp C contrast boot lo (-0.007)", blo, -0.007)
+    check("Exp C contrast boot hi (+0.048)", bhi, 0.048)
+    check_true("Exp C boot-CI reproduces stored",
+               abs(blo - est["boot_ci90"][0]) <= 1e-9 and abs(bhi - est["boot_ci90"][1]) <= 1e-9)
+    check("Exp C mean final treat AUROC (0.568)", float(ft.mean()), 0.568)
+    # the pre-registered claim is a null: all three sub-conditions fail, CI spans 0
+    check_true("Exp C contrast t-CI spans 0 (ci_excludes_zero False)",
+               tlo < 0.0 < thi and not est["ci_excludes_zero"])
+    check_true("Exp C mean contrast below SESOI 0.05 (meets_sesoi False)",
+               float(contrast.mean()) < 0.05 and not est["meets_sesoi"])
+    check_true("Exp C mean final treat AUROC below floor 0.65 (meets_auroc_floor False)",
+               float(ft.mean()) < BAR and not est["meets_auroc_floor"])
+    check_true("Exp C emergence_claim is False", not est["emergence_claim"])
+    # mechanism: selection HAD grip (fitness moved in both arms) but did not route
+    # it through detection - the separate-survival series is the evidence
+    check_true("Exp C gate-2 fitness moved in both arms",
+               ec["gates"]["gate2_fitness_moves_treat"]
+               and ec["gates"]["gate2_fitness_moves_ctrl"])
+    check_true("Exp C seed-0 treatment bit-reproducible",
+               ec["gates"]["determinism_bit_reproducible"])
+    check_true("Exp C fitness delta positive in every arm-run (selection had grip)",
+               all(c["fit_delta_treat"] > 0 and c["fit_delta_ctrl"] > 0 for c in cells))
+    check_true("Exp C authentic-world death rate fell under selection (gen0 ~0.58 -> final)",
+               all(0.55 <= c["death_rate_auth_gen0"] <= 0.60 for c in cells)
+               and all(c["death_rate_auth_final_treat"] < c["death_rate_auth_gen0"]
+                       for c in cells))
+
     print()
     if failures:
         print(f"RESULT: {len(failures)} of {n_checks} checks FAILED:")

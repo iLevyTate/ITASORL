@@ -1,0 +1,112 @@
+{
+ "source_run": "fullruns/expC_milestone3/emergence_pilot.json",
+ "world": "P(k_land=1.5, k_water=1.5, gravity=0.4)",
+ "surrogate": "frozen L3 G_motion (hidden=8, seed=0)",
+ "control_food": {
+  "n_pellets": 80,
+  "reach": 0.25
+ },
+ "git_commit": "97582022a34874bbbbfba9026cf71cfcc4caab0d",
+ "generated_by": "scripts/promote_expC_summary.py",
+ "bars": {
+  "sesoi": 0.05,
+  "auroc_floor": 0.65
+ },
+ "config": {
+  "n": 48,
+  "generations": 30,
+  "seeds": [
+   0,
+   1,
+   2
+  ],
+  "sigma": 0.03,
+  "q": 0.5,
+  "drift_sigma": 1.0,
+  "n_eps": 2,
+  "max_steps": 80,
+  "embed": 8,
+  "hidden": 8,
+  "l3_hidden": 8,
+  "l3_seed": 0,
+  "panel_pairs": 110,
+  "panel_prefix": 20,
+  "panel_tail": 24
+ },
+ "cells": [
+  {
+   "seed": 0,
+   "gen0_auroc": 0.5046627808513174,
+   "final_treat_auroc": 0.5303117543536837,
+   "final_ctrl_auroc": 0.5580207632667546,
+   "fit_delta_treat": 0.611619,
+   "fit_delta_ctrl": 2.785491,
+   "death_rate_auth_gen0": 0.5833333134651184,
+   "death_rate_auth_final_treat": 0.28125,
+   "death_rate_auth_final_ctrl": 0.4270833432674408,
+   "death_rate_surr_gen0": 0.010416666977107525
+  },
+  {
+   "seed": 1,
+   "gen0_auroc": 0.49852465669642926,
+   "final_treat_auroc": 0.5697587648969866,
+   "final_ctrl_auroc": 0.5367186416614795,
+   "fit_delta_treat": 1.358394,
+   "fit_delta_ctrl": 3.598249,
+   "death_rate_auth_gen0": 0.5729166865348816,
+   "death_rate_auth_final_treat": 0.375,
+   "death_rate_auth_final_ctrl": 0.2604166567325592,
+   "death_rate_surr_gen0": 0.0
+  },
+  {
+   "seed": 2,
+   "gen0_auroc": 0.49635914565468814,
+   "final_treat_auroc": 0.6043540384254041,
+   "final_ctrl_auroc": 0.5495517974686095,
+   "fit_delta_treat": 0.951255,
+   "fit_delta_ctrl": 3.633876,
+   "death_rate_auth_gen0": 0.59375,
+   "death_rate_auth_final_treat": 0.1458333283662796,
+   "death_rate_auth_final_ctrl": 0.1458333283662796,
+   "death_rate_surr_gen0": 0.02083333395421505
+  }
+ ],
+ "estimand": {
+  "delta_treat": [
+   0.02564897350236628,
+   0.07123410820055737,
+   0.107994892770716
+  ],
+  "delta_ctrl": [
+   0.05335798241543721,
+   0.038193984965050276,
+   0.053192651813921354
+  ],
+  "contrast": [
+   -0.02770900891307093,
+   0.03304012323550709,
+   0.054802240956794646
+  ],
+  "mean_contrast": 0.020044451759743603,
+  "t_ci90": [
+   -0.05204809790152706,
+   0.09213700142101428
+  ],
+  "boot_ci90": [
+   -0.007459298196878257,
+   0.04754820171636546
+  ],
+  "mean_final_treat_auroc": 0.5681415192253582,
+  "n_seeds": 3,
+  "ci_excludes_zero": false,
+  "meets_sesoi": false,
+  "meets_auroc_floor": false,
+  "emergence_claim": false
+ },
+ "gates": {
+  "gate2_fitness_moves_treat": true,
+  "gate2_fitness_moves_ctrl": true,
+  "determinism_bit_reproducible": true
+ },
+ "wall_seconds": 25194.0
+}
