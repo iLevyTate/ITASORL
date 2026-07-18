@@ -51,23 +51,30 @@ Together: an agent does not represent a detectable artifact *for free* (L2), but
 when the artifact is a generative fingerprint that survival pressure forces it to
 cope with, world-discriminative state emerges as a byproduct, read out and never
 rewarded (L3). A held-out probe (n = 10, section 10.6) sharpens what "emerges"
-means: the world-signal *generalizes* to an unseen same-recipe fingerprint the
-agent never lived with (transfer 0.773 vs untrained 0.569, pre-registered rule
-passes), so it is not an overfit to one artifact instance - though a frozen
-reverse run shows the transfer is direction-dependent (coarse-trained reading the
-subtler fingerprint fails the bar at 0.638, section 10.6); but under a
+means: the world-signal survives transfer to a *capacity variant* of the training
+fingerprint the agent never lived with (transfer 0.773 vs untrained 0.569,
+pre-registered rule passes) - though the two maps share the same recipe, seed,
+and training data, so this channel certifies robustness within one recipe, not
+generalization to an independent fingerprint (see the 2026-07-18 scope note in
+section 10.6); a frozen
+reverse run also shows the transfer is direction-dependent (coarse-trained reading
+the subtler fingerprint fails the bar at 0.638, section 10.6); but under a
 common-garden control that equalizes the felt dynamics, the signal does **not**
 persist (0.557, below the bar; late-tail at chance). The emergent state is best
 read as **reactive tracking of the currently-felt dynamics, not a persistent
 stored world-identity representation** — *a reading that is PROVISIONAL pending
 re-scoring: the common-garden numbers were computed with the since-fixed biased
 estimator of section 13.C (see the correction banner in section 10.6); the
-transfer numbers are unaffected.* A cross-recipe probe (n = 10, section
-10.7) extends the generality one step further: the same direction also reads a
+transfer numbers are unaffected.* The **generalization claim is carried by the
+cross-recipe probe** (n = 10, section 10.7): the same direction reads a
 *different surrogate family* (a random-Fourier-features ridge law; 0.684 vs
-untrained 0.548, pre-registered rule passes), so the reactive world-signal is
-recipe-general, not a signature of one function class. The conditions under
-which incidental encoding emerges are exactly the object of study.
+untrained 0.548, pre-registered rule passes, machine-checked), so the reactive
+world-signal is recipe-general, not a signature of one function class - a thin
+but genuine pass (t-based 90% CI lower bound 0.654 vs the 0.65 bar; 7/10 seeds
+above), fit on the same training data by design, so it certifies transfer across
+differently-biased approximations of the same law, not across independent data.
+The conditions under which incidental encoding emerges are exactly the object of
+study.
 
 ---
 
@@ -83,7 +90,7 @@ substrate). Detection is measured against a **surrogate ladder**:
 | L0 | Identical re-implementation (control, must be at chance) | tested |
 | L1 | Observation discretization (a lattice / quantization tell) | tested |
 | L2 | Rollout drift (a slowly drifting dynamics coefficient) | tested |
-| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; held-out probe: transfer-generalizing but reactive, not a persistent representation; cross-recipe probe: the signal also reads a different surrogate family, 0.684, rule passes; section 10) |
+| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; held-out probe: capacity-variant transfer positive (0.773; same recipe and data, see the 10.6 scope note); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the "reactive, not persistent" common-garden reading is PROVISIONAL pending the 10.6 re-score; section 10) |
 | L4 | Adversarially-hardened surrogate | not started |
 
 Three experiments were planned. This cycle completed Experiment A for L1 and L2
@@ -154,9 +161,10 @@ leakage audit must be read with this in mind.
 
 ## 3. Experiment B: incidental detection (the headline)
 
-*(All section-3 numbers are committed in `artifacts/expB/summary.json`,
+*(Section-3 numbers are committed in `artifacts/expB/summary.json`,
 promoted from the recorded `fullruns/06302026` e2e bundle plus the 2026-07-13
-k-step rerun log by `scripts/promote_ab_summaries.py`.)*
+k-step rerun log by `scripts/promote_ab_summaries.py` - with one exception: the
+3.4 engagement figures, see the 2026-07-18 correction note there.)*
 
 **The apparatus.** A compact recurrent world model (RSSM-lite: encoder → GRU →
 next-observation decoder) trained **only** to predict its own sensory stream. It
@@ -252,6 +260,20 @@ where the drag drift most directly lives, only marginally beat its own baseline,
 1.07×, and also showed nothing; it is the less informative of the two, precisely
 because it under-engaged.)
 
+> **CORRECTION NOTE (2026-07-18, methodology audit).** The specific figures in
+> the paragraph above (0.52 / 0.89 / 1.35 / 1.07×) predate the promotion
+> pipeline and cannot be tied to a recorded run: the committed artifact stores
+> `open_loop_mse: 0.657` for the promoted `fullruns/06302026` bundle and no
+> baseline values at all, because `results_io.py`'s gap-step parser captures
+> only the MSE line and drops the printed baselines. The qualitative
+> adjudication - the objective engaged (`open_loop_engaged: true`, committed and
+> gate-checked) - stands; the specific magnitudes above should be treated as
+> unverified until the gap step is re-promoted with a parser that captures the
+> baselines. Two scope caveats recorded at the same time: the engagement MSE is
+> computed on the model's own training episodes (an "objective engaged during
+> training" check, not held-out prediction skill), and this correction changes
+> no verdict.
+
 **A nonlinear probe finds nothing either.** Replacing the linear probe with a
 random forest on the same recurrent states leaves the target at chance
 (**0.459 ± 0.009** control and **0.482 ± 0.031** drift 0.45), while the positive
@@ -325,13 +347,14 @@ inducing it (if possible) requires something more deliberate.
   that clears the pre-registered bar. The condition that flips the result is the
   artifact's character (a generative fingerprint that survival must cope with), not
   probe power, capacity, or objective horizon. A held-out probe (section 10.6)
-  qualifies the *nature* of the encoding: it transfers to an unseen same-recipe
-  fingerprint (not an overfit to one artifact instance), but a common-garden
+  qualifies the *nature* of the encoding: it transfers to a capacity variant of
+  the training fingerprint (same recipe, seed, and training data - robustness
+  within one recipe, see the 10.6 scope note), but a common-garden
   control shows it is reactive tracking of the felt dynamics, not a persistent
   stored world-identity representation (PROVISIONAL — the common-garden channel
   is being re-scored with the fixed estimator, see the section 10.6 correction
-  banner). A cross-recipe probe (section 10.7)
-  extends the transfer half across surrogate families: the same direction reads a
+  banner). The generalization evidence is the cross-recipe probe (section 10.7):
+  the same direction reads a
   gate-calibrated random-Fourier-features law (0.684, rule passes), so the
   reactive signal is recipe-general.
 - **H2 (substrate-grounding via ablations)**: not yet tested.
@@ -362,7 +385,12 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    replication. The genuinely *instrumentally-necessary* (Dreamer-style) refinement, an
    identifiable per-episode drag the agent must cope with to survive (pre-registered in
    `docs/PREREGISTRATION_Bv3.md`), lifts the probe to **0.610** at n = 10 (90 % CI
-   [0.585, 0.634]) but still misses 0.65. A pre-registered capacity-ceiling control (n = 10)
+   [0.585, 0.634]) but still misses 0.65. *(Record completed 2026-07-18: the
+   pre-registered n = 3 confirmatory run at the frozen seeds preceded the n = 10
+   power extension and read 0.615 ± 0.083, intermediate zone - recorded at the
+   time only in the 2026-07-03 runner-design spec, not here; conclusion-neutral,
+   both runs miss the bar. Logged for file-drawer completeness, with a matching
+   entry in `PREREGISTRATION_Bv3.md` section 12.)* A pre-registered capacity-ceiling control (n = 10)
    that supervises the recurrent trunk directly on the drift saturates the pooled
    persistent-direction readout at **0.596** (90 % CI [0.577, 0.616]; a t-based interval
    [0.573, 0.619] also excludes 0.65, by ~4 SE), while the matched-pair detectability
@@ -395,9 +423,10 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    now run and reported below.
 2. **Held-out / common-garden probe: TESTED, SPLIT (section 10.6).** Two channels
    on one hidden = 8 run. Transfer is POSITIVE: the world-identity direction fit
-   against the trained fingerprint still reads an unseen same-recipe fingerprint
-   (survival 0.773 vs untrained 0.569; pre-registered rule passes), so the signal
-   is not an overfit to one artifact instance. Common garden is a NEGATIVE:
+   against the trained fingerprint still reads a held-out capacity variant of it
+   (survival 0.773 vs untrained 0.569; pre-registered rule passes) - same recipe
+   and training data, so robustness within one recipe (10.6 scope note); the
+   across-recipe generalization is item 3. Common garden is a NEGATIVE:
    once the felt dynamics are made identical for the tail, tail-only state does not
    carry the prefix world (survival 0.557, below the 0.65 bar; late-tail 0.492 at
    chance; rule fails). This resolves the reactive-vs-representational ambiguity
@@ -594,6 +623,17 @@ mediates only ≈ 0.03 of the 0.752 headline. Caveat: the residualization basis 
 linear/quadratic in a short behavior window; a full-history or nonlinear control
 could in principle remove more.
 
+> **COVARIATE-GAP NOTE (2026-07-18, methodology audit).** The behavior channels
+> residualized out are speed/energy/food-distance/drag only; absolute position
+> and heading are not in the dump and are not controlled. Because the two
+> worlds' velocity laws differ, identical policies trace diverging position
+> paths, so a state component that encodes *position* would survive this
+> control and read as "behavior-independent." The 0.726/0.722 controlled
+> numbers should be cited with this scope limit until the audit is re-run with
+> position and heading added to the trace basis (the dump and covariate code
+> now support them for future runs; existing dumps do not contain position, so
+> the re-run requires regenerating pools).
+
 ### 10.5 Second in-band capacity (replication across artifact type)
 
 The preregistration requires the organism test at a second in-band capacity, since
@@ -690,6 +730,18 @@ against. Scope, stated honestly: hidden = 7 is the same surrogate recipe at a
 different capacity, not a different surrogate family; cross-recipe transfer was out
 of scope for this run (spec 2026-07-14) and is closed by section 10.7.
 
+> **SCOPE NOTE (2026-07-18, methodology audit).** The held-out hidden = 7 map is
+> trained on the bit-identical authentic transition set as the hidden = 8
+> training map (same n_eps = 250, steps = 40, seed = 0), differing only in
+> width. A residual-field comparison on fresh authentic transitions measures
+> ~36% shared fingerprint variance between the two maps (Pearson r ≈ +0.60),
+> versus ~4% (r ≈ +0.20) between hidden = 8 and the cross-recipe `G_rff` of
+> section 10.7. Channel 1 therefore certifies robustness across *capacity
+> variants of one recipe fit on one dataset* - a weaker claim than transfer to
+> an independent fingerprint. The recipe-level generalization claim is carried
+> by section 10.7, whose two maps are near-orthogonal in fingerprint space.
+> This note changes no number and no rule outcome; it narrows the wording.
+
 **Channel 2, common garden: NEGATIVE (informative).** Two groups run a 20-step
 prefix in different worlds (authentic vs the hidden = 8 surrogate), then continue
 under identical authentic dynamics for a 24-step tail; the probe reads tail-only
@@ -774,7 +826,11 @@ against, survival-specifically (the predictor and untrained arms clear no bar),
 attenuated relative to same-recipe transfer (0.773 -> 0.684) as expected for a
 farther family. The common-garden verdict of section 10.6 is untouched: this
 extends the *generality* of the reactive world-signal; it says nothing new about
-persistence.
+persistence. *(2026-07-18 note: that common-garden verdict is itself now
+provisional - see the section 10.6 correction banner; and per the 10.6 scope
+note, this cross-recipe channel, not same-recipe transfer, carries the
+generalization claim. Scope: `G_rff` is fit on the same training data as
+`G_motion` by design - the recipes differ in function class and fit, not data.)*
 
 ---
 

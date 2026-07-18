@@ -88,7 +88,7 @@ def test_collect_pool_traces_match_anchor_means():
     out = collect_pool(agent, norm, P, 0.45, 5, 6, "cpu", 222, RS, return_anchors=True)
     H, spd, energy, food, drag, reward, traces = out
     k, steps = H.shape[0], H.shape[1]
-    assert traces.shape == (k, steps, 4)
+    assert traces.shape == (k, steps, 7)
     np.testing.assert_allclose(traces[:, :, 0].mean(1), spd, rtol=1e-5, atol=1e-6)
     np.testing.assert_allclose(traces[:, :, 1].mean(1), energy, rtol=1e-5, atol=1e-6)
     np.testing.assert_allclose(traces[:, :, 2].mean(1), food, rtol=1e-5, atol=1e-6)
@@ -96,15 +96,16 @@ def test_collect_pool_traces_match_anchor_means():
 
 
 def test_pooled_readout_dump_contains_traces(tmp_path):
-    """--dump-states must persist bta/bts (k, steps, 4) so the per-timestep
-    behavior control can run offline on new dumps."""
+    """--dump-states must persist bta/bts (k, steps, 7) so the per-timestep
+    behavior control (including the position/heading channels added 2026-07-18)
+    can run offline on new dumps."""
     agent, norm = _agent_norm()
     p = tmp_path / "dump.npz"
     pooled_readout(agent, norm, P, 0.45, n_eps=6, steps=5, ray_steps=RS,
                    device="cpu", dump_path=str(p))
     with np.load(p) as z:
-        assert z["bta"].shape[1:] == (5, 4)
-        assert z["bts"].shape[1:] == (5, 4)
+        assert z["bta"].shape[1:] == (5, 7)
+        assert z["bts"].shape[1:] == (5, 7)
         assert z["bta"].shape[0] == z["Ha"].shape[0]
         assert z["bts"].shape[0] == z["Hs"].shape[0]
 

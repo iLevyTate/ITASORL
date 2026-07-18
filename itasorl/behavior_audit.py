@@ -27,8 +27,12 @@ import numpy as np
 from itasorl.experiment_b import (episode_features, episode_features_full,
                                   probe_auroc)
 
-#: dump trace channel order (matches collect_pool's sp/en/fd/dg accumulators)
-BEHAVIOR_CHANNELS = ("speed", "energy", "food", "drag")
+#: dump trace channel order (matches collect_pool's accumulators). Dumps written
+#: before 2026-07-18 carry only the first four channels; position/heading were
+#: added after the methodology audit flagged that diverging position paths are
+#: an uncontrolled mediator (FINDINGS 10.4 covariate-gap note). All controls
+#: below are channel-count agnostic and accept both dump generations.
+BEHAVIOR_CHANNELS = ("speed", "energy", "food", "drag", "pos_x", "pos_y", "heading")
 
 
 def quad_expand(B: np.ndarray) -> np.ndarray:
@@ -153,6 +157,11 @@ def audit_cell(npz: dict, seed: int = 0) -> dict:
                   np.concatenate([npz["ena"], npz["ens"]]),
                   np.concatenate([npz["fda"], npz["fds"]]),
                   np.concatenate([npz["dra"], npz["drs"]])], axis=1)
+    if "bta" in npz and np.asarray(npz["bta"]).shape[-1] > 4:
+        # post-2026-07-18 dumps: fold the extra trace channels (position/heading)
+        # into the episode-mean basis so the control covers the position mediator
+        Bt_all = np.concatenate([np.asarray(npz["bta"]), np.asarray(npz["bts"])])
+        B = np.concatenate([B, Bt_all[:, :, 4:].mean(axis=1)], axis=1)
     out = {
         "target": probe_auroc(X, y),
         "behavior_only": behavior_only_auroc(B, y),

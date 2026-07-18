@@ -92,8 +92,9 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: transfers to an unseen fingerprint subtle-to-coarse (0.773) but not coarse-to-subtle (0.638, frozen rule fails); the "reactive, not persistent" common-garden reading is PROVISIONAL pending re-scoring with a fixed estimator (FINDINGS §10.6 correction); cross-recipe probe: also reads a different surrogate family (0.684, rule passes)** |
-| Experiment C (emergence under selection) / Ladder L4 | not started (pre-registration design-complete: [`docs/PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md)) |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: capacity-variant transfer subtle-to-coarse (0.773; same recipe/data, FINDINGS §10.6 scope note) but not coarse-to-subtle (0.638, frozen rule fails); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the "reactive, not persistent" common-garden reading is PROVISIONAL pending re-scoring with a fixed estimator (FINDINGS §10.6 correction)** |
+| Experiment C (emergence under selection) | first pilot run; recorded null **invalidated** by two since-fixed measurement bugs (FINDINGS §13.C) - pre-registered re-run on fixed code pending ([`docs/PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md)) |
+| Ladder L4 (adversarially-hardened surrogate) | not started |
 
 ### Key result
 
@@ -140,9 +141,10 @@ claim is conditional on the subtler hidden = 8 artifact. What survives both capa
 reward-clean, survivorship-clean, behavior-independent world-signal of about **0.72** in the
 survival agent's state. *A held-out probe (n = 10, committed per-seed summary in
 `artifacts/expB2/heldout_l3_h8_summary.json`) then sharpens what that signal is.* It splits: the world-identity direction learned against the trained fingerprint
-still reads an unseen same-recipe fingerprint the agent never lived with (transfer **0.773** vs
-untrained floor 0.569; the pre-registered rule passes), so it is not an overfit to one artifact
-instance. A frozen reverse probe (train on the coarser fingerprint, read the subtler one;
+still reads a held-out capacity variant of it (transfer **0.773** vs
+untrained floor 0.569; the pre-registered rule passes) - note the variant shares the training
+recipe, seed, and data, so this certifies robustness within one recipe (FINDINGS §10.6 scope
+note); the across-recipe generalization claim is carried by the cross-recipe probe below. A frozen reverse probe (train on the coarser fingerprint, read the subtler one;
 per-seed summary in `artifacts/expB2/heldout_l3_h7_reverse_summary.json`) fails its bar at
 **0.638**, so this transfer is direction-dependent: it generalizes from subtle training
 artifacts, not bidirectionally. And under a common-garden control that runs both groups through an identical tail after
@@ -154,8 +156,9 @@ the common-garden numbers were scored with a since-fixed biased estimator and ar
 probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
 surrogate *families*: the same direction reads a gate-calibrated random-Fourier-features ridge law
 the agent never lived with (**0.684** vs untrained floor 0.548; the pre-registered rule passes,
-machine-checked), so the reactive world-signal is recipe-general, not a signature of one function
-class. See
+machine-checked; a thin pass - the t-based 90% CI lower bound clears the bar by 0.004 and 7/10
+seeds sit above it), so the reactive world-signal is recipe-general, not a signature of one
+function class. See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 
 ---
@@ -201,7 +204,7 @@ class. See
 |   |-- PREREGISTRATION_C.md    Experiment C pre-registration (design-complete)
 |   |-- AUDIT_2026-07.md        research-integrity audit
 |   `-- figures/                result figures (.png) + provenance README
-|-- artifacts/expB2/            published B-v2/L3 JSON/PNG (committed)
+|-- artifacts/                  published summaries (committed): expA/, expB/, expB2/, expC/, l3_crossrecipe/
 |-- fullruns/                   e2e run bundles (gitignored; default output)
 |-- results/LATEST_RUN.txt      pointer to latest fullruns folder
 |-- notebooks/colab_gpu.ipynb   Colab end-to-end runner

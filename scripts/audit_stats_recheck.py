@@ -464,6 +464,43 @@ def main() -> int:
                and all(c["death_rate_auth_final_treat"] < c["death_rate_auth_gen0"]
                        for c in cells))
 
+    # ---- derived-doc qualifier guard ------------------------------------
+    # The reactive-vs-persistent reading is PROVISIONAL until the section 10.6
+    # re-score is adjudicated (FINDINGS correction banner, 2026-07-18). The
+    # public-facing derived docs are hand-maintained and have drifted stale
+    # before (audit fault: index.html stated the reading as final), so pin the
+    # qualifier here. When the re-score is adjudicated and the banner comes
+    # down, update or remove this block in the same change.
+    print("\n== derived-doc qualifier guard (provisional reactive reading) ==")
+    root = os.path.join(os.path.dirname(__file__), "..")
+
+    def _read(relpath: str) -> str:
+        with open(os.path.join(root, relpath), encoding="utf-8") as fh:
+            return fh.read()
+
+    for relpath, needle, label in [
+        ("index.html", "PROVISIONAL",
+         "index.html carries the PROVISIONAL qualifier"),
+        ("CITATION.cff", "provisional",
+         "CITATION.cff carries the provisional qualifier"),
+        ("README.md", "PROVISIONAL",
+         "README carries the PROVISIONAL qualifier"),
+        ("docs/FINDINGS.md", "PROVISIONAL pending the 10.6 re-score",
+         "FINDINGS section-1 ladder row carries the PROVISIONAL qualifier"),
+        ("docs/PAPER_OUTLINE.md", "PROVISIONAL",
+         "PAPER_OUTLINE carries the PROVISIONAL qualifier"),
+    ]:
+        check_true(label, needle in _read(relpath))
+    # the reactive wording must never appear in index.html without the
+    # qualifier attached in the same sentence block
+    idx = _read("index.html")
+    for phrase in ("not a persistent stored representation",
+                   "not a stored representation"):
+        for pos in _find_all(idx, phrase):
+            window = idx[pos:pos + 260]
+            check_true(f"index.html reactive claim at offset {pos} is qualified",
+                       "PROVISIONAL" in window)
+
     print()
     if failures:
         print(f"RESULT: {len(failures)} of {n_checks} checks FAILED:")
@@ -472,6 +509,14 @@ def main() -> int:
         return 1
     print(f"RESULT: all {n_checks} checks passed.")
     return 0
+
+
+def _find_all(haystack: str, needle: str) -> list[int]:
+    out, start = [], 0
+    while (pos := haystack.find(needle, start)) != -1:
+        out.append(pos)
+        start = pos + 1
+    return out
 
 
 if __name__ == "__main__":

@@ -681,7 +681,7 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
         h = agent.initial_state(1, device)
         prev = torch.zeros(1, agent.act_dim, device=device)
         obs = w.observe().astype(np.float64)
-        Hrow, sp, en, fd, dg, died = [], [], [], [], [], False
+        Hrow, sp, en, fd, dg, px, py, hd, died = [], [], [], [], [], [], [], [], False
         rw = 0.0
         for _ in range(steps):
             obs_t = torch.as_tensor(norm(obs)[None], dtype=torch.float32, device=device)
@@ -692,6 +692,9 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             en.append(float(w.E / w.Emax))
             fd.append(-_food_potential(w))           # >=0 distance to nearest pellet
             dg.append(float(w._drift_w))             # instantaneous drag-drift state (0 in authentic)
+            px.append(float(w.pos[0]))               # absolute position: diverges across worlds
+            py.append(float(w.pos[1]))               # under differing velocity laws, so it must be
+            hd.append(float(w.heading))              # available to the mediation control
             rw += float(r.reward)                     # summed homeostatic reward (never detection)
             obs = r.obs.astype(np.float64)
             prev = env_act
@@ -705,10 +708,10 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             food.append(float(np.mean(fd)))
             drag.append(float(np.mean(dg)))
             reward.append(rw)
-            traces.append(np.stack([sp, en, fd, dg], axis=1).astype(np.float32))
+            traces.append(np.stack([sp, en, fd, dg, px, py, hd], axis=1).astype(np.float32))
     H = np.stack(Hs) if Hs else np.zeros((0, steps, agent.hidden), np.float32)
     if return_anchors:
-        Bt = np.stack(traces) if traces else np.zeros((0, steps, 4), np.float32)
+        Bt = np.stack(traces) if traces else np.zeros((0, steps, 7), np.float32)
         return (H, np.asarray(spd), np.asarray(energy), np.asarray(food),
                 np.asarray(drag), np.asarray(reward), Bt)
     return H, np.asarray(spd)

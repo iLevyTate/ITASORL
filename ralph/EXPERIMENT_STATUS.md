@@ -3,10 +3,10 @@
 Ralph reads this **every run** before choosing work. Update it when new
 `fullruns/` appear, canonical artifacts change, or conclusions shift.
 
-Last updated: **2026-07-17** (doc-sync during the repository quality audit: this
-snapshot had lagged at 2026-07-10 / pre-L3; brought current with the completed L3 arc.
-Numbers below are the ones verified by `scripts/audit_stats_recheck.py` and
-`docs/FINDINGS.md` §10.)
+Last updated: **2026-07-18** (methodology-audit sync: Exp C pilot invalidation
+reflected, held-out-transfer wording narrowed per the FINDINGS §10.6 scope note,
+seed-0 diagnostic bundle acknowledged. Numbers below are the ones verified by
+`scripts/audit_stats_recheck.py` and `docs/FINDINGS.md` §10.)
 
 ---
 
@@ -125,7 +125,10 @@ Narrative: `docs/FINDINGS.md` §7 (next steps), §9 (B-v2).
 ## Open scientific questions
 
 1. **Replication gap:** Why do seeds 1–2 land ~0.49 while seed 0 ~0.586? Code,
-   GPU, or true variance? Local seed-0 diagnostic deferred (needs human to start).
+   GPU, or true variance? A completed local seed-0 diagnostic bundle exists at
+   `results/replicate-seed0-diagnostic/expB2_results.json` (survival@0.45
+   seed 0 = 0.605 - consistent with Colab 0.586 / lab ~0.595, conclusion-neutral);
+   it has not been formally analyzed or written up.
 2. **Power:** RESOLVED (07062026): the n=10 regime extension ran (RTX 4050, 337 min);
    survival 0.610 +/- 0.047, 90% CI [0.585, 0.634] excludes 0.65, and L0 TOST/ROPE pass
    at n=10 (equivalent to chance).
@@ -134,16 +137,20 @@ Narrative: `docs/FINDINGS.md` §7 (next steps), §9 (B-v2).
    pair-splitting estimator (FINDINGS §10.6 correction banner, 2026-07-18) and are
    being re-scored from the saved `_cg.npz` dumps; the frozen rules re-adjudicate. The
    L3 held-out/common-garden probe (`artifacts/expB2/heldout_l3_h8_summary.json`) shows
-   the world-signal transfers to unseen fingerprints (0.773 same-recipe, 0.684
-   cross-recipe) but does not survive a common-garden control (tail-only 0.557, late tail
-   0.492 at chance) — so the agent tracks the currently-felt dynamics rather than storing a
-   persistent world-identity representation. FINDINGS §10.6–10.7.
+   the world-signal transfers to a same-recipe capacity variant (0.773; same recipe/data,
+   FINDINGS §10.6 scope note) and, carrying the generalization claim, to a different
+   surrogate family (0.684 cross-recipe) but does not survive a common-garden control
+   (tail-only 0.557, late tail 0.492 at chance) — so the agent tracks the currently-felt
+   dynamics rather than storing a persistent world-identity representation.
+   FINDINGS §10.6–10.7.
 4. **L3 artifact:** DONE. The generative-fingerprint surrogate (`itasorl/surrogate_l3.py`
    `G_motion`, `l3` world hook) was built, oracle-gated (AUROC in [0.85, 0.95]), and run at
    two calibrated capacities (hidden=8, hidden=7) at n=10; survival pooled 0.752 with a
    behavior-independent ~0.73. FINDINGS §10, PREREGISTRATION_L3 §12. Remaining open science:
-   H2 substrate-grounding ablations, H3 / Experiment C (emergence under selection; prereg
-   design-complete, `docs/PREREGISTRATION_C.md`), and Ladder L4 (adversarial; stub).
+   H2 substrate-grounding ablations, H3 / Experiment C (first milestone-3 pilot ran; its
+   recorded null is INVALIDATED by two since-fixed measurement bugs, FINDINGS §13.C - the
+   pre-registered re-run on fixed code is pending, `docs/PREREGISTRATION_C.md`), and
+   Ladder L4 (adversarial; stub).
 
 ---
 

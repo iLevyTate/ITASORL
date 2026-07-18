@@ -118,6 +118,16 @@ raw metrics in `expB2_results.json`. Published confirmatory copies live in
 
 ## 12. Deviations from pre-registration
 
+- **2026-07-18 — retroactive log entry (methodology audit): the replication
+  verdict was rendered with the L0 equivalence gate formally inconclusive.**
+  Section 7 requires all gates to pass before the survival target is
+  interpreted. The full-scale replication's L0 TOST was inconclusive at n = 3
+  (p = 0.20; underpowered, as FINDINGS section 9 discloses in its caveats), yet
+  the pre-registered "strengthened negative" verdict was rendered. The gap was
+  disclosed in FINDINGS but never logged here as a deviation; it is now. The
+  gate later passed cleanly at n = 10 (TOST and ROPE), so the verdict stands;
+  the mechanical lesson - the pipeline prints gates and verdicts independently
+  rather than conditioning one on the other - is recorded in the audit notes.
 - **2026-06-28 — GAE training bug found and fixed; sweep re-run.** The ralph hardening
   pass found a real correctness bug in `compute_gae`: the advantage accumulator gated
   its carry with the *current* step's mask instead of the *next* step's, leaking the

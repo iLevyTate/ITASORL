@@ -116,7 +116,20 @@ sysid-aux CEILING (PR #14) as the capacity reference.
 
 ## 12. Deviations from pre-registration
 
-- (none yet)
+- **2026-07-18 (recorded retroactively by the methodology audit): the n = 3
+  confirmatory run was not published at the time.** The pre-registered n = 3 run
+  at the frozen seeds completed 2026-07-03 and read pooled survival target
+  0.615 ± 0.083 (intermediate zone); it was recorded only in the 2026-07-03
+  runner-design spec (`docs/superpowers/specs/`), and FINDINGS reported the
+  n = 10 power extension (0.610) directly. Conclusion-neutral - both runs land
+  below the 0.65 bar and in the same zone - but the primary run should have
+  been recorded here when it completed. Now logged in FINDINGS section 7.1.
+- **2026-07-18 (same audit): estimand wording vs adjudication.** Section 5
+  names "selectivity-corrected AUROC" as the estimand while section 6's
+  decision sentence and the promoted artifacts adjudicate the raw pooled
+  target; the raw target is what every published B-v3 verdict used. For a
+  below-bar null this is the anti-conservative (honest) choice; recorded here
+  so the discrepancy in the frozen text is on the record rather than silent.
 
 ## 13. How to run
 
