@@ -267,3 +267,41 @@ records here before milestone 1.
    dumping per-generation states for offline re-probing and the behavior-mediation audit.
 4. **Adjudicate + decide on scale.** Apply the frozen decision rule; if the pilot trend is promising but
    not decisive, decide the persistent-host commitment for the n=0..9 / G=60 extension.
+
+## 14. Proposed amendments for the post-invalidation re-run (2026-07-18 - DRAFT, not yet frozen)
+
+*Appended by the 2026-07-18 methodology audit, before the re-run and therefore
+outcome-blind with respect to it. These are PROPOSALS: none is binding until
+the run owner reviews, edits, and re-freezes them in a dated entry here. The
+original sections 1-13 are unchanged. Rationale for each lives in the audit
+record (the invalidated pilot is FINDINGS section 13/13.C).*
+
+1. **Persistence estimand.** The pilot adjudicated emergence on the full-tail
+   `cg_tail_target` (per the section-5 feature spec). The full-tail mean weights
+   early tail steps where residual reactive state from the just-felt prefix
+   lingers, so a slow-decaying reactive signal could satisfy the claim. Proposal:
+   report `cg_tail_target` as registered AND pre-register `cg_latetail_target`
+   (last 8 tail steps) as a co-primary persistence condition - an emergence claim
+   requires the late-tail to clear the floor too.
+2. **Selection-intensity matching must be adjudicated, not assumed.** The
+   per-arm gen-0 quantile threshold (the disclosed pilot deviation) leaves the
+   per-generation qualifier fraction free to diverge between arms (the pilot's
+   control arm selected ~3x harder on fitness delta). The runner now persists
+   `n_qualifiers_treat/ctrl` per generation; proposal: freeze an
+   intensity-matching check (e.g., mean qualifier-fraction difference between
+   arms below a stated tolerance) as a validity gate for the contrast.
+3. **Missing panel gates from section 7.** The pilot panel computed detection +
+   L0 floor + separate survival only; the leakage battery ("re-run every few
+   generations") and a panel-level speed positive control (>= 0.75) were never
+   implemented. Proposal: implement both before the re-run, or amend section 7
+   to state what replaces them (the L0 floor plus offline dump re-probing).
+4. **Gate-1 scope honesty.** The gate-1 control leg cannot fail by construction
+   at the default layout (see the 2026-07-18 note in
+   `itasorl/experiment_c_gate1.py`); control-arm fitness-neutrality rests on
+   `scripts/derisk_expC_control.py`. Proposal: the re-run's gate checklist cites
+   the de-risk sensitivity explicitly and treats gate-1 as treatment-leg-only.
+5. **Reproducibility wording.** Determinism checks compare fitness series
+   rounded to 8 decimals and never re-derive the panel AUROC; claims should say
+   "reproducible to 8 decimals", and a CUDA run should add a CPU-parity spot
+   check on one seed. (The runner now enables
+   `torch.use_deterministic_algorithms(True, warn_only=True)`.)

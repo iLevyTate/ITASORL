@@ -58,6 +58,13 @@ Per creature i:
 - slope acceleration g_slope = −g · ∇H(x, y).
 - a = R(φ)·thrust(action) + g_slope.
 - v ← (1 − k_drag·dt)·v + a·dt;  pos ← wrap(pos + v·dt);  φ ← φ + turn·dt.
+  - *Implementation note (v0, recorded 2026-07-18):* `PatchOfEarthV0` deviates
+    from the wrap spec - position is **clipped** to [0, 1] with the normal
+    velocity zeroed (a reflecting wall), and the raycast returns a wall hit at
+    the boundary. The deviation is applied identically to authentic and
+    surrogate worlds, so it cannot leak world identity; every published run
+    used walls. A future version should either implement wrap or promote this
+    note into the spec proper.
 
 **Metabolism / homeostasis:**
 

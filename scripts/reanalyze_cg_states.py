@@ -123,12 +123,39 @@ def main() -> None:
         print(f"\nSurvival @ strongest drift {dmax} (old committed: tail 0.557 / latetail 0.492 at h8):")
         print(f"  corrected tail     = {s['cg_tail_mean']:.3f}  (bar {a.bar})")
         print(f"  corrected latetail = {s['cg_latetail_mean']:.3f}")
-        verdict = ("PERSISTENT-signal candidate: corrected value reaches the bar - "
-                   "the 'reactive, not persistent' reading does NOT survive as recorded"
-                   if max(s["cg_tail_mean"], s["cg_latetail_mean"]) >= a.bar else
-                   "below the bar - the reactive reading survives the estimator fix "
-                   "(now on a valid measurement)")
-        print(f"  -> {verdict}")
+        # Frozen rule (PREREGISTRATION_L3 sec. 12, 2026-07-14 entry): survival
+        # cg_tail_target >= bar AND > untrained + 0.05. The late-tail is the
+        # separate persistence-decay diagnostic, never an OR-able pass channel.
+        # (2026-07-18 audit fix: the earlier verdict line keyed on
+        # max(tail, latetail) and omitted the untrained clause.)
+        ukey = f"d{dmax}_untrained"
+        tail = s["cg_tail_mean"]
+        if not np.isfinite(tail):
+            print("  -> INSUFFICIENT DATA: survival tail is NaN "
+                  "(every seed under the 5-pair guard); no verdict")
+        elif ukey not in summary or not np.isfinite(summary[ukey]["cg_tail_mean"]):
+            print(f"  -> untrained aggregate unavailable; absolute clause "
+                  f"{'reaches' if tail >= a.bar else 'misses'} the bar, but the "
+                  "frozen rule needs the '> untrained + 0.05' clause - "
+                  "adjudicate manually")
+        else:
+            floor = summary[ukey]["cg_tail_mean"]
+            clause1, clause2 = tail >= a.bar, tail > floor + 0.05
+            print(f"  untrained floor    = {floor:.3f}  (margin clause needs > {floor + 0.05:.3f})")
+            if clause1 and clause2:
+                verdict = ("PERSISTENT-signal candidate: corrected tail passes BOTH frozen "
+                           "clauses - the 'reactive, not persistent' reading does NOT "
+                           "survive as recorded")
+            elif clause1:
+                verdict = ("bar reached but the untrained+0.05 margin clause FAILS - "
+                           "the frozen rule still adjudicates NEGATIVE (reactive reading "
+                           "survives, now on a valid measurement)")
+            else:
+                verdict = ("below the bar - the reactive reading survives the estimator "
+                           "fix (now on a valid measurement)")
+            print(f"  -> {verdict}")
+        print(f"  (latetail {s['cg_latetail_mean']:.3f} is the persistence-decay "
+              "diagnostic, reported alongside, not part of the pass rule)")
 
     if a.json:
         d = os.path.dirname(a.json)

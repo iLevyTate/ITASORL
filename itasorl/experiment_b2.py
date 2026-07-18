@@ -786,10 +786,20 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
     # One shared label permutation across feature sets so selectivity gaps reflect
     # feature-set overfitting bias, not permutation noise. selectivity = target - shuffled
     # is the estimand that survives the L0>0.5 probe-bias offset seen in some seeds.
-    y_perm = rng.permutation(y)
-    shuf = probe_auroc(X, y_perm)
-    shuf_v = probe_auroc(Xv, y_perm)
-    shuf_f = probe_auroc(Xf, y_perm)
+    # Averaged over several label permutations: a single draw of the CV-AUROC
+    # null has sd ~0.04 at these pool sizes, which previously leaked straight
+    # into per-seed selectivity (2026-07-18 audit; selectivity is a secondary
+    # readout, the pre-registered decision uses the raw target).
+    n_perm = 8
+    shuf_draws, shuf_v_draws, shuf_f_draws = [], [], []
+    for _ in range(n_perm):
+        y_perm = rng.permutation(y)
+        shuf_draws.append(probe_auroc(X, y_perm))
+        shuf_v_draws.append(probe_auroc(Xv, y_perm))
+        shuf_f_draws.append(probe_auroc(Xf, y_perm))
+    shuf = float(np.mean(shuf_draws))
+    shuf_v = float(np.mean(shuf_v_draws))
+    shuf_f = float(np.mean(shuf_f_draws))
     # Drag-tracking ceiling: decode high- vs low-drift-drag episodes from h_t WITHIN the
     # surrogate pool only (all surrogate, so this is NOT the world label). High here +
     # chance target = the interesting null (the state tracks the dynamics moment-to-moment

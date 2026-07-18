@@ -500,6 +500,14 @@ def main() -> int:
             window = idx[pos:pos + 260]
             check_true(f"index.html reactive claim at offset {pos} is qualified",
                        "PROVISIONAL" in window)
+    # index.html is hand-maintained with no generator, so pin its headline
+    # numbers to the artifact-verified values: if a rerun/correction changes a
+    # headline, the page must be edited in the same change or CI fails here.
+    for num, meaning in [("0.752", "L3 survival headline"),
+                         ("0.773", "held-out capacity-variant transfer"),
+                         ("0.684", "cross-recipe transfer"),
+                         ("0.638", "reverse transfer (fails bar)")]:
+        check_true(f"index.html still quotes {num} ({meaning})", num in idx)
 
     print()
     if failures:

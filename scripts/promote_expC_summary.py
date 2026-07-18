@@ -72,7 +72,12 @@ def main() -> int:
         "world": run["world"],
         "surrogate": run["surrogate"],
         "control_food": run["control_food"],
-        "git_commit": git_head(),
+        # provenance, disambiguated (2026-07-18 audit): the commit the RUN
+        # executed on comes from the run JSON itself (runner records it since
+        # the same audit); the promote-time commit is stamped separately and
+        # must never be read as the run's code version.
+        "git_commit_at_run": run.get("git_commit_at_run", "unknown (pre-audit run JSON)"),
+        "git_commit_at_promotion": git_head(),
         "generated_by": "scripts/promote_expC_summary.py",
         "bars": {"sesoi": 0.05, "auroc_floor": 0.65},
         "config": {k: run["config"][k] for k in CONFIG_KEYS if k in run["config"]},

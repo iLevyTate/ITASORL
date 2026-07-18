@@ -180,6 +180,16 @@ def parse_step_metrics(name: str, log: str) -> dict[str, Any]:
         mse = re.search(r"open-loop MSE=([\d.]+)", log)
         if mse:
             m["open_loop_mse"] = float(mse.group(1))
+        # the engagement claim needs its baselines on the record too - the
+        # 2026-07-18 audit found FINDINGS 3.4 quoting baseline values no
+        # committed artifact carried because this parser dropped them
+        base = re.search(r"mean-predictor=([\d.]+)\s+persistence=([\d.]+)", log)
+        if base:
+            m["open_loop_mean_predictor_mse"] = float(base.group(1))
+            m["open_loop_persistence_mse"] = float(base.group(2))
+        ratio = re.search(r"engagement \(zero-delta/model MSE\)=([\d.]+)x", log)
+        if ratio:
+            m["delta_engagement_ratio"] = float(ratio.group(1))
         rows = re.findall(r"drift=([\d.]+):\s+target AUROC=([\d.]+)±([\d.]+)", log)
         m["delta_objective"] = [
             {"drift": float(d), "target_mean": float(t), "organism_encodes_world": _encodes(float(t))}
@@ -349,7 +359,14 @@ class RunRecorder:
         rec.manifest = manifest
         manifest.setdefault("steps", {})
         manifest["resumed_at_utc"] = datetime.now(timezone.utc).isoformat()
-        manifest["git_commit"] = _git_head()
+        # Provenance: never overwrite the original run's commit - a resume
+        # across a code change would otherwise attribute earlier steps' outputs
+        # to the later commit (2026-07-18 audit fix). The original commit stays
+        # in git_commit; every resume appends to git_commit_history.
+        head = _git_head()
+        hist = manifest.setdefault("git_commit_history", [manifest.get("git_commit")])
+        if head != hist[-1]:
+            hist.append(head)
         manifest["environment"] = _device_info()
         rec._write_manifest()
         done = [n for n, s in manifest["steps"].items() if s.get("status") == "ok"]
