@@ -198,7 +198,11 @@ class PatchOfEarthV0(PatchOfEarth):
             d2 = np.sum((self.pellets - self.pos) ** 2, axis=1)
             j = int(np.argmin(d2))
             if d2[j] < self.reach ** 2 and self.pellet_amt[j] > 0:
-                gain = min(self.pellet_amt[j], self.food_gain * eat * self.params.dt)
+                # Cap by remaining energy capacity too: at E == Emax nothing is
+                # actually consumed, so no pellet depletion and no intake reward
+                # (reward must stay a homeostatic quantity, not free at the cap).
+                gain = min(self.pellet_amt[j], self.food_gain * eat * self.params.dt,
+                           self.Emax - self.E)
                 self.E = min(self.Emax, self.E + gain)
                 self.pellet_amt[j] -= gain
                 intake, ate = gain, True
@@ -215,7 +219,9 @@ class PatchOfEarthV0(PatchOfEarth):
         self.Tb = self.Tb + (self.mu_T * (T - self.Tb) + self.heat_met * amag) * self.params.dt
         self.age += self.params.dt
         self._reward = intake - cost * self.params.dt
-        if self._focal_dead():
+        if self.alive and self._focal_dead():
+            # Penalize the death TRANSITION once, not the dead state: a caller that
+            # steps past termination must not collect -1 on every subsequent step.
             self._reward -= 1.0
             self.alive = False
         return {"ate": ate, "intake": intake}
@@ -286,8 +292,13 @@ class PatchOfEarthV0(PatchOfEarth):
         self.pellets, self.pellet_amt = s["pellets"], s["pellet_amt"]
         self._tf, self._tph, self._ta, self._reward = s["tf"], s["tph"], s["ta"], s["reward"]
         self._drift_w = s.get("drift_w", 0.0)
+        # Restore only streams this world actually has: a snapshot from a differently
+        # configured world (e.g. a drift world's "drift" stream restored into an
+        # authentic world) must not KeyError. Streams the snapshot lacks keep their
+        # current state - same-config round-trips remain exact.
         for k, st in s["rng"].items():
-            self._rng[k].bit_generator.state = st
+            if k in self._rng:
+                self._rng[k].bit_generator.state = st
 
 
 def make_v0_world(_seed_offset: int = 0) -> PatchOfEarthV0:

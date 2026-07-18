@@ -33,7 +33,9 @@ free_ram_mb() {
     "[int]((Get-CimInstance Win32_OperatingSystem).FreePhysicalMemory/1024)" 2>/dev/null | tr -dc '0-9'
 }
 
-FREE_MB=$(free_ram_mb)
+# `|| true`: under set -e/pipefail a missing powershell.exe (any non-WSL box) would
+# otherwise kill the script silently right here, never reaching the guarded error below.
+FREE_MB=$(free_ram_mb || true)
 if [ "${FREE_MB:-0}" -lt $((MIN_FREE_GB * 1024)) ]; then
   echo "ERROR: only ${FREE_MB} MB RAM free (< ${MIN_FREE_GB} GB needed)." >&2
   echo "Free memory first (e.g. stop the ralph loop), then rerun." >&2

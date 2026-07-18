@@ -78,7 +78,7 @@ def run_arm(pop0, food_override, *, generations, sigma, drift_sigma, n_eps, max_
     reproduction threshold is the `quantile` of this arm's gen-0 fitness (matched
     selection intensity, see module docstring). Returns final pop + fitness series."""
     fit_kw = dict(drift_sigma=drift_sigma, n_eps_per_world=n_eps, max_steps=max_steps,
-                  seed_base=seed_base, food_override=food_override)
+                  seed_base=seed_base, food_override=food_override, params=P)
     gen0_fit = mixed_world_fitness(pop0, **fit_kw)
     threshold = float(np.quantile(gen0_fit, quantile))
     fit = partial(mixed_world_fitness, **fit_kw)
@@ -125,9 +125,13 @@ def main():
     b2.setup_l3_surrogate(hidden=args.l3_hidden, seed=args.l3_seed, params=P)
     print(f"[expC m3] frozen L3 map installed ({time.time()-t0:.0f}s)", flush=True)
 
+    # params=P: the fitness lifetimes and the detection panel must run on the SAME
+    # world the frozen L3 map was trained on, or the auth-vs-surrogate contrast
+    # includes the whole P-vs-default parameter gap instead of the velocity law
+    # (and the "world" field below would be false provenance).
     panel_kw = dict(drift_sigma=args.drift_sigma, n_pairs=args.panel_pairs,
                     prefix_steps=args.panel_prefix, tail_steps=args.panel_tail,
-                    seed_base=args.panel_seed_base)
+                    seed_base=args.panel_seed_base, params=P)
     arm_kw = dict(generations=args.generations, sigma=args.sigma, drift_sigma=args.drift_sigma,
                   n_eps=args.n_eps, max_steps=args.max_steps, quantile=args.q)
 

@@ -78,8 +78,11 @@ def train_world_model(eps, epochs: int = 8, lr: float = 1e-3, embed: int = 64,
     model.delta = bool(delta)
     opt = torch.optim.Adam(model.parameters(), lr=lr)
     idx = np.arange(len(eps))
+    # Own keyed stream, NOT the global numpy RNG: minibatch order must be a function
+    # of `seed` alone or run_experiment_b(seed=...) is not reproducible.
+    shuffle_rng = np.random.default_rng(seed)
     for _ in range(epochs):
-        np.random.shuffle(idx)
+        shuffle_rng.shuffle(idx)
         for s in range(0, len(idx), batch):
             b = idx[s:s + batch]
             if rollout_context is None:

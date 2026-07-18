@@ -66,8 +66,11 @@ if TORCH:
 
         def prediction_loss(self, obs, act):
             pred, states = self(obs, act)
-            # pred[:, t] is the model's guess for obs[:, t+1]
-            loss = ((pred[:, :-1] - obs[:, 1:]) ** 2).mean()
+            # pred[:, t] is the model's guess for obs[:, t+1] - absolute or delta,
+            # per self.delta (the decoder's output convention; forward_rollout
+            # integrates deltas back, so training must target the same quantity).
+            tgt = (obs[:, 1:] - obs[:, :-1]) if self.delta else obs[:, 1:]
+            loss = ((pred[:, :-1] - tgt) ** 2).mean()
             return loss, states
 
         def forward_rollout(self, obs, act, context):
@@ -77,6 +80,9 @@ if TORCH:
             step t+1 (absolute or delta, per self.delta), same convention as forward.
             """
             B, T, _ = obs.shape
+            if context < 1:
+                raise ValueError(f"context must be >= 1 (got {context}): the first open-loop "
+                                 "step reconstructs its input from the previous prediction")
             h = torch.zeros(B, self.hidden, device=obs.device)
             x = obs[:, 0]
             preds = []
@@ -93,6 +99,10 @@ if TORCH:
         def rollout_loss(self, obs, act, context):
             """Open-loop prediction error over the imagined horizon (the trained
             objective for the k-step / delta-rollout experiments)."""
+            T = obs.shape[1]
+            if not 1 <= context <= T - 2:
+                raise ValueError(f"context must be in [1, T-2] (got {context}, T={T}): "
+                                 "otherwise the scored horizon is empty and the loss is NaN")
             pred = self.forward_rollout(obs, act, context)
             P = pred[:, context:-1]
             tgt = (obs[:, context + 1:] - obs[:, context:-1]) if self.delta else obs[:, context + 1:]

@@ -84,7 +84,11 @@ def main() -> None:
             continue
         drift, seed, agent = m["drift"], int(m["seed"]), m["agent"]
         with np.load(f) as npz:
-            res = probe_cell(dict(npz), seed)
+            cell = dict(npz)
+        if "Ha" not in cell:  # heldout-eval sibling dumps (_h7transfer/_cg) lack pool keys
+            print(f"  skip (heldout sibling dump): {os.path.basename(f)}")
+            continue
+        res = probe_cell(cell, seed)
         if not res:
             print(f"  skip (too few survivors): {os.path.basename(f)}")
             continue
