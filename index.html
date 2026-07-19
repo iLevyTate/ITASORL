@@ -2,6 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>x-dc{display:none!important}</style>
 <title>ItaSoRL · Readout, Not Reward</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
@@ -357,6 +358,34 @@
   .fact:hover{ box-shadow:inset 8px 8px 17px #c3bed9, inset -8px -8px 17px #ffffff !important; }
   .darkghost{ transition:background .18s, color .15s, border-color .18s; }
   .darkghost:hover{ background:rgba(255,255,255,0.08) !important; color:#ffffff !important; border-color:rgba(255,255,255,0.4) !important; }
+  /* Responsive overrides — the markup uses inline styles, so these need !important. */
+  @media (max-width:1000px){
+    header#top{ grid-template-columns:1fr !important; gap:10px !important; padding:36px 0 56px !important; }
+    [data-screen-label="Facts"]{ grid-template-columns:repeat(2,1fr) !important; margin-bottom:90px !important; }
+    #about > div:nth-of-type(2){ grid-template-columns:1fr !important; gap:20px !important; }
+    #research > div:last-child{ grid-template-columns:1fr !important; }
+    #readout > div > div{ grid-template-columns:1fr !important; gap:30px !important; }
+    section{ margin-bottom:90px !important; }
+  }
+  @media (max-width:720px){
+    div[style*="1180px"]{ padding:0 20px !important; }
+    nav .navlink{ display:none; }
+    nav{ padding:10px 10px 10px 16px !important; }
+    h1{ font-size:38px !important; }
+    h2{ font-size:30px !important; }
+    #about > p{ font-size:24px !important; }
+    #research > div:first-child, #findings > div:first-child{ flex-direction:column !important; align-items:flex-start !important; gap:12px; }
+    #research > div:first-child > div:last-child{ text-align:left !important; max-width:none !important; }
+    header#top > div:last-child{ min-height:300px !important; transform:scale(.7); }
+    .pub{ grid-template-columns:1fr !important; gap:10px !important; padding:18px 14px !important; }
+    .pub > span:last-child{ justify-self:start !important; }
+    #readout > div{ padding:30px 22px !important; }
+    #join > div{ padding:44px 22px 40px !important; }
+  }
+  @media (max-width:480px){
+    [data-screen-label="Facts"]{ grid-template-columns:1fr !important; }
+    h1{ font-size:33px !important; }
+  }
 </style>
 </helmet>
 
