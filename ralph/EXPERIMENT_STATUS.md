@@ -28,15 +28,15 @@ world-signal of **~0.73** (resid_trace 0.726 [0.685, 0.765]) clears the bar. Cav
 narrow the claim: (1) survival-*specificity* holds only at the subtler hidden=8 artifact —
 at hidden=7 every trained agent picks it up (predictor 0.714 vs survival 0.737); (2) a
 held-out probe shows the direction transfers to an unseen same-recipe (0.773) and a
-different-recipe (cross-recipe 0.684) fingerprint but a common-garden control leaves
-tail-only state at chance (0.557, late tail 0.492), so the signal is **reactive tracking
-of the felt dynamics, not a persistent stored representation** (PROVISIONAL — the
-common-garden numbers are being re-scored with the fixed estimator, FINDINGS §10.6
-correction banner); (3) held-out transfer is
-direction-dependent (reverse 0.638 fails the bar). Honest headline: L3 induces a reactive,
-artifact-conditional, behavior-independent world-signal — the first reversal of the L2
-nulls, but not an abstract persistent world-identity direction. See `docs/FINDINGS.md`
-§10 and `docs/PREREGISTRATION_L3.md` §12.
+different-recipe (cross-recipe 0.684) fingerprint, and a re-scored common-garden
+control passes the frozen rule on both directions (0.666 forward, 0.684 reverse), so
+the signal carries a **modest persistent stored world-identity component** the policy
+also expresses reactively (weak, tail-decaying; FINDINGS §10.6.1 resolution); (3)
+held-out transfer is direction-dependent (reverse 0.638 fails the bar). Honest
+headline: L3 induces an artifact-conditional, behavior-independent world-signal with a
+modest persistent component, the first reversal of the L2 nulls, though not a strongly
+stored world-identity direction. See `docs/FINDINGS.md` §10 and
+`docs/PREREGISTRATION_L3.md` §12.
 
 ---
 
@@ -132,17 +132,18 @@ Narrative: `docs/FINDINGS.md` §7 (next steps), §9 (B-v2).
 2. **Power:** RESOLVED (07062026): the n=10 regime extension ran (RTX 4050, 337 min);
    survival 0.610 +/- 0.047, 90% CI [0.585, 0.634] excludes 0.65, and L0 TOST/ROPE pass
    at n=10 (equivalent to chance).
-3. **Reactive vs representational:** PROVISIONAL (was: RESOLVED 2026-07-14 toward
-   reactive) — the common-garden numbers below were scored with the since-fixed
-   pair-splitting estimator (FINDINGS §10.6 correction banner, 2026-07-18) and are
-   being re-scored from the saved `_cg.npz` dumps; the frozen rules re-adjudicate. The
+3. **Reactive vs representational:** RESOLVED (2026-07-19) toward a modest persistent
+   component. The common-garden numbers below were first scored with the since-fixed
+   pair-splitting estimator; re-scoring the saved `_cg.npz` dumps and re-adjudicating
+   with the frozen rules flips the reading, both directions pass (0.666 forward, 0.684
+   reverse; FINDINGS §10.6.1). The
    L3 held-out/common-garden probe (`artifacts/expB2/heldout_l3_h8_summary.json`) shows
    the world-signal transfers to a same-recipe capacity variant (0.773; same recipe/data,
    FINDINGS §10.6 scope note) and, carrying the generalization claim, to a different
-   surrogate family (0.684 cross-recipe) but does not survive a common-garden control
-   (tail-only 0.557, late tail 0.492 at chance) — so the agent tracks the currently-felt
-   dynamics rather than storing a persistent world-identity representation.
-   FINDINGS §10.6–10.7.
+   surrogate family (0.684 cross-recipe) and, re-scored, passes a common-garden control
+   on both directions (0.666 forward, 0.684 reverse), so the agent carries a modest
+   persistent world-identity component it also expresses reactively (weak and
+   tail-decaying; FINDINGS §10.6.1). FINDINGS §10.6-10.7.
 4. **L3 artifact:** DONE. The generative-fingerprint surrogate (`itasorl/surrogate_l3.py`
    `G_motion`, `l3` world hook) was built, oracle-gated (AUROC in [0.85, 0.95]), and run at
    two calibrated capacities (hidden=8, hidden=7) at n=10; survival pooled 0.752 with a

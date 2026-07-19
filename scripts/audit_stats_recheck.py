@@ -114,6 +114,8 @@ def main() -> int:
     h7 = load("behavior_audit_l3_h7_traces.json")
     held = load("heldout_l3_h8_summary.json")
     rev = load("heldout_l3_h7_reverse_summary.json")
+    cgf = load("heldout_l3_h8_cg_rescore.json")
+    cgr = load("heldout_l3_h7_reverse_cg_rescore.json")
     b2 = load("expB2_results.json")
     b2c = load("expB2_results_confirmatory_n3.json")
 
@@ -245,17 +247,20 @@ def main() -> int:
     check_true("pre-registered transfer rule passes (>=0.65 and >untrained+0.05)",
                float(np.mean(tr)) >= BAR
                and float(np.mean(tr)) > float(np.mean(tru)) + 0.05)
+    # Biased pre-1633bca cg numbers, retained to verify the frozen §10.6 body
+    # (the historical/invalidated record) still matches its committed artifact.
+    # The corrected verdict is re-scored below and adjudicated in §10.6.1.
     cg = seed_vals(held, "0.45", "survival", "cg_tail_target")
-    check("common-garden survival (0.557)", float(np.mean(cg)), 0.557)
+    check("common-garden survival, biased/historical (0.557)", float(np.mean(cg)), 0.557)
     tlo, thi = t_ci(cg)
-    check("common-garden t lo (0.492)", tlo, 0.492)
-    check("common-garden t hi (0.622)", thi, 0.622)
-    check_int("common-garden seeds >= 0.65 (1)", sum(v >= BAR for v in cg), 1)
-    check("common-garden predictor (0.409)",
+    check("common-garden t lo, biased/historical (0.492)", tlo, 0.492)
+    check("common-garden t hi, biased/historical (0.622)", thi, 0.622)
+    check_int("common-garden seeds >= 0.65, biased/historical (1)", sum(v >= BAR for v in cg), 1)
+    check("common-garden predictor, biased/historical (0.409)",
           float(np.mean(seed_vals(held, "0.45", "predictor", "cg_tail_target"))), 0.409)
-    check("common-garden untrained (0.377)",
+    check("common-garden untrained, biased/historical (0.377)",
           float(np.mean(seed_vals(held, "0.45", "untrained", "cg_tail_target"))), 0.377)
-    check("late-tail decay (0.492)",
+    check("late-tail decay, biased/historical (0.492)",
           float(np.mean(seed_vals(held, "0.45", "survival", "cg_latetail_target"))), 0.492)
 
     print("== FINDINGS 10.6 / PREREG 2026-07-16: reverse transfer (train h7, hold out h8) ==")
@@ -286,18 +291,50 @@ def main() -> int:
                float(np.mean(rtr)) < BAR)
     check_true("reverse floor-margin clause passes (> untrained + 0.05)",
                float(np.mean(rtr)) > float(np.mean(rtru)) + 0.05)
+    # Biased pre-1633bca reverse cg numbers, retained as the historical §10.6 body
+    # record; corrected verdict re-scored below (§10.6.1).
     rcg = seed_vals(rev, "0.45", "survival", "cg_tail_target")
-    check("reverse common-garden survival (0.598)", float(np.mean(rcg)), 0.598)
+    check("reverse common-garden survival, biased/historical (0.598)", float(np.mean(rcg)), 0.598)
     tlo, thi = t_ci(rcg)
-    check("reverse common-garden t lo (0.547)", tlo, 0.547)
-    check("reverse common-garden t hi (0.649)", thi, 0.649)
-    check_int("reverse common-garden seeds >= 0.65 (4)", sum(v >= BAR for v in rcg), 4)
-    check("reverse common-garden predictor (0.504)",
+    check("reverse common-garden t lo, biased/historical (0.547)", tlo, 0.547)
+    check("reverse common-garden t hi, biased/historical (0.649)", thi, 0.649)
+    check_int("reverse common-garden seeds >= 0.65, biased/historical (4)", sum(v >= BAR for v in rcg), 4)
+    check("reverse common-garden predictor, biased/historical (0.504)",
           float(np.mean(seed_vals(rev, "0.45", "predictor", "cg_tail_target"))), 0.504)
-    check("reverse common-garden untrained (0.456)",
+    check("reverse common-garden untrained, biased/historical (0.456)",
           float(np.mean(seed_vals(rev, "0.45", "untrained", "cg_tail_target"))), 0.456)
-    check("reverse late-tail decay (0.489)",
+    check("reverse late-tail decay, biased/historical (0.489)",
           float(np.mean(seed_vals(rev, "0.45", "survival", "cg_latetail_target"))), 0.489)
+
+    print("== FINDINGS 10.6.1: common-garden re-score (fixed estimator, frozen rule) ==")
+    cg_cases = [
+        ("forward (h8 trained, h7 held out)", cgf,
+         dict(surv=0.666, untr=0.570, pred=0.588, late=0.586, margin=0.620)),
+        ("reverse (h7 trained, h8 held out)", cgr,
+         dict(surv=0.684, untr=0.573, pred=0.597, late=0.577, margin=0.623)),
+    ]
+    for tag, doc, exp in cg_cases:
+        sd, adj = doc["strong_drift"], doc["adjudication"]
+        surv = float(sd["survival"]["cg_tail_mean"])
+        untr = float(sd["untrained"]["cg_tail_mean"])
+        late = float(sd["survival"]["cg_latetail_mean"])
+        check(f"cg re-score {tag} survival tail", surv, exp["surv"])
+        check(f"cg re-score {tag} untrained floor", untr, exp["untr"])
+        check(f"cg re-score {tag} predictor tail",
+              float(sd["predictor"]["cg_tail_mean"]), exp["pred"])
+        check(f"cg re-score {tag} late-tail", late, exp["late"])
+        check(f"cg re-score {tag} margin threshold (untrained + 0.05)",
+              float(adj["margin_threshold"]), exp["margin"])
+        check_true(f"cg re-score {tag} drift-0.00 L0 floors == 0.500 (bias fix confirmed)",
+                   all(abs(float(v) - 0.5) <= 1e-6 for v in doc["floor_drift0"].values()))
+        check_true(f"cg re-score {tag} survival tail clears bar (>= 0.65)",
+                   surv >= BAR and adj["cg_tail_pass_bar"] is True)
+        check_true(f"cg re-score {tag} survival tail > untrained + 0.05",
+                   surv > untr + 0.05 and adj["cg_tail_pass_margin"] is True)
+        check_true(f"cg re-score {tag} frozen rule PASSES (modest persistent component)",
+                   adj["cg_channel_pass"] is True)
+        check_true(f"cg re-score {tag} late-tail decays below bar (decay diagnostic)",
+                   late < BAR)
 
     print("== FINDINGS 9 / artifacts: B-v2 survival coupling (L2, n=3) ==")
     rep = [float(v) for v in b2["0.45"]["survival"]["pool_target"]]
@@ -465,14 +502,16 @@ def main() -> int:
                    for c in cells)
                and all(c["death_rate_auth_gen0"] <= 1e-6 for c in cells))
 
-    # ---- derived-doc qualifier guard ------------------------------------
-    # The reactive-vs-persistent reading is PROVISIONAL until the section 10.6
-    # re-score is adjudicated (FINDINGS correction banner, 2026-07-18). The
-    # public-facing derived docs are hand-maintained and have drifted stale
-    # before (audit fault: index.html stated the reading as final), so pin the
-    # qualifier here. When the re-score is adjudicated and the banner comes
-    # down, update or remove this block in the same change.
-    print("\n== derived-doc qualifier guard (provisional reactive reading) ==")
+    # ---- derived-doc resolution guard -----------------------------------
+    # The reactive-vs-persistent reading was PROVISIONAL until the section 10.6
+    # re-score; it is now RESOLVED (FINDINGS 10.6.1, 2026-07-19): the corrected
+    # common-garden control passes the frozen rule on both directions, so the
+    # signal is a modest persistent world-identity component. The public-facing
+    # derived docs are hand-maintained and drifted stale before (audit fault:
+    # index.html once stated the reading as final), so pin the resolved
+    # references here and forbid regression to the provisional/reactive-only
+    # wording.
+    print("\n== derived-doc resolution guard (10.6.1 persistent reading) ==")
     root = os.path.join(os.path.dirname(__file__), "..")
 
     def _read(relpath: str) -> str:
@@ -480,33 +519,41 @@ def main() -> int:
             return fh.read()
 
     for relpath, needle, label in [
-        ("index.html", "PROVISIONAL",
-         "index.html carries the PROVISIONAL qualifier"),
-        ("CITATION.cff", "provisional",
-         "CITATION.cff carries the provisional qualifier"),
-        ("README.md", "PROVISIONAL",
-         "README carries the PROVISIONAL qualifier"),
-        ("docs/FINDINGS.md", "PROVISIONAL pending the 10.6 re-score",
-         "FINDINGS section-1 ladder row carries the PROVISIONAL qualifier"),
-        ("docs/PAPER_OUTLINE.md", "PROVISIONAL",
-         "PAPER_OUTLINE carries the PROVISIONAL qualifier"),
+        ("index.html", "10.6.1",
+         "index.html points at the 10.6.1 resolution"),
+        ("index.html", "modest persistent",
+         "index.html carries the resolved persistent reading"),
+        ("CITATION.cff", "10.6.1",
+         "CITATION.cff points at the 10.6.1 resolution"),
+        ("README.md", "10.6.1",
+         "README points at the 10.6.1 resolution"),
+        ("docs/FINDINGS.md", "### 10.6.1",
+         "FINDINGS carries the 10.6.1 resolution subsection"),
+        ("docs/FINDINGS.md", "RE-SCORE RESOLVED",
+         "FINDINGS 10.6 banner is marked RESOLVED"),
+        ("docs/PAPER_OUTLINE.md", "10.6.1",
+         "PAPER_OUTLINE points at the 10.6.1 resolution"),
     ]:
         check_true(label, needle in _read(relpath))
-    # the reactive wording must never appear in index.html without the
-    # qualifier attached in the same sentence block
+    # forbid regression: the provisional qualifier must not reappear as the
+    # current verdict in the hand-maintained public pages.
+    for relpath, banned in [("index.html", "PROVISIONAL"),
+                            ("CITATION.cff", "provisional pending")]:
+        check_true(f"{relpath} no longer carries the provisional qualifier",
+                   banned not in _read(relpath))
+    # and the old reactive-only claim must not reappear in index.html.
     idx = _read("index.html")
     for phrase in ("not a persistent stored representation",
                    "not a stored representation"):
-        for pos in _find_all(idx, phrase):
-            window = idx[pos:pos + 260]
-            check_true(f"index.html reactive claim at offset {pos} is qualified",
-                       "PROVISIONAL" in window)
+        check_true(f"index.html no longer states the reactive-only claim '{phrase}'",
+                   len(_find_all(idx, phrase)) == 0)
     # index.html is hand-maintained with no generator, so pin its headline
     # numbers to the artifact-verified values: if a rerun/correction changes a
     # headline, the page must be edited in the same change or CI fails here.
     for num, meaning in [("0.752", "L3 survival headline"),
                          ("0.773", "held-out capacity-variant transfer"),
-                         ("0.684", "cross-recipe transfer"),
+                         ("0.684", "cross-recipe transfer / reverse cg re-score"),
+                         ("0.666", "forward common-garden re-score (passes bar)"),
                          ("0.638", "reverse transfer (fails bar)")]:
         check_true(f"index.html still quotes {num} ({meaning})", num in idx)
 

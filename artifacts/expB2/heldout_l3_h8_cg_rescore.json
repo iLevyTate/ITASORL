@@ -1,0 +1,83 @@
+{
+ "source_rescore": "fullruns/l3_h8_heldout/cg_rescore.json",
+ "states_dir": "fullruns/l3_h8_heldout/states",
+ "estimator": "cg_probe (pair-grouped, post-1633bca)",
+ "git_commit_at_promotion": "0fb2c6b886a217e90ad11d5e2afb4dad54ad4b9a",
+ "generated_by": "scripts/promote_cg_rescore.py",
+ "bar": 0.65,
+ "margin": 0.05,
+ "drift": "0.45",
+ "strong_drift": {
+  "survival": {
+   "cg_tail_mean": 0.6664834804445194,
+   "cg_tail_per_seed": [
+    0.7732,
+    0.5696,
+    0.7008,
+    0.6908,
+    0.7268,
+    0.5274,
+    0.7018,
+    0.6458,
+    0.6736,
+    0.655
+   ],
+   "cg_latetail_mean": 0.585578231292517,
+   "cg_n_pairs_min": 107,
+   "cg_n_pairs_max": 110,
+   "n_seeds": 10
+  },
+  "predictor": {
+   "cg_tail_mean": 0.5879412754633533,
+   "cg_tail_per_seed": [
+    0.5674,
+    0.6654,
+    0.5609,
+    0.627,
+    0.6512,
+    0.6019,
+    0.4484,
+    0.5689,
+    0.5841,
+    0.6043
+   ],
+   "cg_latetail_mean": 0.5462034369670732,
+   "cg_n_pairs_min": 101,
+   "cg_n_pairs_max": 109,
+   "n_seeds": 10
+  },
+  "untrained": {
+   "cg_tail_mean": 0.5699428496207896,
+   "cg_tail_per_seed": [
+    0.5207,
+    0.5484,
+    0.507,
+    0.6476,
+    0.566,
+    0.6127,
+    0.5065,
+    0.6361,
+    0.5728,
+    0.5815
+   ],
+   "cg_latetail_mean": 0.5421819826757807,
+   "cg_n_pairs_min": 96,
+   "cg_n_pairs_max": 107,
+   "n_seeds": 10
+  }
+ },
+ "floor_drift0": {
+  "survival": 0.5,
+  "predictor": 0.5,
+  "untrained": 0.5
+ },
+ "adjudication": {
+  "survival_cg_tail": 0.6664834804445194,
+  "untrained_cg_tail": 0.5699428496207896,
+  "margin_threshold": 0.6199428496207896,
+  "cg_tail_pass_bar": true,
+  "cg_tail_pass_margin": true,
+  "cg_channel_pass": true,
+  "floor_near_chance": true
+ }
+}

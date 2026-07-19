@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: capacity-variant transfer subtle-to-coarse (0.773; same recipe/data, FINDINGS §10.6 scope note) but not coarse-to-subtle (0.638, frozen rule fails); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the "reactive, not persistent" common-garden reading is PROVISIONAL pending re-scoring with a fixed estimator (FINDINGS §10.6 correction)** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: capacity-variant transfer subtle-to-coarse (0.773; same recipe/data, FINDINGS §10.6 scope note) but not coarse-to-subtle (0.638, frozen rule fails); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the re-scored common-garden control passes the frozen rule on both directions (forward 0.666, reverse 0.684), so the signal is a modest persistent world-identity component, not purely reactive (FINDINGS §10.6.1)** |
 | Experiment C (emergence under selection) | first pilot run; recorded null **invalidated** by two since-fixed measurement bugs (FINDINGS §13.C) - pre-registered re-run on fixed code pending ([`docs/PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md)) |
 | Ladder L4 (adversarially-hardened surrogate) | not started |
 
@@ -148,16 +148,19 @@ note); the across-recipe generalization claim is carried by the cross-recipe pro
 per-seed summary in `artifacts/expB2/heldout_l3_h7_reverse_summary.json`) fails its bar at
 **0.638**, so this transfer is direction-dependent: it generalizes from subtle training
 artifacts, not bidirectionally. And under a common-garden control that runs both groups through an identical tail after
-differing prefixes, tail-only state does not carry the prefix world (**0.557**, below the 0.65 bar;
-the late tail decays to chance, 0.492). So the L3 world-signal is best read as reactive tracking of
-the currently-felt dynamics, not a persistent stored world-identity representation — *provisional:
-the common-garden numbers were scored with a since-fixed biased estimator and are being re-scored
-(see the correction banner in FINDINGS §10.6); the transfer numbers are unaffected.* A cross-recipe
+differing prefixes, tail-only state still recovers the prefix world above the frozen bar on both
+directions (**0.666** forward, **0.684** reverse; both clauses pass), though the last-8-step late
+tail decays toward chance (0.586/0.577). So the L3 world-signal is best read as a modest persistent
+stored world-identity component the survival policy also expresses reactively: it clears the
+common-garden bar but only just, and its late tail fades, so it is persistent-but-weak, not strongly
+stored. *(The original common-garden numbers, 0.557 below the bar, were scored with a since-fixed
+biased estimator and have now been re-scored, overturning the reactive reading; see FINDINGS §10.6.1.
+The transfer numbers were unaffected.)* A cross-recipe
 probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
 surrogate *families*: the same direction reads a gate-calibrated random-Fourier-features ridge law
 the agent never lived with (**0.684** vs untrained floor 0.548; the pre-registered rule passes,
 machine-checked; a thin pass - the t-based 90% CI lower bound clears the bar by 0.004 and 7/10
-seeds sit above it), so the reactive world-signal is recipe-general, not a signature of one
+seeds sit above it), so the world-signal is recipe-general, not a signature of one
 function class. See
 [`docs/FINDINGS.md`](docs/FINDINGS.md) and [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md).
 

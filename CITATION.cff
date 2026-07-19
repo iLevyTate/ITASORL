@@ -22,10 +22,11 @@ abstract: >-
   (it also reads a random-Fourier-features law fit on the same data); a
   same-recipe held-out probe adds capacity-variant robustness in one direction
   only (subtle-to-coarse passes, the frozen reverse fails). A
-  common-garden control read the signal as reactive tracking of the felt
-  dynamics rather than a persistent stored world-identity representation, a
-  reading currently provisional pending re-scoring with a corrected estimator
-  (see FINDINGS section 10.6).
+  common-garden control, re-scored with a corrected estimator, passes the frozen
+  rule on both directions (forward 0.666, reverse 0.684), so the signal carries a
+  modest persistent stored world-identity component the policy also expresses
+  reactively, not purely reactive tracking of the felt dynamics
+  (see FINDINGS section 10.6.1).
 keywords:
   - artificial-life
   - reinforcement-learning

@@ -46,10 +46,10 @@ resolve.*
      fingerprint resolved (FINDINGS 10.6): capacity-variant transfer passes
      (0.773 vs untrained 0.569; same recipe and data - robustness within one
      recipe, per the 10.6 scope note; the generalization claim rides on the
-     cross-recipe probe) but the common-garden control shows the signal is
-     reactive, not a persistent representation (0.557, below bar; late tail
-     0.492 at chance) — PROVISIONAL pending estimator-fix re-score, FINDINGS
-     §10.6 correction banner; cross-recipe resolved (FINDINGS 10.7): the direction
+     cross-recipe probe) and the common-garden control, re-scored with the fixed
+     estimator, passes the frozen rule on both directions (0.666 forward, 0.684
+     reverse), so the signal is a modest persistent world-identity component, not
+     purely reactive (FINDINGS 10.6.1); cross-recipe resolved (FINDINGS 10.7): the direction
      also reads a different surrogate family (RFF ridge, 0.684 vs untrained
      0.548, rule passes), while the constant-drag family proved uncalibratable
      (empty gate-0 window) - coefficient-bias artifacts cannot be made
@@ -86,7 +86,7 @@ resolve.*
 | 21 | Second capacity: dissociation NOT met (artifact-conditional) | survival 0.737 [0.688, 0.780] vs predictor 0.714 [0.687, 0.740]; lead +0.023 < +0.05 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
 | 22 | Gate 0 re-validated per capacity; hidden=7 frozen | oracle 0.922, floor 0.566; hidden=8 regression exact (0.928/0.482); hidden=4 uninformative | FINDINGS 10.5 | PREREGISTRATION_L3.md sec. 12 + scripts/run_expA_l3.py | - |
 | 23 | Held-out capacity-variant transfer passes (same recipe/data; robustness within one recipe, 10.6 scope note) | survival 0.773 [0.722, 0.824], 9/10 vs untrained floor 0.569; rule passes | FINDINGS 10.6 | artifacts/expB2/heldout_l3_h8_summary.json | - |
-| 24 | Common-garden control: REACTIVE not persistent - PROVISIONAL (estimator-fix re-score pending, 10.6 correction banner) | survival cg_tail 0.557 [0.492, 0.622], 1/10 (below bar); late tail 0.492 at chance; rule fails | FINDINGS 10.6 | artifacts/expB2/heldout_l3_h8_summary.json | - |
+| 24 | Common-garden control: re-scored, MODEST PERSISTENT (frozen rule passes both directions) | survival cg_tail 0.666 forward / 0.684 reverse (>= 0.65 and > untrained + 0.05); late tail 0.586/0.577 decays below bar | FINDINGS 10.6.1 | artifacts/expB2/heldout_l3_h8_cg_rescore.json | - |
 | 25 | Reverse transfer direction-dependent: coarse-to-subtle FAILS | survival 0.638, frozen rule fails | FINDINGS 10.6 | artifacts/expB2/heldout_l3_h7_reverse_summary.json | - |
 | 26 | Cross-recipe transfer: GENERALIZES across surrogate families (the generalization claim) | survival 0.684, t 90% CI [0.654, 0.715], 7/10 vs untrained 0.548; rule passes, margin +0.034 | FINDINGS 10.7 | artifacts/l3_crossrecipe/summary.json | - |
 | 27 | Exp C milestone-3 pilot null INVALIDATED (wrong-world + biased estimator); H3 open pending re-run | contrast +0.020 (not a valid measurement) | FINDINGS 13, 13.C | artifacts/expC/emergence_pilot_summary.json (provenance caveat: run predates artifact's stamped commit) | - |
@@ -103,9 +103,10 @@ resolve.*
   `scripts/audit_stats_recheck.py` re-verifies every inventory number against
   the committed artifacts.
 - Rows 23-24 resolved (spec 2026-07-14, per-seed summary committed as
-  `artifacts/expB2/heldout_l3_h8_summary.json`): transfer generalizes, the
-  common-garden control reads reactive (row 24's reactive reading is
-  PROVISIONAL pending the estimator-fix re-score, FINDINGS §10.6 correction);
+  `artifacts/expB2/heldout_l3_h8_summary.json`): transfer generalizes, and the
+  re-scored common-garden control passes the frozen rule on both directions
+  (row 24; forward 0.666, reverse 0.684; a modest persistent world-identity
+  component, not purely reactive, FINDINGS §10.6.1);
   the paper reports both as generality checks, not as a new headline. Rows 20-22 resolved 2026-07-14: the second
   capacity replicates the behavior-independent signal and bounds the
   survival-specific claim to the subtler artifact.

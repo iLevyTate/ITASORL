@@ -511,10 +511,11 @@ behavior-independent world signal of about 0.72 in the survival creature's state
   forger built on a different recipe (0.684, rule passes). But a frozen reverse
   test, training on the coarse fingerprint and reading the subtle one, fails the
   bar (0.638): transfer runs from subtle training artifacts, not both ways. And a
-  common-garden control settles what the signal is: reactive tracking of the
-  dynamics the creature currently feels, not a stored memory of which world it
-  came from (0.557, below the bar; the trace decays to chance). L4 and
-  Experiment C remain entirely open.
+  common-garden control, re-scored with a fixed estimator, settles what the signal
+  is: a modest persistent memory of which world the creature came from that its
+  policy also expresses reactively (0.666 forward and 0.684 reverse, both clearing
+  the bar; the memory is weak and the trace decays across the tail). L4 remains
+  open, and Experiment C's emergence pilot resolved negative (FINDINGS 13.D).
 
 Where results live: `docs/FINDINGS.md` (the narrative), `docs/PREREGISTRATION_L3.md`
 section 12 (the dated lab log), `artifacts/expB2/*.json` (the committed numbers),

@@ -59,16 +59,19 @@ generalization to an independent fingerprint (see the 2026-07-18 scope note in
 section 10.6); a frozen
 reverse run also shows the transfer is direction-dependent (coarse-trained reading
 the subtler fingerprint fails the bar at 0.638, section 10.6); but under a
-common-garden control that equalizes the felt dynamics, the signal does **not**
-persist (0.557, below the bar; late-tail at chance). The emergent state is best
-read as **reactive tracking of the currently-felt dynamics, not a persistent
-stored world-identity representation** — *a reading that is PROVISIONAL pending
-re-scoring: the common-garden numbers were computed with the since-fixed biased
-estimator of section 13.C (see the correction banner in section 10.6); the
-transfer numbers are unaffected.* The **generalization claim is carried by the
+common-garden control that equalizes the felt dynamics, the re-scored signal does
+persist above the frozen bar on both directions (survival tail 0.666 forward,
+0.684 reverse; section 10.6.1). The emergent state is best read as a **modest
+persistent stored world-identity component** that the survival policy also
+expresses reactively: it clears the common-garden bar but only just, and its late
+tail decays toward chance (0.586/0.577), so it is persistent-but-weak, not a
+strongly stored tag. *(The original common-garden numbers, 0.557 below the bar,
+were computed with the since-fixed biased estimator of section 13.C; the re-score
+of the saved tail dumps overturned that reading, see section 10.6.1. The transfer
+numbers were unaffected.)* The **generalization claim is carried by the
 cross-recipe probe** (n = 10, section 10.7): the same direction reads a
 *different surrogate family* (a random-Fourier-features ridge law; 0.684 vs
-untrained 0.548, pre-registered rule passes, machine-checked), so the reactive
+untrained 0.548, pre-registered rule passes, machine-checked), so the
 world-signal is recipe-general, not a signature of one function class - a thin
 but genuine pass (t-based 90% CI lower bound 0.654 vs the 0.65 bar; 7/10 seeds
 above), fit on the same training data by design, so it certifies transfer across
@@ -90,7 +93,7 @@ substrate). Detection is measured against a **surrogate ladder**:
 | L0 | Identical re-implementation (control, must be at chance) | tested |
 | L1 | Observation discretization (a lattice / quantization tell) | tested |
 | L2 | Rollout drift (a slowly drifting dynamics coefficient) | tested |
-| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; held-out probe: capacity-variant transfer positive (0.773; same recipe and data, see the 10.6 scope note); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the "reactive, not persistent" common-garden reading is PROVISIONAL pending the 10.6 re-score; section 10) |
+| L3 | Learned world-model surrogate (a generative fingerprint) | tested (positive, n=10; reward/survivorship-controlled, behavior-independent component 0.726; held-out probe: capacity-variant transfer positive (0.773; same recipe and data, see the 10.6 scope note); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the re-scored common-garden control passes the frozen rule on both directions (forward 0.666, reverse 0.684), so the signal is a modest persistent world-identity component, not purely reactive (section 10.6.1); section 10) |
 | L4 | Adversarially-hardened surrogate | not started |
 
 Three experiments were planned. This cycle completed Experiment A for L1 and L2
@@ -351,14 +354,14 @@ inducing it (if possible) requires something more deliberate.
   probe power, capacity, or objective horizon. A held-out probe (section 10.6)
   qualifies the *nature* of the encoding: it transfers to a capacity variant of
   the training fingerprint (same recipe, seed, and training data - robustness
-  within one recipe, see the 10.6 scope note), but a common-garden
-  control shows it is reactive tracking of the felt dynamics, not a persistent
-  stored world-identity representation (PROVISIONAL — the common-garden channel
-  is being re-scored with the fixed estimator, see the section 10.6 correction
-  banner). The generalization evidence is the cross-recipe probe (section 10.7):
-  the same direction reads a
+  within one recipe, see the 10.6 scope note), and a common-garden
+  control, re-scored with the fixed estimator, passes the frozen rule on both
+  directions (survival tail 0.666 forward, 0.684 reverse), so it carries a modest
+  persistent stored world-identity component, not purely reactive tracking of the
+  felt dynamics (see section 10.6.1). The generalization evidence is the
+  cross-recipe probe (section 10.7): the same direction reads a
   gate-calibrated random-Fourier-features law (0.684, rule passes), so the
-  reactive signal is recipe-general.
+  world-identity signal is recipe-general.
 - **H2 (substrate-grounding via ablations)**: not yet tested.
 - **H3 (emergence under selection).** RESOLVED NEGATIVE. The first pilot's
   recorded null was **invalidated** (section 13.C): the run executed on pre-fix
@@ -371,7 +374,10 @@ inducing it (if possible) requires something more deliberate.
   final treatment AUROC 0.509 (below the 0.65 floor), so emergence_claim is
   False on all three pre-registered sub-conditions. Selection had grip (fitness
   moved in both arms) but did not route it through a persistent heritable
-  world-detector, coherent with the L3 arc's reactive-not-persistent reading.
+  world-detector, coherent with the L3 arc's reading (section 10.6.1): the
+  world-signal is a modest, largely within-lifetime component the survival policy
+  expresses when the dynamics bite, and selection did not consolidate it into a
+  heritable detector.
 
 ---
 
@@ -425,27 +431,29 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    dissociation does not, making the survival-specific verdict conditional on the
    subtler hidden = 8 artifact. The held-out fingerprint probe (section 10.6) is
    now run and reported below.
-2. **Held-out / common-garden probe: TESTED, SPLIT (section 10.6).** Two channels
+2. **Held-out / common-garden probe: TESTED, POSITIVE (section 10.6).** Two channels
    on one hidden = 8 run. Transfer is POSITIVE: the world-identity direction fit
    against the trained fingerprint still reads a held-out capacity variant of it
    (survival 0.773 vs untrained 0.569; pre-registered rule passes) - same recipe
    and training data, so robustness within one recipe (10.6 scope note); the
-   across-recipe generalization is item 3. Common garden is a NEGATIVE:
-   once the felt dynamics are made identical for the tail, tail-only state does not
-   carry the prefix world (survival 0.557, below the 0.65 bar; late-tail 0.492 at
-   chance; rule fails). This resolves the reactive-vs-representational ambiguity
-   (§9 caveats) toward REACTIVE: the state tracks the currently-felt dynamics, it
-   does not hold a persistent world-identity tag. *(PROVISIONAL: the cg channel
-   was scored with the since-fixed biased estimator — see the section 10.6
-   correction banner; the transfer channel stands.)*
+   across-recipe generalization is item 3. Common garden is also a PASS after
+   re-scoring: with the felt dynamics made identical for the tail, tail-only state
+   still recovers the prefix world above the frozen bar on both directions
+   (survival 0.666 forward, 0.684 reverse; both clauses pass; section 10.6.1).
+   This resolves the reactive-vs-representational ambiguity (§9 caveats) toward a
+   MODEST PERSISTENT component: the state holds a weak, tail-decaying world-identity
+   signal, not only reactive tracking of the currently-felt dynamics. *(The original
+   common-garden read as NEGATIVE, survival 0.557 below the bar, was scored with
+   the since-fixed biased estimator of section 13.C; the re-score of the saved tail
+   dumps overturned it, see section 10.6.1. The transfer channel was unaffected.)*
 3. **Cross-recipe transfer probe: TESTED, POSITIVE (section 10.7).** Readout-only
    against the saved hidden = 8 agents. The direction fit against the trained MLP
    fingerprint reads a gate-calibrated random-Fourier-features ridge law the agent
    never lived with (survival 0.684 vs untrained 0.548; pre-registered rule passes,
    machine-checked), survival-specifically. The secondary constant-drag family
    proved uncalibratable (empty gate-0 window) and was dropped per the pre-stated
-   rule. The reactive reading from item 2 is unchanged; its generality now spans
-   surrogate recipes, not just instances.
+   rule. The world-identity reading from item 2 carries over; its generality now
+   spans surrogate recipes, not just instances.
 4. **Remaining objective variants.** Weighting the dynamics-relevant observation
    dimensions and increasing capacity, though the capacity-ceiling result above makes a
    pooled-probe breakthrough from these unlikely at L2.
@@ -692,19 +700,20 @@ conditional on the subtler hidden = 8 artifact.
 
 ### 10.6 Held-out fingerprint (common-garden) probe
 
-> **CORRECTION IN PROGRESS (2026-07-18, recorded before the re-score's outcome
-> is known).** The common-garden channel numbers in this section (cg_tail 0.557,
-> late-tail 0.492; reverse-run 0.598/0.489) were computed with the pre-fix
-> pair-splitting `cg_probe` estimator invalidated in section 13.C (bias toward
-> AUROC 0 whenever the surviving pair count is not a multiple of 5). The
-> committed artifacts carry the signature: drift-0.00 cg floors of 0.001-0.27
-> instead of ~0.5, and cg pair counts of 96-110 (non-multiples of 5 in most
-> cells). The cg-channel NEGATIVE — and therefore the "reactive, not
-> persistent" adjudication — is **provisional pending re-scoring** of the saved
-> `_cg.npz` tail dumps with the fixed estimator
-> (`scripts/reanalyze_cg_states.py`); the frozen 2026-07-14/15 decision rules
-> are unchanged and will re-adjudicate the corrected numbers. The TRANSFER
-> channel (0.773 forward / 0.638 reverse / 0.684 cross-recipe) is unaffected:
+> **RE-SCORE RESOLVED (2026-07-19).** The common-garden channel numbers in this
+> section (cg_tail 0.557, late-tail 0.492; reverse-run 0.598/0.489) were computed
+> with the pre-fix pair-splitting `cg_probe` estimator invalidated in section
+> 13.C (bias toward AUROC 0 whenever the surviving pair count is not a multiple of
+> 5). The committed artifacts carried the signature: drift-0.00 cg floors of
+> 0.001-0.27 instead of ~0.5, and cg pair counts of 96-110 (non-multiples of 5 in
+> most cells). The saved `_cg.npz` tail dumps have now been re-scored with the
+> fixed estimator (`scripts/reanalyze_cg_states.py`) and re-adjudicated against
+> the unchanged frozen 2026-07-14/15 rule. The corrected numbers OVERTURN the
+> "reactive, not persistent" reading recorded below: both directions PASS the
+> frozen rule (forward survival cg_tail 0.666, reverse 0.684). See the resolution
+> in section 10.6.1. The NEGATIVE body text that follows is retained as the
+> historical (invalidated) record; the current verdict is 10.6.1. The TRANSFER
+> channel (0.773 forward / 0.638 reverse / 0.684 cross-recipe) was never affected:
 > it uses the frozen-fit train/test estimator with no CV grouping. The
 > matched-pair mp_target numbers are fold-safe by accident (pair counts 60/25,
 > multiples of 5, and that path drops no pairs) and stand.
@@ -786,6 +795,46 @@ it reads the subtler one only partially (0.638, above the floor but below the
 bar). The honest generality claim is that the survival world-signal generalizes
 *from subtle training artifacts*; it is not bidirectional.
 
+### 10.6.1 Common-garden re-score resolution (2026-07-19)
+
+The section 13.C estimator fix was applied to the saved common-garden tail dumps
+by re-scoring both held-out bundles (`scripts/reanalyze_cg_states.py`), promoting
+the decision-relevant aggregate to committed artifacts
+(`artifacts/expB2/heldout_l3_h8_cg_rescore.json` forward,
+`heldout_l3_h7_reverse_cg_rescore.json` reverse, via
+`scripts/promote_cg_rescore.py`), and re-adjudicating with the unchanged frozen
+2026-07-14/15 rule (survival tail AUROC >= 0.65 AND > untrained + 0.05).
+
+**Sanity first.** Every drift-0.00 L0 floor returns to 0.500 exactly under the
+fixed estimator (survival, predictor, and untrained, both runs), the signature
+that the pair-splitting bias is gone. The biased artifacts had read these floors
+as low as 0.001.
+
+**Forward run (hidden = 8 trained, hidden = 7 held out; decision-relevant).**
+Survival `cg_tail` = **0.666** (per-seed range 0.527-0.773, n_pairs 107-110),
+untrained floor 0.570, predictor 0.588. Both frozen clauses PASS: 0.666 >= 0.65,
+and 0.666 > 0.570 + 0.05 = 0.620. The late tail still decays (last-8-step survival
+`cg_latetail` = 0.586, below the bar), so the retained component is real but
+modest and fading, not a strong persistent tag.
+
+**Reverse run (hidden = 7 trained, hidden = 8 held out; supporting).** Survival
+`cg_tail` = **0.684** (per-seed range 0.579-0.763), untrained floor 0.573,
+predictor 0.597. Both clauses PASS again: 0.684 >= 0.65 and 0.684 > 0.573 + 0.05 =
+0.623. Late-tail 0.577, the same modest-and-fading pattern. The two directions now
+agree.
+
+**Corrected reading.** Under the fixed estimator the common-garden control does
+NOT read reactive. Once the felt dynamics are made identical, tail-only state
+still recovers the prefix world above the frozen bar on both directions, so the L3
+world-signal carries a persistent held-out world-identity component, not only
+reactive tracking of the live dynamics. The component is modest (survival tail
+just over the 0.65 bar, 0.666 forward and 0.684 reverse) and decays across the
+tail (late-tail 0.586/0.577, below the bar), so the honest statement is
+"persistent but weak and fading," not "strongly stored." This supersedes the
+"resolves toward reactive" conclusion in the body above: the
+reactive-vs-representational ambiguity (§7.2, §9 caveats) resolves toward a modest
+persistent representation.
+
 ### 10.7 Cross-recipe transfer probe
 
 Done (`fullruns/l3_crossrecipe`, n = 10, spec frozen 2026-07-15 before any run;
@@ -828,11 +877,11 @@ clauses, machine-checked in the runner aggregate (`rff_rule_pass` true, margin
 not just instances: it reads a cosine-basis ridge fingerprint it was never fit
 against, survival-specifically (the predictor and untrained arms clear no bar),
 attenuated relative to same-recipe transfer (0.773 -> 0.684) as expected for a
-farther family. The common-garden verdict of section 10.6 is untouched: this
-extends the *generality* of the reactive world-signal; it says nothing new about
-persistence. *(2026-07-18 note: that common-garden verdict is itself now
-provisional - see the section 10.6 correction banner; and per the 10.6 scope
-note, this cross-recipe channel, not same-recipe transfer, carries the
+farther family. The common-garden verdict of section 10.6 is a separate question:
+this channel extends the *generality* of the world-signal; it says nothing new
+about persistence. *(2026-07-19 note: the common-garden verdict was re-scored and
+now reads as a modest persistent component, see section 10.6.1; and per the 10.6
+scope note, this cross-recipe channel, not same-recipe transfer, carries the
 generalization claim. Scope: `G_rff` is fit on the same training data as
 `G_motion` by design - the recipes differ in function class and fit, not data.)*
 
@@ -1157,10 +1206,10 @@ positive in every arm-run of every seed (gate-2 passes on both arms), and seed-0
 treatment evolution is bit-reproducible. Selection moved the population, but it
 did not build a persistent heritable world-detector; the final-generation
 foragers read their world no better than the gen-0 population did. This is
-coherent with the L3 arc's reactive-not-persistent reading: a signal that the
-survival policy expresses reactively when the velocity law bites is not the same
-object as a stored world-identity representation that selection can carry
-forward.
+coherent with the L3 arc's reading (section 10.6.1): the within-lifetime
+world-signal is modest and largely expressed while the velocity law bites, and
+selection did not consolidate that within-lifetime signal into a heritable
+world-identity detector it can carry across generations.
 
 **H3 disposition: resolved negative.** Darwinian selection over 30 generations
 in this world did not produce an emergent world-detector. The payoff-steepness
