@@ -97,8 +97,10 @@ Three experiments were planned. This cycle completed Experiment A for L1 and L2
 (and later the L3 oracle gate, section 10.1), the first full arc of Experiment B,
 the survival-coupled B-v2/B-v3 arc (section 9), and the L3 arc (section 10).
 Experiment C (emergence under selection) has run its first pilot; the recorded
-null is **invalidated by two since-fixed measurement bugs** (see the correction
-in section 13.C) and a re-run on fixed code is pending, so H3 is currently open.
+null was **invalidated by two since-fixed measurement bugs** (see the correction
+in section 13.C) and the re-run on fixed code has now landed as a **validated
+null** (section 13.D), so H3 resolves negative: selection did not build a
+persistent heritable world-detector.
 
 The world is **"A Patch of Earth" v0**, a 2.5D, deterministic, dissipative,
 Earth-*like* (authored, not data-driven) environment with a ~146-dimensional
@@ -358,16 +360,18 @@ inducing it (if possible) requires something more deliberate.
   gate-calibrated random-Fourier-features law (0.684, rule passes), so the
   reactive signal is recipe-general.
 - **H2 (substrate-grounding via ablations)**: not yet tested.
-- **H3 (emergence under selection).** OPEN — the first pilot's recorded null is
-  **invalidated** (section 13.C): the run executed on pre-fix code carrying two
-  since-fixed measurement defects (the fitness/panel legs ran on the default
-  world rather than world P, and the common-garden AUROC estimator split matched
-  pairs across CV folds, biasing detection AUROCs toward 0). The pilot's
-  qualitative mechanism observations (selection effective, gains routed through
-  survival behavior) used unaffected series, but the emergence contrast and the
-  AUROC-floor comparison are not valid measurements. A re-run on fixed code with
-  the identical pre-registered configuration is pending; H3 has no valid pilot
-  result until it lands.
+- **H3 (emergence under selection).** RESOLVED NEGATIVE. The first pilot's
+  recorded null was **invalidated** (section 13.C): the run executed on pre-fix
+  code carrying two since-fixed measurement defects (the fitness/panel legs ran
+  on the default world rather than world P, and the common-garden AUROC estimator
+  split matched pairs across CV folds, biasing detection AUROCs toward 0). The
+  re-run on fixed code with the identical pre-registered configuration has now
+  landed (section 13.D) and is a **validated null**: the treatment-minus-control
+  emergence contrast is -0.002 (90% t-CI [-0.013, +0.009], spanning 0), mean
+  final treatment AUROC 0.509 (below the 0.65 floor), so emergence_claim is
+  False on all three pre-registered sub-conditions. Selection had grip (fitness
+  moved in both arms) but did not route it through a persistent heritable
+  world-detector, coherent with the L3 arc's reactive-not-persistent reading.
 
 ---
 
@@ -923,18 +927,24 @@ correspondence.
 
 ## 13. Experiment C: emergence of a world-detector under selection (milestone-3 pilot)
 
-> **CORRECTION (2026-07-18).** The pilot recorded below ran on pre-fix code with
-> two measurement defects that sit directly on the pre-registered estimand; its
-> quantitative result (the null) is **invalidated**. See section 13.C at the end
-> of this section before citing any number below. A re-run on fixed code is
-> pending; the original record is preserved unedited per the append-only
-> convention.
+> **CORRECTION (2026-07-18).** The pilot recorded in the opening body of this
+> section (everything from here down to 13.C) ran on pre-fix code with two
+> measurement defects that sit directly on the pre-registered estimand; its
+> quantitative result (the null) is **invalidated**. See section 13.C for the
+> defect analysis. The re-run on fixed code has since landed and is reported in
+> **section 13.D**; it is a **validated null** that reaches the same H3
+> conclusion. The original opening-body record is preserved unedited per the
+> append-only convention. The committed artifact
+> `artifacts/expC/emergence_pilot_summary.json` now holds the **re-run** numbers
+> (section 13.D); the invalidated original numbers survive only as prose in the
+> opening body above 13.C.
 
-*(All section-13 numbers are committed in
+*(The committed section-13 numbers live in
 `artifacts/expC/emergence_pilot_summary.json`, promoted from the gitignored
 `fullruns/expC_milestone3/emergence_pilot.json` by
 `scripts/promote_expC_summary.py` and re-verified by
-`scripts/audit_stats_recheck.py`. Pre-registration: `docs/PREREGISTRATION_C.md`.)*
+`scripts/audit_stats_recheck.py`. As of the 13.D re-run the artifact holds the
+fixed-code numbers. Pre-registration: `docs/PREREGISTRATION_C.md`.)*
 
 **The question.** The L3 arc found a *reactive* world-signal: the survival-trained
 agent tracks the felt dynamics but does not carry a persistent, stored
@@ -1115,3 +1125,45 @@ The re-run's summary will be promoted through the same
 `promote_expC_summary.py` + `audit_stats_recheck.py` gate and recorded as a new
 subsection; the numbers above stay as the historical record of the invalid run.
 This correction was recorded BEFORE the re-run's outcome was known.
+
+### 13.D Re-run on fixed code: a validated null (2026-07-18)
+
+The pre-registered pilot was re-run on fixed code with the identical
+configuration. The run executed on `git_commit a0cb850` (recorded in the
+artifact's `git_commit_at_run`, at or after the `1633bca` fix) and its summary
+was promoted at `7e587a2`. Wall time was 9.6 hours across the three seeds. This
+is the valid H3 measurement; the opening-body numbers (above 13.C) are
+superseded and survive only as the historical record of the invalidated run.
+
+**The wrong-world symptom is gone.** On fixed code the authentic and surrogate
+legs are the same world apart from the velocity law, and nothing dies in either:
+gen-0 death rate is 0.000 on both the authentic and the surrogate leg for every
+seed (compare the invalidated run's ~0.58-versus-0.01 asymmetry, section 13.C).
+The `"world": "P(...)"` provenance is now truthful.
+
+**The emergence contrast is a null.** Per-seed treatment-minus-control contrast
+is +0.002, -0.009, +0.002 (seeds 0, 1, 2); the mean contrast is -0.002 with a
+90% t-CI of [-0.013, +0.009] and a bootstrap 90% CI of [-0.006, +0.002], both
+spanning 0. Mean final treatment AUROC is 0.509, below the 0.65 detection floor;
+per-seed final treatment AUROCs are 0.508, 0.510, 0.509, all sitting at chance.
+All three pre-registered sub-conditions fail: the contrast CI includes 0
+(`ci_excludes_zero` False), the mean contrast is below the 0.05 SESOI
+(`meets_sesoi` False), and the mean final AUROC is below the floor
+(`meets_auroc_floor` False), so `emergence_claim` is **False**.
+
+**Selection had grip; it did not route through detection.** The mechanism reads
+that survived the correction hold on the fixed world: the fitness delta is
+positive in every arm-run of every seed (gate-2 passes on both arms), and seed-0
+treatment evolution is bit-reproducible. Selection moved the population, but it
+did not build a persistent heritable world-detector; the final-generation
+foragers read their world no better than the gen-0 population did. This is
+coherent with the L3 arc's reactive-not-persistent reading: a signal that the
+survival policy expresses reactively when the velocity law bites is not the same
+object as a stored world-identity representation that selection can carry
+forward.
+
+**H3 disposition: resolved negative.** Darwinian selection over 30 generations
+in this world did not produce an emergent world-detector. The payoff-steepness
+sweep's "controller expressiveness" framing (in the opening body above 13.C) is
+no longer provisional-on-the-re-run: the re-run confirms the null it took as
+premise.
