@@ -21,9 +21,9 @@ Mark status: `[ready]` Ralph can implement · `[blocked]` needs human · `[done]
 
 | Status | Item | Rationale |
 |--------|------|-----------|
-| `[ready]` | `collect_pool` / early-death guard tests (BACKLOG P2). | Ensures B-v2 pools are not silently biased under harsh metabolism. |
-| `[ready]` | Extreme latent → env action bounds test (BACKLOG P3). | Safety on actor-critic squash. |
-| `[ready]` | Update `docs/FINDINGS.md` §7 item 1 to reference §9 replication (0.523) and retire "attempted" ambiguity if wording still implies open positive. | Docs aligned with canonical artifact. |
+| `[done]` | `collect_pool` / early-death guard tests (BACKLOG P2). | Done: test_experiment_b2.py (test_collect_pool_returns_fixed_length, test_collect_pool_excludes_early_deaths, test_pooled_readout_too_few_survivors_guard), verified green 2026-07-20. |
+| `[done]` | Extreme latent → env action bounds test (BACKLOG P3). | Done: test_agent_ac.py test_env_action_bounded_for_extreme_latents (magnitudes 50..1e8), verified green 2026-07-20. |
+| `[done]` | Update `docs/FINDINGS.md` §7 item 1 to reference §9 replication (0.523) and retire "attempted" ambiguity if wording still implies open positive. | Done: §7.1 item 1 already references §9 and states 0.523 (matches canonical §9 table); no open-positive ambiguity remains (verified 2026-07-20). |
 
 ---
 
