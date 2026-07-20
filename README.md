@@ -9,6 +9,8 @@ seams, with detection **read out, not rewarded**.*
 
 **Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb). Enable a GPU runtime, then run all cells (clones the repo and runs `python scripts/run_e2e.py`).
 
+**New to the project?** Start with the [visual walkthrough (PDF)](docs/itasorl-visual-series.pdf): a nine-page illustrated tour of the question, the world, the method, and the findings - every number read from the committed artifacts.
+
 ---
 
 ## The theme in one line
@@ -214,6 +216,7 @@ function class. See
 |   |-- PREREGISTRATION_L3.md   L3 pre-registration + deviation log
 |   |-- PREREGISTRATION_C.md    Experiment C pre-registration (design-complete)
 |   |-- AUDIT_2026-07.md        research-integrity audit
+|   |-- itasorl-visual-series.pdf  nine-page illustrated walkthrough
 |   `-- figures/                result figures (.png) + provenance README
 |-- artifacts/                  published summaries (committed): expA/, expB/, expB2/, expC/, l3_crossrecipe/
 |-- fullruns/                   e2e run bundles (gitignored; default output)
@@ -224,6 +227,7 @@ function class. See
 
 ### Documents
 
+- [`docs/itasorl-visual-series.pdf`](docs/itasorl-visual-series.pdf): the illustrated walkthrough - the friendliest entry point to the whole project.
 - [`docs/ITASORL.md`](docs/ITASORL.md): the research plan, core question, literature white-space, hypotheses (H1 to H4), experiments (A/B/C), the surrogate ladder, validity audit, statistics, and engineering architecture.
 - [`docs/ITASORL_world_spec.md`](docs/ITASORL_world_spec.md): the world specification, "A Patch of Earth" v0, the 2.5D representation, fields and forcing, dynamics, ecology, the ~146-dim observation, ladder attachment, and confound management.
 - [`docs/FINDINGS.md`](docs/FINDINGS.md): empirical results from the first build-and-test cycle.
