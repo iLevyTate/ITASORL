@@ -157,6 +157,23 @@ def mean_ci(values, level: float = 0.90, n_boot: int = 10000,
     return (float(x.mean()), float(np.percentile(means, 100 * a)), float(np.percentile(means, 100 * (1 - a))))
 
 
+def t_ci90(values) -> tuple[float, float]:
+    """Student-t 90% CI of the across-seed mean - the repo's decision interval.
+
+    Unlike mean_ci (a bootstrap percentile band), this is the parametric t interval the
+    FINDINGS decision layer quotes for per-seed AUROCs. Kept here as the single audited
+    path so experiments and the site generator agree. NaNs when n<2 (variance undefined).
+    """
+    x = np.asarray(values, dtype=float).ravel()
+    n = x.size
+    if n < 2:
+        return (float("nan"), float("nan"))
+    mean = float(x.mean())
+    se = float(x.std(ddof=1)) / np.sqrt(n)
+    crit = float(_student_t.ppf(0.95, n - 1)) if _HAVE_SCIPY else 1.645
+    return (mean - crit * se, mean + crit * se)
+
+
 @dataclass
 class RopeResult:
     mean: float

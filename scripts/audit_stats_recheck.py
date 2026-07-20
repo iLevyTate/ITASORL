@@ -597,15 +597,15 @@ def main() -> int:
                    "not a stored representation"):
         check_true(f"index.html no longer states the reactive-only claim '{phrase}'",
                    len(_find_all(idx, phrase)) == 0)
-    # index.html is hand-maintained with no generator, so pin its headline
-    # numbers to the artifact-verified values: if a rerun/correction changes a
-    # headline, the page must be edited in the same change or CI fails here.
-    for num, meaning in [("0.752", "L3 survival headline"),
-                         ("0.773", "held-out capacity-variant transfer"),
-                         ("0.684", "cross-recipe transfer / reverse cg re-score"),
-                         ("0.666", "forward common-garden re-score (passes bar)"),
-                         ("0.638", "reverse transfer (fails bar)")]:
-        check_true(f"index.html still quotes {num} ({meaning})", num in idx)
+    # index.html is now GENERATED from index.template.html by scripts/build_index.py,
+    # which fills {{...}} placeholders from the artifact-derived site metrics. So instead
+    # of pinning bare number strings, regenerate the page and require it to be already up
+    # to date: any artifact/headline change must be re-rendered in the same commit or this
+    # fails. (Replaces the 2026-07-18 headline string pins with real regeneration.)
+    sys.path.insert(0, os.path.dirname(__file__))
+    import build_index
+    check_true("index.html is regenerable and current (build_index --check)",
+               build_index.build(os.path.join(root), check=True) == 0)
 
     print()
     if failures:

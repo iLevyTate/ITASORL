@@ -30,27 +30,10 @@ from .experiment_a import grouped_auroc
 from .experiment_b2 import (RunningNorm, _episode_feature, cg_probe,
                             collect_episodes_ac, common_garden_rollout,
                             leakage_audit_b2)
-from .stats import mean_ci
+from .stats import mean_ci, t_ci90 as _t_ci90
 from .world import WorldParams
 
 Population = list[RecurrentActorCritic]
-
-
-def _t_ci90(x: np.ndarray) -> tuple[float, float]:
-    """90% two-sided t interval on the mean of ``x`` (df=n-1). Student-t if scipy is
-    present, else a normal approximation; [nan, nan] for n<2 (no variance)."""
-    x = np.asarray(x, dtype=float).ravel()
-    n = x.size
-    if n < 2:
-        return (float("nan"), float("nan"))
-    mean = float(x.mean())
-    se = float(x.std(ddof=1)) / np.sqrt(n)
-    try:
-        from scipy.stats import t as _student_t
-        crit = float(_student_t.ppf(0.95, n - 1))
-    except Exception:  # pragma: no cover - scipy optional
-        crit = 1.645
-    return (mean - crit * se, mean + crit * se)
 
 
 def emergence_contrast(

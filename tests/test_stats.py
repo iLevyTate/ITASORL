@@ -10,7 +10,7 @@ import math
 import numpy as np
 import pytest
 
-from itasorl.stats import auroc, auroc_ci, equivalence_test, mean_ci, rope_test
+from itasorl.stats import auroc, auroc_ci, equivalence_test, mean_ci, rope_test, t_ci90
 
 
 def test_auroc_matches_known_cases():
@@ -50,6 +50,21 @@ def test_mean_ci_centers_on_mean():
 def test_mean_ci_handles_single_value():
     m, lo, hi = mean_ci([0.5])
     assert m == lo == hi == 0.5
+
+
+def test_t_ci90_matches_l3_headline_decision_interval():
+    # FINDINGS sec.10.2 canonical L3 survival, one AUROC per seed (n=10). The decision
+    # layer reports the t-based 90% CI over these cells; index.html quotes [0.698, 0.807].
+    per_seed = [0.853, 0.636, 0.841, 0.823, 0.830, 0.573, 0.705, 0.782, 0.759, 0.723]
+    lo, hi = t_ci90(per_seed)
+    assert round(lo, 3) == 0.698
+    assert round(hi, 3) == 0.807
+    assert lo < np.mean(per_seed) < hi
+
+
+def test_t_ci90_handles_degenerate_samples():
+    lo, hi = t_ci90([0.5])          # n<2: variance undefined
+    assert math.isnan(lo) and math.isnan(hi)
 
 
 def test_rope_accepts_tight_chance_rejects_clear_signal():

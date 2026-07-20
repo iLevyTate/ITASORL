@@ -178,3 +178,33 @@ Format per entry:
 - Verify: files are self-consistent with `docs/FINDINGS.md` §9 and
   `artifacts/expB2/README.md` promotion record.
 - Commit: (this session)
+
+## 2026-07-20 17:42 — index.html generator (retire recheck-gate string pins)
+- Found: BACKLOG #12 - index.html was a hand-edited design-tool bundle with no
+  generator, so the recheck gate (`audit_stats_recheck.py`) pinned 5 headline
+  numbers as bare `num in idx` string checks (added 2026-07-18). A re-run that
+  moved a number would silently diverge from the page until someone hand-edited
+  it; the pins only proved the strings were *present*, not *current*.
+- Fix:   built single-source regeneration. `itasorl/stats.py` gained a public
+  `t_ci90()` (promoted from `experiment_c.py`'s private `_t_ci90`, which now
+  delegates - the site CI and the decision layer share one audited t-interval).
+  `scripts/site_metrics.py:derive_metrics()` reads artifacts/expB2/ and returns
+  every headline number as a formatted string (survival 0.752, t-CI 0.698-0.807
+  recomputed live from per-seed cells, transfer same/reverse, cg forward/reverse).
+  `index.template.html` is index.html with those numbers replaced by `{{key}}`
+  placeholders (valid in JS string/numeric literals, HTML attrs, and prose alike -
+  an HTML-comment anchor could not span JS-embedded numbers). `scripts/build_index.py`
+  fills placeholders (KeyError on any unknown key) and has `--check` for the gate.
+  Then rewired `audit_stats_recheck.py`: the 5 string pins became one
+  `build_index.build(check=True) == 0` - regenerate-and-diff, so any artifact or
+  template change must be re-rendered in the same commit or the gate fails.
+- Verify: TDD throughout (each of t_ci90 / derive_metrics / render / build --check
+  RED first). `python -m pytest -q` -> 271 passed; `python -m ruff check .` -> All
+  checks passed; full recheck gate -> 235 checks pass incl. the new regenerable
+  check; perturb-the-page negative test returns 1, restore returns 0.
+- Follow-up: the forward cross-recipe number (~0.684) stays a template literal, not
+  a placeholder - its run lives in untracked `fullruns/l3_crossrecipe/` with no
+  committed artifact to regenerate from. The string stays covered only because the
+  reverse-cg 0.684 IS owned. Filed under Questions/needs-a-human (promote the run
+  into artifacts/expB2/ to let a future revision own it too).
+- Commit: (pending)

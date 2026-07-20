@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>x-dc{display:none!important}</style>
+<title>ItaSoRL · Readout, Not Reward</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#e8e5f1">
+<script>window.__resources={"https://unpkg.com/react@18.3.1/umd/react.production.min.js":"assets/6f6d4fd7.js","https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js":"assets/5d60b07b.js"};</script>
+<script src="assets/3fd2e706.js"></script>
+</head>
+<body>
+
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<style>/* cyrillic-ext */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/86b37b9a.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/922a8bf9.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/fc21ae84.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/234acff6.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/86b37b9a.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/922a8bf9.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/fc21ae84.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/234acff6.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/86b37b9a.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/922a8bf9.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fc21ae84.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Hanken Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/234acff6.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/010dcd73.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/6ed42c05.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/a2e2bd74.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/3e5d743e.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/289c5570.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* cyrillic-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/a70a9a39.woff2") format('woff2');
+  unicode-range: U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;
+}
+/* cyrillic */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/4c6ed467.woff2") format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/f1d58fcc.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/adb02064.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/e5d16635.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/cffe08ab.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/cb7c5239.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("assets/b6d35798.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/cffe08ab.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/cb7c5239.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("assets/b6d35798.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/cffe08ab.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/cb7c5239.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/b6d35798.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* vietnamese */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/cffe08ab.woff2") format('woff2');
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+/* latin-ext */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/cb7c5239.woff2") format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+/* latin */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/b6d35798.woff2") format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+</style>
+<style>
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{ margin:0; background:#e8e5f1; }
+  section{ scroll-margin-top:110px; }
+  ::selection{ background:#8a72c0; color:#fff; }
+  a{ color:#6f5bb3; text-decoration:none; }
+  a:hover{ color:#4f6fc0; }
+  @keyframes float-mark{ 0%,100%{ transform:translateY(0) rotate(0deg); } 50%{ transform:translateY(-12px) rotate(-1.2deg); } }
+  @keyframes bloom{ 0%,100%{ transform:translate(0,0) scale(1); } 50%{ transform:translate(2%,-3%) scale(1.06); } }
+  @keyframes drawline{ from{ stroke-dashoffset:1100; } to{ stroke-dashoffset:0; } }
+  @keyframes spin-slow{ to{ transform:rotate(360deg); } }
+  @keyframes pulse-dot{ 0%,100%{ box-shadow:0 0 0 0 rgba(138,114,192,0.45); } 55%{ box-shadow:0 0 0 7px rgba(138,114,192,0); } }
+  @keyframes rise{ from{ opacity:0; transform:translateY(18px); } to{ opacity:1; transform:none; } }
+  @keyframes layerfade{ 0%,100%{ opacity:1; } 38%{ opacity:0.22; } 52%{ opacity:0.85; } 70%{ opacity:0.4; } 84%{ opacity:0.95; } }
+  @keyframes fade{ from{ opacity:0; } to{ opacity:1; } }
+  .navlink{ transition:color .15s; }
+  @media (max-width:1000px){ .navchip{ display:none; } }
+  .navlink:hover{ color:#2a2547 !important; }
+  .card-hov{ transition:transform .25s cubic-bezier(.2,.7,.3,1), box-shadow .25s; }
+  .card-hov:hover{ transform:translateY(-4px); box-shadow:13px 13px 28px #c5c0dc, -13px -13px 28px #ffffff !important; }
+  .pill{ white-space:nowrap; transition:transform .15s, box-shadow .18s, filter .18s; }
+  .pill:hover{ box-shadow:2px 2px 6px #c8c3dd, -2px -2px 6px #fbfaff !important; transform:translateY(1px); filter:saturate(1.12); }
+  .ghost{ transition:box-shadow .18s, color .15s; }
+  .ghost:active, .ghost:hover{ box-shadow:inset 5px 5px 11px #c8c3dd, inset -5px -5px 11px #fbfaff !important; color:#2a2547 !important; }
+  .pub{ transition:box-shadow .2s, transform .2s; border-radius:14px; position:relative; }
+  .pub:hover{ box-shadow:7px 7px 16px #c8c3dd, -7px -7px 16px #fbfaff; transform:translateX(3px); }
+  .pub:hover .pub-title{ color:#4f6fc0 !important; }
+  .pub .pub-arrow{ opacity:0; transform:translateX(-6px); transition:opacity .2s, transform .2s; }
+  .pub:hover .pub-arrow{ opacity:1; transform:none; }
+  .fact{ transition:box-shadow .25s; }
+  .fact:hover{ box-shadow:inset 8px 8px 17px #c3bed9, inset -8px -8px 17px #ffffff !important; }
+  .darkghost{ transition:background .18s, color .15s, border-color .18s; }
+  .darkghost:hover{ background:rgba(255,255,255,0.08) !important; color:#ffffff !important; border-color:rgba(255,255,255,0.4) !important; }
+  /* Responsive overrides — the markup uses inline styles, so these need !important. */
+  @media (max-width:1000px){
+    header#top{ grid-template-columns:1fr !important; gap:10px !important; padding:36px 0 56px !important; }
+    [data-screen-label="Facts"]{ grid-template-columns:repeat(2,1fr) !important; margin-bottom:90px !important; }
+    #about > div:nth-of-type(2){ grid-template-columns:1fr !important; gap:20px !important; }
+    #research > div:last-child{ grid-template-columns:1fr !important; }
+    #readout > div > div{ grid-template-columns:1fr !important; gap:30px !important; }
+    section{ margin-bottom:90px !important; }
+  }
+  @media (max-width:720px){
+    div[style*="1180px"]{ padding:0 20px !important; }
+    nav .navlink{ display:none; }
+    nav{ padding:10px 10px 10px 16px !important; }
+    h1{ font-size:38px !important; }
+    h2{ font-size:30px !important; }
+    #about > p{ font-size:24px !important; }
+    #research > div:first-child, #findings > div:first-child{ flex-direction:column !important; align-items:flex-start !important; gap:12px; }
+    #research > div:first-child > div:last-child{ text-align:left !important; max-width:none !important; }
+    header#top > div:last-child{ min-height:300px !important; transform:scale(.7); }
+    .pub{ grid-template-columns:1fr !important; gap:10px !important; padding:18px 14px !important; }
+    .pub > span:last-child{ justify-self:start !important; }
+    #readout > div{ padding:30px 22px !important; }
+    #join > div{ padding:44px 22px 40px !important; }
+  }
+  @media (max-width:480px){
+    [data-screen-label="Facts"]{ grid-template-columns:1fr !important; }
+    h1{ font-size:33px !important; }
+  }
+</style>
+</helmet>
+
+<div style="position:relative; min-height:100vh; overflow:hidden; background:#e8e5f1; color:#453f63; font-family:'Hanken Grotesk',sans-serif; -webkit-font-smoothing:antialiased;">
+
+  <!-- AMBIENT BLOOMS -->
+  <sc-if value="{{ ambient }}" hint-placeholder-val="{{ true }}">
+    <div style="position:absolute; top:-160px; right:-140px; width:560px; height:560px; border-radius:50%; background:radial-gradient(circle at 40% 40%, rgba(138,114,192,0.16), rgba(138,114,192,0) 68%); filter:blur(24px); pointer-events:none; animation:bloom 18s ease-in-out infinite;"></div>
+    <div style="position:absolute; top:520px; left:-220px; width:520px; height:520px; border-radius:50%; background:radial-gradient(circle at 60% 40%, rgba(98,133,200,0.14), rgba(98,133,200,0) 68%); filter:blur(24px); pointer-events:none; animation:bloom 21s ease-in-out infinite reverse;"></div>
+  </sc-if>
+
+  <div style="position:relative; max-width:1180px; margin:0 auto; padding:0 40px;">
+
+    <!-- NAV -->
+    <nav style="display:flex; align-items:center; justify-content:space-between; margin:22px 0; padding:13px 14px 13px 22px; position:sticky; top:18px; z-index:40; background:#e8e5f1; border-radius:18px; box-shadow:7px 7px 18px #c8c3dd, -7px -7px 18px #fbfaff, inset 0 1px 0 rgba(255,255,255,0.7);">
+      <a href="#top" style="display:flex; align-items:center; gap:12px;">
+        <img src="assets/46bfa273.png" alt="ItaSoRL" style="height:28px; display:block;">
+        <span class="navchip" style="white-space:nowrap; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.12em; color:#9a94b0; padding:4px 8px; border-radius:6px; box-shadow:inset 2px 2px 5px #c8c3dd, inset -2px -2px 5px #fbfaff;">RESEARCH LOG</span>
+      </a>
+      <div style="display:flex; align-items:center; gap:30px;">
+        <a href="#research" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.04em; color:#6b6588;">Research</a>
+        <a href="#readout" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.04em; color:#6b6588;">Readout</a>
+        <a href="#findings" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.04em; color:#6b6588;">Findings</a>
+        <a href="#about" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.04em; color:#6b6588;">About</a>
+        <a href="https://github.com/iLevyTate/ItaSoRL" target="_blank" class="pill" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.02em; color:#fff; background:linear-gradient(135deg,#9079c8,#5f82c6); padding:10px 20px; border-radius:999px; box-shadow:5px 5px 12px #c8c3dd, -5px -5px 12px #fbfaff, inset 0 1px 0 rgba(255,255,255,0.35);">GitHub ↗</a>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <header id="top" data-screen-label="Hero" style="display:grid; grid-template-columns:1.15fr 0.85fr; gap:40px; align-items:center; padding:56px 0 84px;">
+      <div>
+        <div style="display:inline-flex; align-items:center; gap:11px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.18em; text-transform:uppercase; color:#7a679f; margin-bottom:32px; background:#e8e5f1; padding:11px 18px; border-radius:999px; box-shadow:inset 4px 4px 9px #c8c3dd, inset -4px -4px 9px #fbfaff; animation:rise .7s ease-out both;">
+          <span style="width:7px; height:7px; border-radius:50%; background:linear-gradient(135deg,#9079c8,#5f82c6); animation:pulse-dot 2.6s ease-out infinite;"></span>
+          A tabula-rasa artificial-life experiment
+        </div>
+        <h1 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:62px; line-height:1.02; letter-spacing:-0.024em; margin:0 0 26px; color:#2a2547; text-wrap:balance; animation:rise .7s ease-out .08s both;">When does a mind learn what it was <span style="background:linear-gradient(100deg,#8a6fc0,#5f82c6); -webkit-background-clip:text; background-clip:text; color:transparent;">never asked to care about?</span></h1>
+        <p style="font-size:18px; line-height:1.62; color:#5c5776; max-width:530px; margin:0 0 36px; text-wrap:pretty; animation:rise .7s ease-out .16s both;">ItaSoRL raises a digital organism from scratch inside a simulated world. Sometimes that world is authentic. Sometimes it is a subtly flawed copy. We never tell the organism, and never reward it for noticing: we read its internal state and ask when the difference gets encoded anyway.</p>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:40px; animation:rise .7s ease-out .24s both;">
+          <a href="#readout" class="pill" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#fff; background:linear-gradient(135deg,#9079c8,#5f82c6); padding:14px 26px; border-radius:999px; box-shadow:6px 6px 14px #c8c3dd, -6px -6px 14px #fbfaff, inset 0 1px 0 rgba(255,255,255,0.35);">See the readout →</a>
+          <a href="#research" class="ghost" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#4a4468; background:#e8e5f1; padding:13px 24px; border-radius:999px; box-shadow:6px 6px 14px #c8c3dd, -6px -6px 14px #fbfaff;">What we study</a>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; animation:rise .7s ease-out .32s both;">
+          <span style="display:inline-flex; align-items:center; gap:9px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#6b6588; background:#e8e5f1; padding:10px 16px; border-radius:999px; box-shadow:inset 4px 4px 9px #c8c3dd, inset -4px -4px 9px #fbfaff;"><span style="color:#8a72c0;">●</span> tabula rasa</span>
+          <span style="display:inline-flex; align-items:center; gap:9px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#6b6588; background:#e8e5f1; padding:10px 16px; border-radius:999px; box-shadow:inset 4px 4px 9px #c8c3dd, inset -4px -4px 9px #fbfaff;"><span style="color:#7078c3;">●</span> readout, not reward</span>
+          <span style="display:inline-flex; align-items:center; gap:9px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#6b6588; background:#e8e5f1; padding:10px 16px; border-radius:999px; box-shadow:inset 4px 4px 9px #c8c3dd, inset -4px -4px 9px #fbfaff;"><span style="color:#5f82c6;">●</span> substrate-grounded</span>
+        </div>
+      </div>
+      <div style="position:relative; display:flex; align-items:center; justify-content:center; min-height:440px; animation:fade 1s ease-out .2s both;">
+        <div style="position:absolute; width:340px; height:340px; border-radius:50%; background:#e8e5f1; box-shadow:18px 18px 40px #c8c3dd, -18px -18px 40px #fbfaff;"></div>
+        <div style="position:absolute; width:250px; height:250px; border-radius:50%; background:#e8e5f1; box-shadow:inset 10px 10px 22px #c8c3dd, inset -10px -10px 22px #fbfaff;"></div>
+        <div style="position:absolute; width:412px; height:412px; animation:spin-slow 90s linear infinite;">
+          <svg sc-camel-view-box="0 0 412 412" style="display:block; width:100%; height:100%;"><circle cx="206" cy="206" r="203" fill="none" stroke="#a99cce" stroke-width="1" stroke-dasharray="2 9" opacity="0.7"></circle></svg>
+        </div>
+        <div style="position:absolute; width:412px; height:412px; animation:spin-slow 26s linear infinite;">
+          <div style="position:absolute; top:-4px; left:50%; margin-left:-4px; width:8px; height:8px; border-radius:50%; background:linear-gradient(135deg,#9079c8,#5f82c6); box-shadow:0 0 10px rgba(138,114,192,0.7);"></div>
+        </div>
+        <img src="assets/8ebcbf5e.png" alt="" style="position:relative; width:100%; max-width:330px; display:block; animation:float-mark 9s ease-in-out infinite; filter:drop-shadow(0 22px 34px rgba(60,47,110,0.32));">
+      </div>
+    </header>
+
+    <!-- FACTS STRIP -->
+    <div data-screen-label="Facts" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:120px;">
+      <div class="fact" style="background:#e8e5f1; border-radius:16px; padding:24px; box-shadow:inset 6px 6px 13px #c8c3dd, inset -6px -6px 13px #fbfaff;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#9a94b0; margin-bottom:12px;">Oracle · L2</div>
+        <div class="num" data-target="0.99" data-decimals="2" style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:32px; color:#2a2547; letter-spacing:-0.01em; font-variant-numeric:tabular-nums;">0.99</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.5; color:#6b6588; margin-top:7px;">oracle detects the copy (AUROC)</div>
+      </div>
+      <div class="fact" style="background:#e8e5f1; border-radius:16px; padding:24px; box-shadow:inset 6px 6px 13px #c8c3dd, inset -6px -6px 13px #fbfaff;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#9a94b0; margin-bottom:12px;">Agent probe · L2</div>
+        <div class="num" data-target="0.50" data-decimals="2" style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:32px; color:#2a2547; letter-spacing:-0.01em; font-variant-numeric:tabular-nums;">0.50</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.5; color:#6b6588; margin-top:7px;">the organism's own trace: chance</div>
+      </div>
+      <div class="fact" style="background:#e8e5f1; border-radius:16px; padding:24px; box-shadow:inset 6px 6px 13px #c8c3dd, inset -6px -6px 13px #fbfaff;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#9a94b0; margin-bottom:12px;">Survival · L3</div>
+        <div class="num" data-target="{{l3_survival_hero}}" data-decimals="2" style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:32px; background:linear-gradient(100deg,#8a6fc0,#5f82c6); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:-0.01em; font-variant-numeric:tabular-nums;">{{l3_survival_hero}}</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.5; color:#6b6588; margin-top:7px;">survival probe (n = 10, confirmed; ~0.73 behavior-independent after audit)</div>
+      </div>
+      <div class="fact" style="background:#e8e5f1; border-radius:16px; padding:24px; box-shadow:inset 6px 6px 13px #c8c3dd, inset -6px -6px 13px #fbfaff;">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.18em; text-transform:uppercase; color:#9a94b0; margin-bottom:12px;">Observation</div>
+        <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:32px; color:#2a2547; letter-spacing:-0.01em; font-variant-numeric:tabular-nums;">~146-d</div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.5; color:#6b6588; margin-top:7px;">what the organism sees, tick by tick</div>
+      </div>
+    </div>
+
+    <!-- MISSION -->
+    <section id="about" data-screen-label="Premise" style="margin-bottom:130px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#8a72c0; margin-bottom:24px;">01 &nbsp;/&nbsp; The premise</div>
+      <p style="font-family:'Space Grotesk',sans-serif; font-weight:500; font-size:34px; line-height:1.3; letter-spacing:-0.012em; color:#2a2547; max-width:920px; margin:0 0 32px; text-wrap:balance;">A flaw in the world can be trivially detectable from the outside and still leave <em style="font-style:normal; background:linear-gradient(100deg,#8a6fc0,#5f82c6); -webkit-background-clip:text; background-clip:text; color:transparent;">no trace inside the mind.</em> That gap is the object of study.</p>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:48px; max-width:920px; margin-bottom:44px;">
+        <p style="font-size:16px; line-height:1.68; color:#5c5776; margin:0; text-wrap:pretty;">The organism lives in "A Patch of Earth": a small, deterministic, Earth-like world. Sometimes it runs on authentic dynamics; sometimes on a surrogate carrying tiny substrate seams. Difficulty is dialed on a ladder from L0 (identical control) to L4 (adversarial).</p>
+        <p style="font-size:16px; line-height:1.68; color:#5c5776; margin:0; text-wrap:pretty;">Three invariants hold everywhere: tabula rasa (no imported semantics), readout not reward (world identity is probed, never trained), and substrate-grounded (the only tells are artifacts of the computation itself).</p>
+      </div>
+      <!-- SURROGATE LADDER -->
+      <div style="background:#e8e5f1; border-radius:20px; padding:34px 38px 30px; box-shadow:inset 6px 6px 14px #c8c3dd, inset -6px -6px 14px #fbfaff;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:26px;">
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.16em; text-transform:uppercase; color:#8a72c0;">The surrogate ladder</span>
+          <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#9a94b0;">frontier: L3</span>
+        </div>
+        <div style="position:relative; display:grid; grid-template-columns:repeat(5,1fr);">
+          <div style="position:absolute; top:7px; left:10%; right:10%; height:2px; background:#d6d2e6; border-radius:2px;"></div>
+          <div style="position:absolute; top:7px; left:10%; width:60%; height:2px; background:linear-gradient(90deg,#9079c8,#5f82c6); border-radius:2px;"></div>
+          <div style="position:relative; text-align:center;">
+            <div style="width:16px; height:16px; border-radius:50%; background:linear-gradient(135deg,#9079c8,#5f82c6); margin:0 auto 14px; box-shadow:0 2px 6px rgba(96,79,152,0.4);"></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#2a2547; font-weight:500;">L0</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8a849e; margin-top:4px;">identical control</div>
+          </div>
+          <div style="position:relative; text-align:center;">
+            <div style="width:16px; height:16px; border-radius:50%; background:linear-gradient(135deg,#9079c8,#5f82c6); margin:0 auto 14px; box-shadow:0 2px 6px rgba(96,79,152,0.4);"></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#2a2547; font-weight:500;">L1</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8a849e; margin-top:4px;">discretization</div>
+          </div>
+          <div style="position:relative; text-align:center;">
+            <div style="width:16px; height:16px; border-radius:50%; background:linear-gradient(135deg,#9079c8,#5f82c6); margin:0 auto 14px; box-shadow:0 2px 6px rgba(96,79,152,0.4);"></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#2a2547; font-weight:500;">L2</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8a849e; margin-top:4px;">rollout drift</div>
+          </div>
+          <div style="position:relative; text-align:center;">
+            <div style="width:16px; height:16px; border-radius:50%; background:#e8e5f1; border:2.5px solid #5f82c6; margin:0 auto 14px; animation:pulse-dot 2.4s ease-out infinite;"></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#2a2547; font-weight:500;">L3 · positive</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8a849e; margin-top:4px;">learned dynamics</div>
+          </div>
+          <div style="position:relative; text-align:center;">
+            <div style="width:16px; height:16px; border-radius:50%; background:#d6d2e6; margin:0 auto 14px;"></div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#6b6588; font-weight:500;">L4</div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8a849e; margin-top:4px;">adversarial</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESEARCH -->
+    <section id="research" data-screen-label="Experiments" style="margin-bottom:130px;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:38px;">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#8a72c0; margin-bottom:16px;">02 &nbsp;/&nbsp; What we study</div>
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:40px; letter-spacing:-0.02em; margin:0; color:#2a2547;">The experiments</h2>
+        </div>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#9a94b0; max-width:230px; text-align:right; line-height:1.6;">one world, one surrogate ladder, one readout</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px;">
+        <div class="card-hov" style="position:relative; overflow:hidden; background:#e8e5f1; border-radius:20px; padding:34px; box-shadow:9px 9px 20px #c8c3dd, -9px -9px 20px #fbfaff;">
+          <div style="position:absolute; top:14px; right:24px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:72px; line-height:1; color:#dedaeb; letter-spacing:-0.03em; user-select:none;">A</div>
+          <div style="position:relative; display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b6588; margin-bottom:20px; background:#e8e5f1; padding:7px 12px; border-radius:8px; box-shadow:inset 3px 3px 6px #c8c3dd, inset -3px -3px 6px #fbfaff;"><span style="width:6px; height:6px; border-radius:50%; background:#5f82c6;"></span>EXP A · done</div>
+          <h3 style="position:relative; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:23px; margin:0 0 12px; color:#2a2547; letter-spacing:-0.01em;">Detectability ceiling</h3>
+          <p style="position:relative; font-size:15px; line-height:1.62; color:#5c5776; margin:0 0 22px;">Agent-free first: can a privileged oracle spot the surrogate from the seams alone? Yes, almost perfectly — with calibrated difficulty and a clean confound audit.</p>
+          <div style="position:relative; border-top:1px solid #d9d5e7; padding-top:14px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8a72c0;">AUROC ≈ 0.99 · L1 &amp; L2 · oracle</div>
+        </div>
+        <div class="card-hov" style="position:relative; overflow:hidden; background:#e8e5f1; border-radius:20px; padding:34px; box-shadow:9px 9px 20px #c8c3dd, -9px -9px 20px #fbfaff;">
+          <div style="position:absolute; top:14px; right:24px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:72px; line-height:1; color:#dedaeb; letter-spacing:-0.03em; user-select:none;">B</div>
+          <div style="position:relative; display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b6588; margin-bottom:20px; background:#e8e5f1; padding:7px 12px; border-radius:8px; box-shadow:inset 3px 3px 6px #c8c3dd, inset -3px -3px 6px #fbfaff;"><span style="width:6px; height:6px; border-radius:50%; background:#5f82c6;"></span>EXP B · done</div>
+          <h3 style="position:relative; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:23px; margin:0 0 12px; color:#2a2547; letter-spacing:-0.01em;">Incidental encoding</h3>
+          <p style="position:relative; font-size:15px; line-height:1.62; color:#5c5776; margin:0 0 22px;">Does a prediction-only agent encode the flaw it was never asked to care about? Robust negative at L2: the artifact an oracle catches almost perfectly leaves essentially no decodable trace, across three readout channels.</p>
+          <div style="position:relative; border-top:1px solid #d9d5e7; padding-top:14px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8a72c0;">probe ≈ 0.50 vs oracle 0.99 · L2</div>
+        </div>
+        <div class="card-hov" style="position:relative; overflow:hidden; background:#e8e5f1; border-radius:20px; padding:34px; box-shadow:9px 9px 20px #c8c3dd, -9px -9px 20px #fbfaff;">
+          <div style="position:absolute; top:14px; right:24px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:72px; line-height:1; color:#dedaeb; letter-spacing:-0.03em; user-select:none;">B′</div>
+          <div style="position:relative; display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b6588; margin-bottom:20px; background:#e8e5f1; padding:7px 12px; border-radius:8px; box-shadow:inset 3px 3px 6px #c8c3dd, inset -3px -3px 6px #fbfaff;"><span style="width:6px; height:6px; border-radius:50%; background:#8a72c0;"></span>EXP B · L3 · done</div>
+          <h3 style="position:relative; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:23px; margin:0 0 12px; color:#2a2547; letter-spacing:-0.01em;">Survival changes it</h3>
+          <p style="position:relative; font-size:15px; line-height:1.62; color:#5c5776; margin:0 0 22px;">Against a learned-dynamics fingerprint, the survival agent encodes the world where prediction-only sits near chance; survival-specificity holds at the subtler of the two tested fingerprints. Confirmed at n = 10 and audited: reward- and survivorship-controlled, with a ~0.73 behavior-independent signal, and held-out probes show the signal transfers across fingerprint instances ({{transfer_same}}) and even across surrogate recipes (0.684), though only from subtle training artifacts (the reverse direction fails the bar at {{transfer_reverse}}). Re-scored with a corrected estimator, the common-garden control passes the frozen rule on both directions ({{cg_forward}} forward, {{cg_reverse}} reverse), so it reads as a modest persistent stored world-identity component the policy also expresses reactively, weak and tail-decaying rather than strongly stored (see FINDINGS 10.6.1).</p>
+          <div style="position:relative; border-top:1px solid #d9d5e7; padding-top:14px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8a72c0;">probe {{l3_survival}} · n = 10 · ~0.73 behavior-independent</div>
+        </div>
+        <div class="card-hov" style="position:relative; overflow:hidden; background:#e8e5f1; border-radius:20px; padding:34px; box-shadow:9px 9px 20px #c8c3dd, -9px -9px 20px #fbfaff;">
+          <div style="position:absolute; top:14px; right:24px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:72px; line-height:1; color:#dedaeb; letter-spacing:-0.03em; user-select:none;">C</div>
+          <div style="position:relative; display:inline-flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b6588; margin-bottom:20px; background:#e8e5f1; padding:7px 12px; border-radius:8px; box-shadow:inset 3px 3px 6px #c8c3dd, inset -3px -3px 6px #fbfaff;"><span style="width:6px; height:6px; border-radius:50%; background:#b3aecb;"></span>EXP C · next</div>
+          <h3 style="position:relative; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:23px; margin:0 0 12px; color:#2a2547; letter-spacing:-0.01em;">Emergence under selection</h3>
+          <p style="position:relative; font-size:15px; line-height:1.62; color:#5c5776; margin:0 0 22px;">Make survival depend on the difference and watch whether representing it emerges across generations. The L4 adversarial rung of the ladder waits here.</p>
+          <div style="position:relative; border-top:1px solid #d9d5e7; padding-top:14px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:#8a72c0;">L4 · generational selection</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- READOUT PANEL -->
+    <section id="readout" data-screen-label="Readout" style="margin-bottom:130px;">
+      <div style="position:relative; border-radius:26px; background:#e8e5f1; padding:56px; box-shadow:14px 14px 32px #c8c3dd, -14px -14px 32px #fbfaff, inset 0 1px 0 rgba(255,255,255,0.7);">
+        <div style="position:relative; display:grid; grid-template-columns:0.95fr 1.05fr; gap:52px; align-items:center;">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#8a72c0; margin-bottom:22px;">03 &nbsp;/&nbsp; The readout</div>
+            <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:38px; line-height:1.1; letter-spacing:-0.02em; margin:0 0 20px; color:#2a2547; text-wrap:balance;">Detectable is not the same as learned.</h2>
+            <p style="font-size:16px; line-height:1.65; color:#5c5776; margin:0 0 30px; max-width:440px; text-wrap:pretty;">After training, a linear probe reads the agent's internal state and asks: is world identity in there? At L2 the answer is flat at chance, no matter how loud the artifact is outside. At L3, survival pressure is the first condition that lifts the curve.</p>
+            <div style="display:flex; gap:16px;">
+              <div style="flex:1; background:#e8e5f1; border-radius:14px; padding:18px 20px; box-shadow:inset 5px 5px 11px #c8c3dd, inset -5px -5px 11px #fbfaff;">
+                <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:24px; color:#2a2547;">AUROC</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b6588; margin-top:4px;">0.5 means a coin flip</div>
+              </div>
+              <div style="flex:1; background:#e8e5f1; border-radius:14px; padding:18px 20px; box-shadow:inset 5px 5px 11px #c8c3dd, inset -5px -5px 11px #fbfaff;">
+                <div style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:24px; color:#2a2547;">tabula rasa</div>
+                <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#6b6588; margin-top:4px;">no imported semantics, ever</div>
+              </div>
+            </div>
+          </div>
+          <div style="background:#e8e5f1; border-radius:18px; padding:26px; box-shadow:inset 7px 7px 16px #c8c3dd, inset -7px -7px 16px #fbfaff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.14em; text-transform:uppercase; color:#8a72c0;">probe readout · L3 fingerprint</span>
+              <span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#5f82c6;">● confirmed, n = 10</span>
+            </div>
+            <div style="display:flex; gap:18px; margin-bottom:14px;">
+              <span style="display:inline-flex; align-items:center; gap:7px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#6b6588;"><span style="width:14px; height:3px; border-radius:2px; background:linear-gradient(90deg,#8a72c0,#5f82c6);"></span>survival agent</span>
+              <span style="display:inline-flex; align-items:center; gap:7px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#6b6588;"><span style="width:14px; height:3px; border-radius:2px; background:#b3aecb;"></span>prediction-only</span>
+            </div>
+            <div ref="{{ chartRef }}" style="width:100%;"></div>
+            <div style="display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:#8a849e; margin-top:12px;">
+              <span>training progress →</span><span>survival pressure applied</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINDINGS -->
+    <section id="findings" data-screen-label="Findings" style="margin-bottom:130px;">
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:34px;">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#8a72c0; margin-bottom:16px;">04 &nbsp;/&nbsp; Findings</div>
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:40px; letter-spacing:-0.02em; margin:0; color:#2a2547;">Recent work</h2>
+        </div>
+        <a href="https://github.com/iLevyTate/ItaSoRL/blob/main/docs/FINDINGS.md" target="_blank" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:#6b6588;">docs/FINDINGS.md →</a>
+      </div>
+      <div style="background:#e8e5f1; border-radius:20px; padding:12px 14px; box-shadow:inset 6px 6px 14px #c8c3dd, inset -6px -6px 14px #fbfaff;">
+        <sc-for list="{{ papers }}" as="p" hint-placeholder-count="4">
+          <a href="https://github.com/iLevyTate/ItaSoRL/blob/main/docs/FINDINGS.md" target="_blank" class="pub" style="display:grid; grid-template-columns:120px 1fr 170px; gap:24px; align-items:center; padding:22px 18px; border-bottom:1px solid rgba(190,184,212,0.35);">
+            <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8a72c0;">{{ p.date }}</span>
+            <span>
+              <span class="pub-title" style="display:inline-flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px; color:#2a2547; letter-spacing:-0.01em; transition:color .18s;">{{ p.title }}<span class="pub-arrow" style="font-size:15px; color:#5f82c6;">→</span></span>
+              <span style="display:block; font-size:14px; line-height:1.55; color:#6b6588; margin-top:5px; max-width:640px;">{{ p.note }}</span>
+            </span>
+            <span style="justify-self:end; font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.04em; color:#7a679f; padding:6px 12px; border-radius:999px; box-shadow:inset 3px 3px 6px #c8c3dd, inset -3px -3px 6px #fbfaff;">{{ p.tag }}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- JOIN / CTA -->
+    <section id="join" data-screen-label="CTA" style="margin-bottom:100px;">
+      <div style="position:relative; overflow:hidden; border-radius:26px; background:linear-gradient(140deg,#2e2850 0%,#272b4b 55%,#233047 100%); padding:66px 56px 58px; text-align:center; box-shadow:18px 18px 40px #c3bedb, -12px -12px 30px #fbfaff;">
+        <div style="position:absolute; top:-140px; left:50%; transform:translateX(-50%); width:640px; height:380px; border-radius:50%; background:radial-gradient(closest-side, rgba(144,121,200,0.28), rgba(144,121,200,0)); pointer-events:none;"></div>
+        <div style="position:relative;">
+          <div style="display:inline-flex; align-items:center; gap:9px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#b3a6dd; margin-bottom:24px; padding:9px 16px; border-radius:999px; border:1px solid rgba(179,166,221,0.3);">
+            <span style="width:6px; height:6px; border-radius:50%; background:#9079c8;"></span> deterministic given its seeds
+          </div>
+          <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:46px; line-height:1.08; letter-spacing:-0.02em; margin:0 auto 20px; color:#f2f0fa; max-width:640px; text-wrap:balance;">Open source. Reproducible. Run it yourself.</h2>
+          <p style="font-size:17px; line-height:1.6; color:#b6b1d2; max-width:520px; margin:0 auto 32px; text-wrap:pretty;">Every experiment is deterministic given its seeds. Clone the repo, or open the Colab notebook on a GPU runtime and run all cells.</p>
+          <div style="display:inline-flex; align-items:center; gap:16px; font-family:'IBM Plex Mono',monospace; font-size:13px; color:#cfc9e8; background:rgba(15,13,30,0.45); border:1px solid rgba(179,166,221,0.18); padding:14px 16px 14px 22px; border-radius:14px; margin-bottom:36px; max-width:100%;">
+            <span style="color:#8a72c0; user-select:none;">$</span>
+            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">git clone https://github.com/iLevyTate/ItaSoRL.git</span>
+            <button sc-camel-on-click="{{ copyClone }}" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.04em; color:#e6e2f5; background:rgba(144,121,200,0.25); border:1px solid rgba(179,166,221,0.35); padding:7px 14px; border-radius:8px; cursor:pointer; white-space:nowrap;">{{ copyLabel }}</button>
+          </div>
+          <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
+            <a href="https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb" target="_blank" class="pill" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#fff; background:linear-gradient(135deg,#9079c8,#5f82c6); padding:15px 30px; border-radius:999px; box-shadow:0 10px 26px rgba(20,16,45,0.5), inset 0 1px 0 rgba(255,255,255,0.35);">Open in Colab</a>
+            <a href="https://github.com/iLevyTate/ItaSoRL" target="_blank" class="darkghost" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#cfc9e8; background:rgba(255,255,255,0.04); border:1px solid rgba(179,166,221,0.28); padding:14px 28px; border-radius:999px;">github.com/iLevyTate/ItaSoRL</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer style="padding:10px 0 60px; display:flex; align-items:flex-start; justify-content:space-between; gap:40px; flex-wrap:wrap;">
+      <div style="max-width:320px;">
+        <img src="assets/46bfa273.png" alt="ItaSoRL" style="height:26px; display:block; margin-bottom:16px;">
+        <p style="font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.7; color:#8a849e; margin:0;">Readout, not reward. A tabula-rasa artificial-life experiment inside A Patch of Earth.</p>
+      </div>
+      <div style="display:flex; gap:56px; flex-wrap:wrap;">
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:#9a94b0; margin-bottom:14px;">Lab</div>
+          <div style="display:flex; flex-direction:column; gap:10px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;">
+            <a href="#research">Research</a><a href="#readout">Readout</a><a href="#findings">Findings</a>
+          </div>
+        </div>
+        <div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:#9a94b0; margin-bottom:14px;">Connect</div>
+          <div style="display:flex; flex-direction:column; gap:10px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;">
+            <a href="https://github.com/iLevyTate/ItaSoRL" target="_blank">GitHub</a><a href="https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb" target="_blank">Colab notebook</a><a href="https://github.com/iLevyTate/ItaSoRL/blob/main/docs/ITASORL.md" target="_blank">Research plan</a>
+          </div>
+        </div>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:#9a94b0; align-self:flex-end;">© 2026 ItaSoRL</div>
+    </footer>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1180},&quot;ambient&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Style&quot;}}">
+class Component extends DCLogic {
+  chartRef = React.createRef();
+  markRef = React.createRef();
+  state = { copied: false };
+
+  get PAPERS() {
+    return [
+      { date: 'Exp B / L3', title: 'Transfer probes: general, modestly persistent', note: 'The world-identity direction reads an unseen same-recipe fingerprint at {{transfer_same}} and a different surrogate family at 0.684 (both rules pass), but the reverse, coarse-to-subtle direction fails the bar ({{transfer_reverse}}). A re-scored common-garden control passes the frozen rule on both directions ({{cg_forward}} forward, {{cg_reverse}} reverse), so the signal is a modest persistent world-identity component, not purely reactive (FINDINGS 10.6.1).', tag: 'transfer, n=10' },
+      { date: 'Exp B / L3', title: 'Audit: how much rides on behavior?', note: 'Post-hoc confound audit: behavior alone decodes the world at ~0.69; the per-timestep control leaves a ~0.73 behavior-independent world-signal, clearing the pre-registered 0.65 bar.', tag: 'audited' },
+      { date: 'Exp B / L3', title: 'Survival encodes the fingerprint', note: 'Confirmed at n = 10: survival probe {{l3_survival}} (90% CI {{l3_ci_lo}}-{{l3_ci_hi}}) vs ~0.57 prediction-only and ~0.49 untrained. Reward- and survivorship-controlled; L0 control at chance.', tag: 'positive, n=10' },
+      { date: 'Exp B / L2', title: 'Detectable does not mean learned', note: 'An artifact an oracle detects at ~0.99 leaves no decodable trace (~0.5) in a prediction-only agent, across three readout channels.', tag: 'robust negative' },
+      { date: 'Exp A / L2', title: 'Detectability ceiling: rollout drift', note: 'Oracle detection vs drift strength, with calibrated difficulty and confound audit.', tag: 'done' },
+      { date: 'Exp A / L1', title: 'Detectability ceiling: discretization', note: 'Agent-free oracle spots the surrogate from substrate seams alone, vs grid spacing.', tag: 'done' },
+    ];
+  }
+
+  componentDidMount() {
+    if (document.fonts) { document.fonts.load("600 40px 'Space Grotesk'"); }
+    this.drawChart();
+    this.drawMark();
+    this._onResize = () => this.drawChart();
+    window.addEventListener('resize', this._onResize);
+    this.setupCounters();
+  }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._onResize);
+    if (this._io) this._io.disconnect();
+  }
+
+  setupCounters() {
+    const els = Array.from(document.querySelectorAll('.num[data-target]'));
+    if (!els.length || !window.IntersectionObserver) return;
+    this._io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        this._io.unobserve(e.target);
+        const el = e.target;
+        const target = parseFloat(el.getAttribute('data-target'));
+        const dec = parseInt(el.getAttribute('data-decimals') || '0', 10);
+        const t0 = performance.now(), dur = 1300;
+        const tick = (t) => {
+          const k = Math.min(1, (t - t0) / dur);
+          const ease = 1 - Math.pow(1 - k, 3);
+          el.textContent = (target * ease).toFixed(dec);
+          if (k < 1) requestAnimationFrame(tick); else el.textContent = target.toFixed(dec);
+        };
+        requestAnimationFrame(tick);
+      });
+    }, { threshold: 0.4 });
+    els.forEach((el) => this._io.observe(el));
+  }
+
+  // deterministic jitter
+  noise(i) { return Math.sin(i * 12.9898) * 0.5; }
+
+  blobPath(cx, cy, rx, ry, phase) {
+    const pts = [];
+    const N = 96;
+    for (let i = 0; i < N; i++) {
+      const th = (i / N) * Math.PI * 2;
+      const r = 1
+        + 0.15 * Math.sin(2 * th + phase)
+        + 0.09 * Math.sin(3 * th + phase * 1.7 + 0.8)
+        + 0.045 * Math.sin(5 * th + phase * 0.6 + 2.1);
+      pts.push([(cx + Math.cos(th) * rx * r), (cy + Math.sin(th) * ry * r)]);
+    }
+    let d = 'M' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+    for (let i = 1; i < pts.length; i++) d += 'L' + pts[i][0].toFixed(1) + ' ' + pts[i][1].toFixed(1);
+    return d + 'Z';
+  }
+
+  drawMark() {
+    const host = this.markRef.current;
+    if (!host) return;
+    const W = 440, H = 350, cx = 220, cy = 175;
+    const layers = [
+      { f: 1.00, c1: '#c6b5e2', c2: '#9fd0e2', dur: 11,  del: 0    },
+      { f: 0.80, c1: '#9d89cb', c2: '#7ea9cf', dur: 8.5, del: -2.2 },
+      { f: 0.615,c1: '#7a66b0', c2: '#5f82b8', dur: 7.2, del: -4.6 },
+      { f: 0.455,c1: '#564a92', c2: '#42527e', dur: 9.6, del: -1.4 },
+      { f: 0.315,c1: '#332c5c', c2: '#2b3457', dur: 6.4, del: -3.1 },
+    ];
+    let body = '';
+    let defs = '';
+    layers.forEach((L, i) => {
+      defs += `<linearGradient id="mk${i}" x1="0" y1="0" x2="1" y2="0.35">
+        <stop offset="0" stop-color="${L.c1}"/><stop offset="1" stop-color="${L.c2}"/>
+      </linearGradient>`;
+      const d = this.blobPath(cx, cy, 205 * L.f, 158 * L.f, 0.7 + i * 0.55);
+      body += `<g style="animation:layerfade ${L.dur}s ease-in-out ${L.del}s infinite;">
+        <path d="${d}" fill="url(#mk${i})" filter="url(#mkds)"/>
+      </g>`;
+    });
+    const core = this.blobPath(cx, cy + 2, 205 * 0.17, 158 * 0.16, 3.4);
+    body += `<g style="animation:layerfade 5.2s ease-in-out -0.8s infinite;">
+      <path d="${core}" fill="#daf1f8" filter="url(#mkglow)"/>
+    </g>`;
+    host.innerHTML =
+      `<svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block; overflow:visible;">
+        <defs>
+          ${defs}
+          <filter id="mkds" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#1e1940" flood-opacity="0.35"/>
+          </filter>
+          <filter id="mkglow" x="-80%" y="-80%" width="260%" height="260%">
+            <feDropShadow dx="0" dy="0" stdDeviation="8" flood-color="#bfeaf5" flood-opacity="0.9"/>
+          </filter>
+        </defs>
+        ${body}
+      </svg>`;
+  }
+
+  drawChart() {
+    const host = this.chartRef.current;
+    if (!host) return;
+    const W = Math.max(280, host.clientWidth || 380);
+    const H = 210;
+    const padL = 36, padR = 46, padT = 14, padB = 10;
+    const x0 = padL, x1 = W - padR, y0 = padT, y1 = H - padB;
+    const X = (t) => x0 + t * (x1 - x0);
+    const map = (auroc) => y1 - ((auroc - 0.4) / 0.6) * (y1 - y0);
+    const N = 64, split = 0.6;
+
+    const surv = [], pred = [];
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      let a = 0.5 + this.noise(i) * 0.014;
+      if (t > split) {
+        const k = (t - split) / (1 - split);
+        a = 0.5 + ({{l3_survival}} - 0.5) * (1 / (1 + Math.exp(-9 * (k - 0.45)))) + this.noise(i + 7) * 0.008;
+      }
+      surv.push([X(t), map(Math.min(a, 0.76))]);
+      pred.push([X(t), map(0.53 + this.noise(i + 31) * 0.02 + t * 0.03)]);
+    }
+    const toPath = (pts) => pts.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+    const survPath = toPath(surv);
+    const predPath = toPath(pred);
+    const areaPath = survPath + ` L ${surv[surv.length - 1][0].toFixed(1)} ${y1} L ${surv[0][0].toFixed(1)} ${y1} Z`;
+    const chance = map(0.5);
+    const end = surv[surv.length - 1];
+    const grid = [1.0, 0.75].map((v) =>
+      `<line x1="${x0}" y1="${map(v).toFixed(1)}" x2="${x1}" y2="${map(v).toFixed(1)}" stroke="rgba(120,110,160,0.14)" stroke-width="1"/>`
+    ).join('');
+    const ticks = [1.0, 0.75, 0.5].map((v) =>
+      `<text x="6" y="${(map(v) + 4).toFixed(1)}" font-family="IBM Plex Mono, monospace" font-size="10" fill="#8a849e">${v.toFixed(2)}</text>`
+    ).join('');
+
+    host.innerHTML =
+      `<svg width="100%" viewBox="0 0 ${W} ${H}" style="display:block; overflow:visible;">
+        <defs>
+          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#8a72c0"/><stop offset="1" stop-color="#5f82c6"/>
+          </linearGradient>
+          <linearGradient id="fillg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="rgba(122,111,193,0.20)"/><stop offset="1" stop-color="rgba(122,111,193,0)"/>
+          </linearGradient>
+        </defs>
+        <rect x="${X(split).toFixed(1)}" y="${y0}" width="${(x1 - X(split)).toFixed(1)}" height="${(y1 - y0).toFixed(1)}" fill="rgba(138,114,192,0.06)" rx="6"/>
+        <line x1="${X(split).toFixed(1)}" y1="${y0}" x2="${X(split).toFixed(1)}" y2="${y1}" stroke="rgba(138,114,192,0.3)" stroke-width="1" stroke-dasharray="3 4"/>
+        ${grid}${ticks}
+        <line x1="${x0}" y1="${chance.toFixed(1)}" x2="${x1}" y2="${chance.toFixed(1)}" stroke="rgba(74,68,104,0.28)" stroke-width="1" stroke-dasharray="4 5"/>
+        <text x="${x1}" y="${(chance + 14).toFixed(1)}" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="10" fill="#6b6588">chance</text>
+        <path d="${areaPath}" fill="url(#fillg)" style="animation:fade 1.6s ease-out both;"/>
+        <path d="${predPath}" fill="none" stroke="#b3aecb" stroke-width="2" stroke-linecap="round" stroke-dasharray="1100" style="animation:drawline 2.2s ease-out forwards;"/>
+        <path d="${survPath}" fill="none" stroke="url(#lg)" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1100" style="animation:drawline 2.6s ease-out forwards;"/>
+        <circle cx="${end[0].toFixed(1)}" cy="${end[1].toFixed(1)}" r="4.5" fill="#5f82c6"/>
+        <circle cx="${end[0].toFixed(1)}" cy="${end[1].toFixed(1)}" r="9" fill="none" stroke="rgba(95,130,198,0.35)" stroke-width="1.5"/>
+        <text x="${(end[0] + 14).toFixed(1)}" y="${(end[1] + 4).toFixed(1)}" font-family="IBM Plex Mono, monospace" font-size="11" font-weight="500" fill="#4f6fc0">&#8776;0.75</text>
+      </svg>`;
+  }
+
+  renderVals() {
+    return {
+      ambient: this.props.ambient ?? true,
+      papers: this.PAPERS,
+      chartRef: this.chartRef,
+      markRef: this.markRef,
+      copyLabel: this.state.copied ? 'copied \u2713' : 'copy',
+      copyClone: () => {
+        const cmd = 'git clone https://github.com/iLevyTate/ItaSoRL.git';
+        if (navigator.clipboard) navigator.clipboard.writeText(cmd);
+        this.setState({ copied: true });
+        clearTimeout(this._ct);
+        this._ct = setTimeout(() => this.setState({ copied: false }), 1800);
+      },
+    };
+  }
+}
+</script>
+
+
+</body></html>
