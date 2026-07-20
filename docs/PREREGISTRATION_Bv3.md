@@ -120,7 +120,7 @@ sysid-aux CEILING (PR #14) as the capacity reference.
   confirmatory run was not published at the time.** The pre-registered n = 3 run
   at the frozen seeds completed 2026-07-03 and read pooled survival target
   0.615 ± 0.083 (intermediate zone); it was recorded only in the 2026-07-03
-  runner-design spec (`docs/superpowers/specs/`), and FINDINGS reported the
+  runner-design spec (`docs/specs/`), and FINDINGS reported the
   n = 10 power extension (0.610) directly. Conclusion-neutral - both runs land
   below the 0.65 bar and in the same zone - but the primary run should have
   been recorded here when it completed. Now logged in FINDINGS section 7.1.

@@ -128,7 +128,7 @@ raw metrics in `expB2_results.json`. Published confirmatory copies live in
   gate later passed cleanly at n = 10 (TOST and ROPE), so the verdict stands;
   the mechanical lesson - the pipeline prints gates and verdicts independently
   rather than conditioning one on the other - is recorded in the audit notes.
-- **2026-06-28 — GAE training bug found and fixed; sweep re-run.** The ralph hardening
+- **2026-06-28 — GAE training bug found and fixed; sweep re-run.** A code-hardening
   pass found a real correctness bug in `compute_gae`: the advantage accumulator gated
   its carry with the *current* step's mask instead of the *next* step's, leaking the
   padded value slot into the last step of any episode shorter than `max_steps`. Under

@@ -209,8 +209,8 @@ artifacts/expB2/logs/
 # Claude Code local session state
 .claude/
 
-# Unpublished manuscript drafts: keep local, never commit to the public repo
-# (the public research record is FINDINGS.md, PAPER_OUTLINE.md, and the
-# preregistrations; the submission-ready manuscript is not published here).
+# Local working documents and tooling: keep out of the public repo.
 docs/PAPER_DRAFT*.md
 paper/
+ralph/
+docs/superpowers/

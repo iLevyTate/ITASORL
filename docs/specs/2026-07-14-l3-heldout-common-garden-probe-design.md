@@ -30,7 +30,7 @@ in the repo), the channels run inside one new training run.
 ## Run profile (frozen)
 
 - One n=10 run: seeds 0-9, drifts [0.0, 0.45], 300 updates, the standard
-  frozen organism config (prereg sec.9), RTX 4050, `--device cuda` passed
+  frozen organism config (prereg sec.9), local GPU, `--device cuda` passed
   EXPLICITLY so a CUDA failure aborts rather than silently training on CPU.
 - Agents train against the hidden=8 surrogate (headline capacity, cleanest
   gates: untrained floor 0.482). hidden=7 (the other validated in-band

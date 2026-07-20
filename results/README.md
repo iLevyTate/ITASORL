@@ -33,7 +33,7 @@ The prior lab confirmatory JSON is archived as `expB2_results_confirmatory_n3.js
 python scripts/watch_run.py --follow
 ```
 
-On Google Colab (see `notebooks/colab_gpu.ipynb`, playbook `ralph/COLAB.md`):
+On Google Colab (see `notebooks/colab_gpu.ipynb`):
 
 - Pick **`RUN_PROFILE`** from the config-cell dropdown (full list in the notebook or `python scripts/run_local.py --list`).
 - Runs use **local disk** (`fullruns/` under the repo). Do not set `--results-dir` to Drive (FUSE I/O is slow and often fails).

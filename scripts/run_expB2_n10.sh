@@ -8,7 +8,7 @@
 #   1. verifies a CUDA GPU is actually visible to torch (fails loudly if not),
 #   2. refuses to start unless enough CPU system RAM is free (the episode buffers
 #      live in system RAM, so a starved machine OOMs mid-run, as it did under the
-#      concurrent ralph loop),
+#      concurrent development tooling),
 #   3. pins the run to the current commit and writes outputs to non-clobbering
 #      _n10 names under artifacts/expB2/, restoring the git-tracked n=3 artifacts afterward.
 set -euo pipefail
@@ -38,7 +38,7 @@ free_ram_mb() {
 FREE_MB=$(free_ram_mb || true)
 if [ "${FREE_MB:-0}" -lt $((MIN_FREE_GB * 1024)) ]; then
   echo "ERROR: only ${FREE_MB} MB RAM free (< ${MIN_FREE_GB} GB needed)." >&2
-  echo "Free memory first (e.g. stop the ralph loop), then rerun." >&2
+  echo "Free memory first (e.g. close other heavy processes), then rerun." >&2
   exit 1
 fi
 echo "Free RAM: ${FREE_MB} MB -- OK"

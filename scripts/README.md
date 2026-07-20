@@ -96,7 +96,7 @@ python scripts/audit_behavior_mediation.py fullruns/l3_h7_traces/states \
 # (frozen rule met). Common garden: survival 0.557 [0.500, 0.611] < 0.65 ->
 # REACTIVE tracking (informative negative). See the second 2026-07-14 entry in
 # docs/PREREGISTRATION_L3.md sec.12; spec in
-# docs/superpowers/specs/2026-07-14-l3-heldout-common-garden-probe-design.md.
+# docs/specs/2026-07-14-l3-heldout-common-garden-probe-design.md.
 python scripts/run_expB2.py --drift-mode l3 --l3-hidden 8 \
     --heldout-evals --heldout-hidden 7 --save-agents \
     --seeds 0 1 2 3 4 5 6 7 8 9 --device cuda \
@@ -106,7 +106,7 @@ python scripts/run_expB2.py --drift-mode l3 --l3-hidden 8 \
 
 Then run `audit_behavior_mediation.py` on each `states/` directory. Decision
 rule (fixed in advance, see
-`docs/superpowers/specs/2026-07-12-l3-behavior-audit-design.md`): survival
+`docs/specs/2026-07-12-l3-behavior-audit-design.md`): survival
 `resid_trace` mean >= 0.65 strengthens the behavior-independent claim;
 [0.60, 0.65) weakens it to a below-bar trace; < 0.60 means the L3 signal is
 largely behavior-mediated.

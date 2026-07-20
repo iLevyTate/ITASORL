@@ -208,7 +208,7 @@ function class. See
 |   |-- ITASORL_world_spec.md   world specification ("A Patch of Earth" v0)
 |   |-- FINDINGS.md             empirical results
 |   |-- LEARNING.md             running lab notebook / lessons log
-|   |-- PAPER_OUTLINE.md        paper outline + claims inventory
+|   |-- PAPER_OUTLINE.md        writeup outline + claims inventory
 |   |-- PREREGISTRATION.md      B-v2 pre-registration
 |   |-- PREREGISTRATION_Bv3.md  B-v3 pre-registration
 |   |-- PREREGISTRATION_L3.md   L3 pre-registration + deviation log
@@ -219,8 +219,7 @@ function class. See
 |-- fullruns/                   e2e run bundles (gitignored; default output)
 |-- results/LATEST_RUN.txt      pointer to latest fullruns folder
 |-- notebooks/colab_gpu.ipynb   Colab end-to-end runner
-|-- tests/                      pytest regression suite
-`-- ralph/                      autonomous research + bug-fix loop (Claude Code)
+`-- tests/                      pytest regression suite
 ```
 
 ### Documents
@@ -228,7 +227,7 @@ function class. See
 - [`docs/ITASORL.md`](docs/ITASORL.md): the research plan, core question, literature white-space, hypotheses (H1 to H4), experiments (A/B/C), the surrogate ladder, validity audit, statistics, and engineering architecture.
 - [`docs/ITASORL_world_spec.md`](docs/ITASORL_world_spec.md): the world specification, "A Patch of Earth" v0, the 2.5D representation, fields and forcing, dynamics, ecology, the ~146-dim observation, ladder attachment, and confound management.
 - [`docs/FINDINGS.md`](docs/FINDINGS.md): empirical results from the first build-and-test cycle.
-- [`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md): the paper outline and a claims inventory linking every headline number to its committed artifact.
+- [`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md): the writeup outline and a claims inventory linking every headline number to its committed artifact.
 - [`docs/LEARNING.md`](docs/LEARNING.md): the running lab notebook (methods lessons, dead ends, decisions).
 - [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md), [`PREREGISTRATION_Bv3.md`](docs/PREREGISTRATION_Bv3.md), [`PREREGISTRATION.md`](docs/PREREGISTRATION.md), [`PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md): pre-registrations (with deviation logs) for the B-v2, B-v3, L3, and (design-complete) C experiments.
 - [`docs/AUDIT_2026-07.md`](docs/AUDIT_2026-07.md): a skeptical research-integrity audit (numbers, statistics, pre-registration timing, citations).

@@ -10,7 +10,7 @@ The pre-registered adjudication of the 07032026 B-v3 regime result (survival
 pool target 0.615 +/- 0.083, intermediate zone) requires the n=10 power
 extension. Colab free-tier sessions disconnect before a 20-cell run
 (2 drifts x 10 seeds, roughly 20-40 min per cell) can finish. The run must
-execute locally on a Windows laptop (RTX 4050, Git Bash) and must survive
+execute locally on a Windows laptop (local GPU, Git Bash) and must survive
 interruption: sleep, reboot, OOM, Ctrl+C. `run_e2e.py --resume` resumes at
 step granularity only, and expB2 is a single step, so today an interrupted
 expB2 step restarts from cell 1.

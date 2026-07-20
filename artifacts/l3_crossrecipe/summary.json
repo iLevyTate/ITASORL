@@ -5,10 +5,10 @@
   "runner_branch": "feat/l3-gate0-sweep-tooling",
   "runner_commit": "a5c46ff",
   "base_merge": "c66c991 (PR #51)",
-  "spec": "docs/superpowers/specs/2026-07-15-l3-crossrecipe-transfer-probe-design.md"
+  "spec": "docs/specs/2026-07-15-l3-crossrecipe-transfer-probe-design.md"
  },
  "environment": {
-  "device": "cuda (RTX 4050 laptop)",
+  "device": "cuda (local GPU)",
   "quick": false,
   "n_eps": 110,
   "steps": 24

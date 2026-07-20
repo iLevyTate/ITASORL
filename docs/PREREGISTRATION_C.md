@@ -188,7 +188,7 @@ Carried from the L3/B-v3 battery, plus C-specific gates:
 
 ## 9. Fixed configuration (laptop-minimal pilot; frozen at commit)
 
-Compute is the binding constraint (see section 11). Pilot config for the RTX 4050 host,
+Compute is the binding constraint (see section 11). Pilot config for the local GPU host,
 deliberately small so a first signal is reachable across sessions with cell-level resume:
 
 - **Population:** N = 48, fixed carrying capacity (threshold-triggered reproduction).

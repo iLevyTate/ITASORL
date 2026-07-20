@@ -215,7 +215,7 @@ Rigor carried from the B-v3 audit (2026-07-10):
   Stage-1 observation-channel construction (Option A: authentic physics, observations passed
   through frozen `G`) was built and its oracle calibrated on a from-scratch `G` capacity sweep
   (hidden 8-128; one-step reconstruction AND open-loop imagination; n=200-300 authentic
-  episodes; RTX 4050). Result: the artifact is **trivially detectable (oracle AUROC ~1.0) at
+  episodes; local GPU). Result: the artifact is **trivially detectable (oracle AUROC ~1.0) at
   every capacity and every imagination horizon**, and a matched sensor-noise / variance floor
   did NOT restore a calibratable gradient. Reason: a strong privileged oracle separates "real
   sensor data" from "any neural-net reconstruction of it" via `G`'s systematic per-dimension
@@ -244,7 +244,7 @@ Rigor carried from the B-v3 audit (2026-07-10):
   (smaller dynamics error at hidden=8 should shrink the reward leak vs hidden=4). Gate 0 is met;
   the organism run may proceed with these controls reported.
 - **2026-07-10, ORGANISM RUN n=3 (confirmatory) + an unresolved measurement discrepancy.** Ran
-  `run_expB2 --drift-mode l3 --l3-hidden 8` (n=3 seeds, 300 updates, RTX 4050, `fullruns/l3_n3`).
+  `run_expB2 --drift-mode l3 --l3-hidden 8` (n=3 seeds, 300 updates, local GPU, `fullruns/l3_n3`).
   At drift 0.45 the pooled target was **survival 0.801 (90% CI [0.760, 0.842]), predictor 0.779,
   untrained 0.706**; L0 control clean (0.514); manipulation check: artifact survival-relevant.
   Primary H_B2 NOT met by the SESOI (survival only +0.022 over predictor, < 0.05). TWO problems
@@ -277,7 +277,7 @@ Rigor carried from the B-v3 audit (2026-07-10):
   a real H_L3 adjudication - this time the mechanical floor is at chance, so survival-specific
   encoding can be isolated.
 - **2026-07-10, CORRECTED ORGANISM RUN n=3 - a PRELIMINARY POSITIVE (not yet decisive).** Re-ran
-  `run_expB2 --drift-mode l3 --l3-hidden 8` (n=3, 300 updates, RTX 4050, `fullruns/l3_n3_fixed`,
+  `run_expB2 --drift-mode l3 --l3-hidden 8` (n=3, 300 updates, local GPU, `fullruns/l3_n3_fixed`,
   commit `eeee512`) with `G` trained on the correct world. At drift 0.45 the pooled target is
   **untrained 0.482 +/- 0.055** (mechanical floor AT CHANCE - the fix holds; per-seed
   0.483/0.414/0.549), **predictor 0.573 +/- 0.057**, **survival 0.777 +/- 0.122** (per-seed
@@ -298,7 +298,7 @@ Rigor carried from the B-v3 audit (2026-07-10):
   reward/held-out controls remain to be reported before any headline claim.
 - **2026-07-12, AUDITED ORGANISM RUN n=10 + POST-HOC CONFOUND AUDITS - POSITIVE, PARTLY
   BEHAVIOR-MEDIATED.** Re-ran `run_expB2 --drift-mode l3 --l3-hidden 8` (n=10, seeds 0..9, 300
-  updates, RTX 4050, `fullruns/l3_n10_audited`) with the pooled-path leakage audit added (PR #39). At
+  updates, local GPU, `fullruns/l3_n10_audited`) with the pooled-path leakage audit added (PR #39). At
   drift 0.45 the survival pooled target is **0.752**, honest t-based 90% CI **[0.698, 0.807]** (EXCLUDES
   the 0.65 bar; per-seed 0.853/0.636/0.841/0.823/0.830/0.573/0.705/0.782/0.759/0.723; 8/10 seeds >=
   0.65), with **predictor 0.573** and **untrained 0.488** (mechanical floor at chance) - survival beats
@@ -340,12 +340,12 @@ Rigor carried from the B-v3 audit (2026-07-10):
   (artifact: `artifacts/expB2/behavior_audit_l3_n10.json`). The dump now also persists PER-TIMESTEP
   behavior traces (`bta`/`bts`), and the script runs the strictly stronger per-timestep control when
   traces are present, with a decision rule fixed in advance
-  (`docs/superpowers/specs/2026-07-12-l3-behavior-audit-design.md`): survival per-timestep-controlled
+  (`docs/specs/2026-07-12-l3-behavior-audit-design.md`): survival per-timestep-controlled
   mean >= 0.65 strengthens the claim; [0.60, 0.65) weakens it to a below-bar trace; < 0.60 means largely
   behavior-mediated. Owed items (a) and (b) reduce to two human-launched runs
   (`scripts/README.md`, "L3 owed runs"): hidden=8 with traces (headline capacity) and hidden=4 n=10.
 - **2026-07-13 - PER-TIMESTEP BEHAVIOR CONTROL: CLAIM STRENGTHENED (hidden=8 re-run with traces).** Re-ran
-  the frozen hidden=8 n=10 protocol with trace-extended dumps (`fullruns/l3_h8_traces`, RTX 4050). The
+  the frozen hidden=8 n=10 protocol with trace-extended dumps (`fullruns/l3_h8_traces`, local GPU). The
   pipeline is deterministic end-to-end: every published figure reproduced exactly (survival target 0.752
   [0.704, 0.797]; behavior-only 0.689/0.705; per-episode controlled 0.676/0.659; L0 mean 0.517, ROPE
   equivalence accepted; reward-leak clean 10/10; 0 deaths, all pools 110/110). The pre-registered decision
@@ -364,8 +364,8 @@ Rigor carried from the B-v3 audit (2026-07-10):
   control could in principle remove more. Artifact: `artifacts/expB2/behavior_audit_l3_h8_traces.json`.
   STILL OWED: the hidden=4 second-capacity replication (section 11) and the held-out/common-garden probe.
 - **2026-07-13 - HIDDEN=4 RUN UNINFORMATIVE (gate failure); GATE 0 RE-VALIDATED PER CAPACITY AND THE
-  SECOND CAPACITY RE-FROZEN AT HIDDEN=7.** The owed hidden=4 n=10 run (`fullruns/l3_h4_traces`, RTX
-  4050) completed and FAILS its gates at drift 0.45: untrained mechanical floor **0.891** (not
+  SECOND CAPACITY RE-FROZEN AT HIDDEN=7.** The owed hidden=4 n=10 run (`fullruns/l3_h4_traces`, local
+  GPU) completed and FAILS its gates at drift 0.45: untrained mechanical floor **0.891** (not
   chance), pooled reward-leak 0.637 with the clean gate passing in **0/10 seeds**, engagement
   passing in only **30% of seeds** (the drift-trained policy barely recovers: train@0.45 eval@0.45
   return -1.069, vs -0.219 at hidden=8). Per the section-8 decision matrix the run is
@@ -393,7 +393,7 @@ Rigor carried from the B-v3 audit (2026-07-10):
 - **2026-07-14 - SECOND-CAPACITY REPLICATION AT HIDDEN=7 (n=10): THE BEHAVIOR-INDEPENDENT SURVIVAL
   SIGNAL REPLICATES (~0.72, CI clears the bar) BUT THE SURVIVAL-VS-PREDICTOR DISSOCIATION DOES NOT -
   THE FULL "ENCODING INDUCED" VERDICT IS ARTIFACT-CONDITIONAL.** The re-frozen hidden=7 n=10 run
-  (`fullruns/l3_h7_traces`, RTX 4050, frozen protocol, trace dumps) completed with ALL gates passing:
+  (`fullruns/l3_h7_traces`, local GPU, frozen protocol, trace dumps) completed with ALL gates passing:
   engagement 10/10 seeds at drift 0.45 (pooled train@0.45 eval@0.45 return -0.734, a partial recovery
   sitting between hidden=8's -0.219 and hidden=4's failing -1.069; the per-seed engagement criterion
   passes in every seed), L0 control 0.517 (TOST p=0.010 and ROPE P=0.999 both accept equivalence),
@@ -425,8 +425,8 @@ Rigor carried from the B-v3 audit (2026-07-10):
 - **2026-07-14 - HELD-OUT FINGERPRINT + COMMON-GARDEN PROBE (n=10): THE WORLD-SIGNAL GENERALIZES TO AN
   UNSEEN SAME-RECIPE FINGERPRINT (TRANSFER POSITIVE) BUT DOES NOT SURVIVE A COMMON-GARDEN CONTROL
   (REACTIVE, NOT A PERSISTENT REPRESENTATION).** Two readout-only evaluation channels on one frozen
-  hidden=8 training run (`fullruns/l3_h8_heldout`, RTX 4050, frozen protocol, spec
-  `docs/superpowers/specs/2026-07-14-l3-heldout-common-garden-probe-design.md`); no change to training,
+  hidden=8 training run (`fullruns/l3_h8_heldout`, local GPU, frozen protocol, spec
+  `docs/specs/2026-07-14-l3-heldout-common-garden-probe-design.md`); no change to training,
   the surrogate family, or the pre-registered headline probe. GATES REPRODUCED (third independent
   determinism check): survival pooled target **0.752** (90% CI [0.704, 0.797]), byte-matching the
   published hidden=8 headline; L0 control 0.517 (TOST p=0.010, ROPE P=0.999 both accept equivalence);
@@ -508,7 +508,7 @@ Rigor carried from the B-v3 audit (2026-07-10):
 
 - **2026-07-16 - CROSS-RECIPE TRANSFER PROBE (n=10, readout-only): THE WORLD-SIGNAL READS A
   DIFFERENT SURROGATE FAMILY (RULE PASSES); THE CONSTANT-DRAG FAMILY IS UNCALIBRATABLE AND DROPPED.**
-  Executes the pre-registered spec `docs/superpowers/specs/2026-07-15-l3-crossrecipe-transfer-probe-design.md`
+  Executes the pre-registered spec `docs/specs/2026-07-15-l3-crossrecipe-transfer-probe-design.md`
   (frozen before any run; PR #51) against the SAVED `fullruns/l3_h8_heldout` agents; no training
   anywhere. Committed artifact: `artifacts/l3_crossrecipe/summary.json`. GATE-0 CALIBRATION: the
   `G_rff` family's round-1 D sweep {8..128} stepped over the band (0.975 at D=64, 0.624 at D=128);

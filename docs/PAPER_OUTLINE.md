@@ -1,17 +1,9 @@
-# Paper outline (arXiv draft skeleton)
+# Writeup outline and claims inventory
 
-*Working scaffold for the writeup. Every claim in the paper must trace to a row in
+*Structured summary of the project's results. Every claim must trace to a row in
 the claims inventory below; every row traces to a committed artifact. Update this
 file as sections 10.5 (second capacity) and 10.6 (held-out probe) of FINDINGS.md
 resolve.*
-
-## Candidate titles
-
-- Detectable but not encoded: incidental detection of surrogate worlds by a
-  from-scratch digital organism
-- When does an agent notice its world is fake? Detectability vs incidental
-  encoding on a surrogate ladder
-- Incidental encoding of a learned-dynamics fingerprint under survival pressure
 
 ## Structure
 
@@ -92,7 +84,7 @@ resolve.*
 | 26 | Cross-recipe transfer: GENERALIZES across surrogate families (the generalization claim) | survival 0.684, t 90% CI [0.654, 0.715], 7/10 vs untrained 0.548; rule passes, margin +0.034 | FINDINGS 10.7 | artifacts/l3_crossrecipe/summary.json | - |
 | 27 | Exp C milestone-3 pilot null INVALIDATED (wrong-world + biased estimator); H3 open pending re-run | contrast +0.020 (not a valid measurement) | FINDINGS 13, 13.C | artifacts/expC/emergence_pilot_summary.json (provenance caveat: run predates artifact's stamped commit) | - |
 
-## Known gaps before submission
+## Known gaps
 
 - Claims 1-7 resolved (2026-07-16): the recorded 06302026 e2e bundle's step
   metrics (plus the 2026-07-13 k-step rerun and the across-seed stds recovered
@@ -108,6 +100,6 @@ resolve.*
   re-scored common-garden control passes the frozen rule on both directions
   (row 24; forward 0.666, reverse 0.684; a modest persistent world-identity
   component, not purely reactive, FINDINGS §10.6.1);
-  the paper reports both as generality checks, not as a new headline. Rows 20-22 resolved 2026-07-14: the second
+  the writeup reports both as generality checks, not as a new headline. Rows 20-22 resolved 2026-07-14: the second
   capacity replicates the behavior-independent signal and bounds the
   survival-specific claim to the subtler artifact.
