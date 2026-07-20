@@ -39,7 +39,8 @@ resolve.*
    - 4.2 The L2 negative arc (FINDINGS 3, 4, 9): chance across channels, horizons,
      probes; survival coupling 0.610 [0.585, 0.634]; capacity ceiling 0.596.
    - 4.3 The L3 positive (FINDINGS 10): 0.752 [0.698, 0.807] survival-only;
-     controls; behavior mediation; 0.726 behavior-independent.
+     controls; behavior mediation; 0.726 behavior-independent (holds at 0.723
+     once absolute position and heading join the control basis, FINDINGS 10.4.1).
    - 4.4 Replications: second capacity resolved (FINDINGS 10.5): the
      behavior-independent signal replicates (0.722 vs 0.726) but the
      survival-vs-predictor dissociation is artifact-conditional; held-out
@@ -80,7 +81,7 @@ resolve.*
 | 15 | Reward leak clean | 0.541, clean 10/10 | FINDINGS 10.3 | PREREGISTRATION_L3.md sec. 12 (n=10 audited entry) | - |
 | 16 | No survivorship asymmetry | 0 early deaths, 110/110 all pools | FINDINGS 10.3 | PREREGISTRATION_L3.md sec. 12 | - |
 | 17 | Behavior alone decodes world | trace 0.803 [0.763, 0.840] | FINDINGS 10.4 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
-| 18 | Behavior-independent component | 0.726 [0.685, 0.765], 9/10; quad 0.721 | FINDINGS 10.4 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
+| 18 | Behavior-independent component (four-channel; position/heading added in 10.4.1) | 0.726 [0.685, 0.765], 9/10; quad 0.721; position/heading-controlled 0.723 [0.682, 0.760], 8/10, quad 0.700 | FINDINGS 10.4, 10.4.1 | artifacts/expB2/behavior_audit_l3_h8_traces.json; artifacts/expB2/behavior_audit_l3_covar_n10.json | - |
 | 19 | Control neither manufactures nor spares signal | untrained resid 0.498; predictor 0.574 | FINDINGS 10.4 | artifacts/expB2/behavior_audit_l3_h8_traces.json | - |
 | 20 | Second capacity: behavior-independent signal replicates | 0.722 [0.678, 0.763], 8/10; quad 0.704 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |
 | 21 | Second capacity: dissociation NOT met (artifact-conditional) | survival 0.737 [0.688, 0.780] vs predictor 0.714 [0.687, 0.740]; lead +0.023 < +0.05 | FINDINGS 10.5 | artifacts/expB2/behavior_audit_l3_h7_traces.json | - |

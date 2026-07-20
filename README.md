@@ -121,7 +121,10 @@ pre-registered per-timestep control (dump every step's speed/energy/food/drag, r
 recurrent state on the behavior trace in-fold, probe what is left) rejects that reading: the
 behavior-independent world-signal is **0.726** (t-based 90% CI **[0.679, 0.772]**, which
 excludes the 0.65 bar; the seed-level bootstrap interval [0.685, 0.765] agrees; 9 of 10 seeds
-clear it; quadratic variant 0.721). The control is honest on its own
+clear it; quadratic variant 0.721). Strengthening that control to also residualize absolute
+position and heading (the covariate a differing velocity law could otherwise smuggle in) barely
+moves the signal, to **0.723** (t-based 90% CI [0.676, 0.769]; 8 of 10 seeds), closing the
+covariate gap in the headline's favor (FINDINGS §10.4.1). The control is honest on its own
 negative controls: the untrained agent's state reads exact chance (0.498) under the same
 control even though untrained *behavior* decodes 0.645, and the prediction-only agent stays
 near chance (0.574). (An earlier, cruder per-episode-mean control had under-estimated the

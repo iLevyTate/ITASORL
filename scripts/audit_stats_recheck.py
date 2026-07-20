@@ -112,6 +112,7 @@ def main() -> int:
     n10 = load("behavior_audit_l3_n10.json")
     h8 = load("behavior_audit_l3_h8_traces.json")
     h7 = load("behavior_audit_l3_h7_traces.json")
+    covar = load("behavior_audit_l3_covar_n10.json")
     held = load("heldout_l3_h8_summary.json")
     rev = load("heldout_l3_h7_reverse_summary.json")
     cgf = load("heldout_l3_h8_cg_rescore.json")
@@ -121,6 +122,7 @@ def main() -> int:
 
     print("== internal consistency: stored aggregates reproduce from per-seed cells ==")
     for name, doc in [("n10", n10), ("h8_traces", h8), ("h7_traces", h7),
+                      ("covar_n10", covar),
                       ("heldout_summary", held), ("h7_reverse_summary", rev)]:
         verify_aggregate_consistency(name, doc)
 
@@ -168,7 +170,8 @@ def main() -> int:
                all(n == 110 for n in seed_vals(held, "0.45", "survival", "n_auth")
                    + seed_vals(held, "0.45", "survival", "n_surr")))
 
-    print("== FINDINGS 10.4: behavior mediation (hidden=8) ==")
+    print("== FINDINGS 10.4: behavior mediation (hidden=8, four-channel control; "
+          "superseded by 10.4.1) ==")
     check("behavior_only linear (0.689)",
           float(np.mean(seed_vals(h8, "0.45", "survival", "behavior_only"))), 0.689)
     check("behavior_only nonlinear (0.705)",
@@ -200,6 +203,34 @@ def main() -> int:
           float(np.mean(seed_vals(h8, "0.45", "untrained", "behavior_trace_only"))), 0.645)
     check("predictor resid_trace (0.574)",
           float(np.mean(seed_vals(h8, "0.45", "predictor", "resid_trace"))), 0.574)
+
+    print("== FINDINGS 10.4.1: position/heading covariate resolution (7-channel, n=10) ==")
+    ctg = seed_vals(covar, "0.45", "survival", "target")
+    check("covar target reproduces headline (0.752)", float(np.mean(ctg)), 0.752)
+    check_true("covar target byte-identical to h8 (determinism receipt)",
+               all(abs(a - b) <= 1e-6 for a, b in
+                   zip(ctg, seed_vals(h8, "0.45", "survival", "target"))))
+    cbt = seed_vals(covar, "0.45", "survival", "behavior_trace_only")
+    check("covar behavior trace rises (0.832)", float(np.mean(cbt)), 0.832)
+    check_true("covar behavior ceiling above four-channel (0.803)",
+               float(np.mean(cbt)) > 0.803)
+    crt = seed_vals(covar, "0.45", "survival", "resid_trace")
+    check("covar resid_trace (0.723)", float(np.mean(crt)), 0.723)
+    check("covar resid_trace boot lo (0.682)", mean_ci(crt)[1], 0.682)
+    check("covar resid_trace boot hi (0.760)", mean_ci(crt)[2], 0.760)
+    check_int("covar resid_trace seeds >= 0.65 (8)", sum(v >= BAR for v in crt), 8)
+    ctlo, cthi = t_ci(crt)
+    check("covar resid_trace t lo (0.676)", ctlo, 0.676)
+    check("covar resid_trace t hi (0.769)", cthi, 0.769)
+    check_true("covar resid_trace t-CI excludes bar", ctlo > BAR)
+    check_true("covar resolution: control stronger, signal held (delta > -0.02)",
+               float(np.mean(crt)) - float(np.mean(rt)) > -0.02)
+    check("covar resid_trace_quad (0.700)",
+          float(np.mean(seed_vals(covar, "0.45", "survival", "resid_trace_quad"))), 0.700)
+    check("covar untrained resid_trace (0.512)",
+          float(np.mean(seed_vals(covar, "0.45", "untrained", "resid_trace"))), 0.512)
+    check("covar predictor resid_trace (0.565)",
+          float(np.mean(seed_vals(covar, "0.45", "predictor", "resid_trace"))), 0.565)
 
     print("== FINDINGS 10.5: second capacity (hidden=7) ==")
     surv7 = seed_vals(h7, "0.45", "survival", "target")

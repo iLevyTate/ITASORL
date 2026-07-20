@@ -3,7 +3,9 @@
 Ralph reads this **every run** before choosing work. Update it when new
 `fullruns/` appear, canonical artifacts change, or conclusions shift.
 
-Last updated: **2026-07-18** (methodology-audit sync: Exp C pilot invalidation
+Last updated: **2026-07-19** (covariate-gap closed: absolute position and heading
+added to the L3 behavior control at n=10, resid_trace holds at 0.723, FINDINGS
+§10.4.1. Prior 2026-07-18: methodology-audit sync: Exp C pilot invalidation
 reflected, held-out-transfer wording narrowed per the FINDINGS §10.6 scope note,
 seed-0 diagnostic bundle acknowledged. Numbers below are the ones verified by
 `scripts/audit_stats_recheck.py` and `docs/FINDINGS.md` §10.)
@@ -24,7 +26,9 @@ decodable-when-forced but not pooled-persistent.
 (a small net replacing the velocity law) rather than a hand-tuned drag knob, the survival
 agent's pooled probe reads **0.752** (t 90% CI [0.698, 0.807], 8/10 seeds; L0 control
 0.517), and a reward-clean, survivorship-clean, per-timestep **behavior-independent**
-world-signal of **~0.73** (resid_trace 0.726 [0.685, 0.765]) clears the bar. Caveats that
+world-signal of **~0.73** (resid_trace 0.726 [0.685, 0.765]; holds at 0.723 [0.682, 0.760]
+once absolute position and heading join the control basis, closing the covariate gap,
+FINDINGS §10.4.1) clears the bar. Caveats that
 narrow the claim: (1) survival-*specificity* holds only at the subtler hidden=8 artifact —
 at hidden=7 every trained agent picks it up (predictor 0.714 vs survival 0.737); (2) a
 held-out probe shows the direction transfers to an unseen same-recipe (0.773) and a

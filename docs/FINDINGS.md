@@ -39,7 +39,9 @@ floor at chance), the survival agent's state decodes the world at **0.752**
 predictor (0.573) and untrained (0.488) baselines on the identical trunk do not.
 Reward leakage, survivorship, and nonlinear-probe controls pass; a strict
 per-timestep behavior control leaves a behavior-independent world-signal of
-**0.726** (90% CI [0.685, 0.765], 9/10 seeds above the bar; section 10). A
+**0.726** (90% CI [0.685, 0.765], 9/10 seeds above the bar; section 10; widening
+that control to also residualize absolute position and heading holds it at 0.723,
+section 10.4.1). A
 pre-registered replication at a second oracle-calibrated capacity (hidden = 7)
 splits the claim: the behavior-independent world-signal replicates almost exactly
 (**0.722**, CI clearing the bar), but the survival-vs-predictor dissociation does
@@ -425,7 +427,8 @@ detectability-vs-encoding gap has survived every lever pulled so far.
 1. **L3, a generative fingerprint: TESTED, POSITIVE (section 10).** This was the lever
    that changed the result. A surrogate whose tell comes from a separately *learned*
    predictive world-model reverses the L2 nulls: the survival agent incidentally
-   encodes world identity at 0.752 with a behavior-independent component of 0.726.
+   encodes world identity at 0.752 with a behavior-independent component of 0.726
+   (0.723 once absolute position and heading join the control basis, section 10.4.1).
    The second in-band capacity is now tested (section 10.5): the
    behavior-independent signal replicates (0.722), but the survival-vs-predictor
    dissociation does not, making the survival-specific verdict conditional on the
@@ -644,7 +647,54 @@ could in principle remove more.
 > numbers should be cited with this scope limit until the audit is re-run with
 > position and heading added to the trace basis (the dump and covariate code
 > now support them for future runs; existing dumps do not contain position, so
-> the re-run requires regenerating pools).
+> the re-run requires regenerating pools). **RESOLVED 2026-07-19 (see 10.4.1):
+> position and heading were added to the control basis at n = 10; resid_trace
+> 0.726 -> 0.723, the gap closes in the headline's favor.**
+
+### 10.4.1 Position/heading covariate resolution (2026-07-19)
+
+The covariate-gap note above flagged that the per-timestep behavior control
+residualized speed/energy/food/drag only; absolute position and heading were
+absent from the dump, so a state component encoding *position* (which diverges
+across worlds under the differing velocity laws) could survive the control and
+read as "behavior-independent." To close it, the L3 hidden = 8 pools were
+regenerated at n = 10 with the extended dump (`scripts/run_expB2.py --drift-mode
+l3 --l3-hidden 8 --dump-states`, which now records pos_x/pos_y/heading trace
+channels), and the audit re-run with the seven-channel basis
+(`scripts/audit_behavior_mediation.py`; `BEHAVIOR_CHANNELS` now includes
+pos_x/pos_y/heading, folded into both the per-episode-mean and the per-timestep
+controls). Reporting is unchanged: 90% seed-bootstrap CI, bar 0.65, committed as
+`artifacts/expB2/behavior_audit_l3_covar_n10.json`.
+
+**Determinism first.** The uncontrolled `target` probe (which never touches the
+behavior traces) reproduced the published aggregate exactly: 0.752 [0.704, 0.797]
+(8/10), and every per-seed drift-0.45 survival target matched the four-channel
+run to three decimals. The regeneration is bit-faithful; only the control basis
+changed.
+
+**The control got strictly stronger and the signal held.** Adding position and
+heading lifts the behavior ceiling as expected -- `behavior_trace_only` rises from
+0.803 [0.763, 0.840] to **0.832 [0.798, 0.862]** -- because position genuinely
+does decode the world. Yet the position/heading-controlled state signal barely
+moves: `resid_trace` goes 0.726 [0.685, 0.765] (9/10) to **0.723 [0.682, 0.760]
+(8/10)**, a change of -0.003; the t-based 90% CI [0.676, 0.769] still excludes the
+0.65 bar. The quadratic variant, which absorbs more of the richer basis, softens
+to 0.700 [0.663, 0.735] (7/10) but stays above the bar at the mean.
+
+**Controls clean.** The untrained agent's position/heading-controlled state reads
+0.512 (chance) and the predictor 0.565, preserving the survival-only
+dissociation; the drift-0.00 survival floor sits at 0.521, near chance.
+
+**Corrected reading.** The covariate gap is CLOSED in the headline's favor.
+Strengthening the control by exactly the flagged mediator -- absolute position and
+heading -- raised the behavior ceiling (+0.028) but left the residual world-signal
+at 0.723, above the 0.65 bar with a t-CI that excludes it. Had a position code
+been masquerading as world-identity, adding those channels to the control would
+have collapsed `resid_trace`; instead the ceiling rose while the residual held,
+the signature of a genuine latent world representation rather than
+position-in-disguise. The 10.4 "behavior-independent ~0.73" reading stands with
+position and heading now inside the control basis (revised figure resid_trace
+0.723). This resolves the covariate-gap note above.
 
 ### 10.5 Second in-band capacity (replication across artifact type)
 

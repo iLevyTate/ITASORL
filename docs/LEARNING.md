@@ -470,7 +470,11 @@ Then comes the deflating objection: behavior alone reveals the world at 0.803,
 better than the state probe, so maybe the reader is just seeing the limp. The
 pre-registered per-timestep control answers it: after surgically subtracting the
 behavior trace, 0.726 remains (90% CI [0.685, 0.765]; 9 of 10 seeds clear the
-bar; the quadratic version is 0.721). And the control is honest on its own tests:
+bar; the quadratic version is 0.721). A later audit widened that subtraction to
+also remove the creature's absolute position and heading, the one covariate the
+two worlds' different motion laws could smuggle in; the signal barely moved, to
+0.723, so it is not position wearing a disguise. And the control is honest on its
+own tests:
 the untrained creature's residual reads exact chance (0.498) even though its raw
 behavior reveals the world at 0.645. This is the first reversal of the negative: a
 creature never rewarded for it carries world-distinguishing state (about 0.73
