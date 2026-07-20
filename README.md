@@ -92,7 +92,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: capacity-variant transfer subtle-to-coarse (0.773; same recipe/data, FINDINGS §10.6 scope note) but not coarse-to-subtle (0.638, frozen rule fails); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the re-scored common-garden control passes the frozen rule on both directions (forward 0.666, reverse 0.684), so the signal is a modest persistent world-identity component, not purely reactive (FINDINGS §10.6.1)** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity** - behavior-independent signal ~0.72 at both; transfer is direction-dependent but recipe-general; the re-scored common-garden control shows a modest persistent world-identity component (details in [Key result](#key-result) below and FINDINGS §10.6.1) |
 | Experiment C (emergence under selection) | first pilot run; recorded null **invalidated** by two since-fixed measurement bugs (FINDINGS §13.C) - pre-registered re-run on fixed code pending ([`docs/PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md)) |
 | Ladder L4 (adversarially-hardened surrogate) | not started |
 
@@ -113,8 +113,9 @@ is near chance (about 0.57), the survival probe reads **0.752** (n = 10, honest 
 dissociation is robust: it is not reward-mediated (world is not decodable from summed reward,
 AUROC 0.541, clean 10 of 10 seeds), not survivorship-biased (0 early deaths, every pool
 110/110), not a linear-probe artifact (the untrained net stays near chance even nonlinearly),
-and the L0 authentic-vs-authentic control is at chance (0.517). **And the signal is not just
-behavior.** The agent does move and forage differently in the two worlds - in fact the full
+and the L0 authentic-vs-authentic control is at chance (0.517).
+
+**And the signal is not just behavior.** The agent does move and forage differently in the two worlds - in fact the full
 behavior trace alone decodes the world at **0.803**, better than the state probe itself - so
 the obvious deflationary reading was that the probe reads behavior, not a representation. A
 pre-registered per-timestep control (dump every step's speed/energy/food/drag, residualize the
@@ -134,15 +135,18 @@ behavior-independent world-signal of about **0.73** that clears the pre-register
 is the first place "detectable does not imply learned" reverses: a from-scratch agent, never
 rewarded for it, comes to carry world-discriminative state as a byproduct of surviving. The
 mediation audit is reproducible code (`scripts/audit_behavior_mediation.py`; artifacts in
-`artifacts/expB2/`). *A pre-registered replication at a second calibrated capacity sharpens
-the claim.* The second in-band fingerprint (hidden = 7, selected by a frozen fallback rule
+`artifacts/expB2/`).
+
+*A pre-registered replication at a second calibrated capacity sharpens the claim.* The second in-band fingerprint (hidden = 7, selected by a frozen fallback rule
 after hidden = 4 failed its gates) passes every gate and replicates the behavior-independent
 world-signal almost exactly: **0.722** (t-based 90% CI [0.672, 0.773]) vs 0.726 at hidden = 8. But
 that coarser artifact is one every trained agent picks up (predictor 0.714 vs survival 0.737,
 under the pre-registered +0.05 dissociation requirement), so the survival-*only* part of the
 claim is conditional on the subtler hidden = 8 artifact. What survives both capacities is a
 reward-clean, survivorship-clean, behavior-independent world-signal of about **0.72** in the
-survival agent's state. *A held-out probe (n = 10, committed per-seed summary in
+survival agent's state.
+
+*A held-out probe (n = 10, committed per-seed summary in
 `artifacts/expB2/heldout_l3_h8_summary.json`) then sharpens what that signal is.* It splits: the world-identity direction learned against the trained fingerprint
 still reads a held-out capacity variant of it (transfer **0.773** vs
 untrained floor 0.569; the pre-registered rule passes) - note the variant shares the training
@@ -158,8 +162,9 @@ stored world-identity component the survival policy also expresses reactively: i
 common-garden bar but only just, and its late tail fades, so it is persistent-but-weak, not strongly
 stored. *(The original common-garden numbers, 0.557 below the bar, were scored with a since-fixed
 biased estimator and have now been re-scored, overturning the reactive reading; see FINDINGS §10.6.1.
-The transfer numbers were unaffected.)* A cross-recipe
-probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
+The transfer numbers were unaffected.)*
+
+A cross-recipe probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
 surrogate *families*: the same direction reads a gate-calibrated random-Fourier-features ridge law
 the agent never lived with (**0.684** vs untrained floor 0.548; the pre-registered rule passes,
 machine-checked; a thin pass - the t-based 90% CI lower bound clears the bar by 0.004 and 7/10
