@@ -6,7 +6,7 @@ authors:
   - family-names: "Tate"
     given-names: "Levy"
     orcid: "https://orcid.org/0009-0009-1337-0709"
-repository-code: "https://github.com/iLevyTate/ITASORL"
+repository-code: "https://github.com/iLevyTate/ItaSoRL"
 license: MIT
 version: 1.0.0
 abstract: >-

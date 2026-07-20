@@ -37,7 +37,7 @@ dependencies = [
 dev = ["pytest>=7.0", "ruff>=0.4"]
 
 [project.urls]
-Repository = "https://github.com/iLevyTate/ITASORL"
+Repository = "https://github.com/iLevyTate/ItaSoRL"
 
 [tool.setuptools]
 packages = ["itasorl"]

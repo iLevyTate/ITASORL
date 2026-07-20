@@ -5,9 +5,9 @@ organism can tell that its world is a generative **surrogate** rather than the
 authentic base dynamics of its computational substrate, using only substrate
 seams, with detection **read out, not rewarded**.*
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb)
 
-**Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb). Enable a GPU runtime, then run all cells (clones the repo and runs `python scripts/run_e2e.py`).
+**Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb). Enable a GPU runtime, then run all cells (clones the repo and runs `python scripts/run_e2e.py`).
 
 ---
 
@@ -273,13 +273,14 @@ A quick smoke test of the Experiment B pipeline:
 python -m itasorl.experiment_b
 ```
 
-Run the test suite:
+Run the test suite (pytest ships in the dev requirements):
 
 ```bash
+pip install -r requirements-dev.txt
 pytest -q
 ```
 
-**Google Colab (GPU):** [Open in Colab](https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb) (same notebook as the badge at the top). Enable a GPU runtime, run all cells.
+**Google Colab (GPU):** [Open in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb) (same notebook as the badge at the top). Enable a GPU runtime, run all cells.
 
 **Local Jupyter / VS Code:** open [`notebooks/colab_gpu.ipynb`](notebooks/colab_gpu.ipynb) from this repo; it auto-detects local mode (no Drive/download cells).
 

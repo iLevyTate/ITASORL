@@ -410,7 +410,7 @@
         <a href="#readout" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.04em; color:#6b6588;">Readout</a>
         <a href="#findings" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.04em; color:#6b6588;">Findings</a>
         <a href="#about" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.04em; color:#6b6588;">About</a>
-        <a href="https://github.com/iLevyTate/ITASORL" target="_blank" class="pill" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.02em; color:#fff; background:linear-gradient(135deg,#9079c8,#5f82c6); padding:10px 20px; border-radius:999px; box-shadow:5px 5px 12px #c8c3dd, -5px -5px 12px #fbfaff, inset 0 1px 0 rgba(255,255,255,0.35);">GitHub ↗</a>
+        <a href="https://github.com/iLevyTate/ItaSoRL" target="_blank" class="pill" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:0.02em; color:#fff; background:linear-gradient(135deg,#9079c8,#5f82c6); padding:10px 20px; border-radius:999px; box-shadow:5px 5px 12px #c8c3dd, -5px -5px 12px #fbfaff, inset 0 1px 0 rgba(255,255,255,0.35);">GitHub ↗</a>
       </div>
     </nav>
 
@@ -601,11 +601,11 @@
           <div style="font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.2em; text-transform:uppercase; color:#8a72c0; margin-bottom:16px;">04 &nbsp;/&nbsp; Findings</div>
           <h2 style="font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:40px; letter-spacing:-0.02em; margin:0; color:#2a2547;">Recent work</h2>
         </div>
-        <a href="https://github.com/iLevyTate/ITASORL/blob/main/docs/FINDINGS.md" target="_blank" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:#6b6588;">docs/FINDINGS.md →</a>
+        <a href="https://github.com/iLevyTate/ItaSoRL/blob/main/docs/FINDINGS.md" target="_blank" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:#6b6588;">docs/FINDINGS.md →</a>
       </div>
       <div style="background:#e8e5f1; border-radius:20px; padding:12px 14px; box-shadow:inset 6px 6px 14px #c8c3dd, inset -6px -6px 14px #fbfaff;">
         <sc-for list="{{ papers }}" as="p" hint-placeholder-count="4">
-          <a href="https://github.com/iLevyTate/ITASORL/blob/main/docs/FINDINGS.md" target="_blank" class="pub" style="display:grid; grid-template-columns:120px 1fr 170px; gap:24px; align-items:center; padding:22px 18px; border-bottom:1px solid rgba(190,184,212,0.35);">
+          <a href="https://github.com/iLevyTate/ItaSoRL/blob/main/docs/FINDINGS.md" target="_blank" class="pub" style="display:grid; grid-template-columns:120px 1fr 170px; gap:24px; align-items:center; padding:22px 18px; border-bottom:1px solid rgba(190,184,212,0.35);">
             <span style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#8a72c0;">{{ p.date }}</span>
             <span>
               <span class="pub-title" style="display:inline-flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:19px; color:#2a2547; letter-spacing:-0.01em; transition:color .18s;">{{ p.title }}<span class="pub-arrow" style="font-size:15px; color:#5f82c6;">→</span></span>
@@ -629,12 +629,12 @@
           <p style="font-size:17px; line-height:1.6; color:#b6b1d2; max-width:520px; margin:0 auto 32px; text-wrap:pretty;">Every experiment is deterministic given its seeds. Clone the repo, or open the Colab notebook on a GPU runtime and run all cells.</p>
           <div style="display:inline-flex; align-items:center; gap:16px; font-family:'IBM Plex Mono',monospace; font-size:13px; color:#cfc9e8; background:rgba(15,13,30,0.45); border:1px solid rgba(179,166,221,0.18); padding:14px 16px 14px 22px; border-radius:14px; margin-bottom:36px; max-width:100%;">
             <span style="color:#8a72c0; user-select:none;">$</span>
-            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">git clone https://github.com/iLevyTate/ITASORL.git</span>
+            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">git clone https://github.com/iLevyTate/ItaSoRL.git</span>
             <button sc-camel-on-click="{{ copyClone }}" style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.04em; color:#e6e2f5; background:rgba(144,121,200,0.25); border:1px solid rgba(179,166,221,0.35); padding:7px 14px; border-radius:8px; cursor:pointer; white-space:nowrap;">{{ copyLabel }}</button>
           </div>
           <div style="display:flex; gap:14px; justify-content:center; flex-wrap:wrap;">
-            <a href="https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb" target="_blank" class="pill" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#fff; background:linear-gradient(135deg,#9079c8,#5f82c6); padding:15px 30px; border-radius:999px; box-shadow:0 10px 26px rgba(20,16,45,0.5), inset 0 1px 0 rgba(255,255,255,0.35);">Open in Colab</a>
-            <a href="https://github.com/iLevyTate/ITASORL" target="_blank" class="darkghost" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#cfc9e8; background:rgba(255,255,255,0.04); border:1px solid rgba(179,166,221,0.28); padding:14px 28px; border-radius:999px;">github.com/iLevyTate/ITASORL</a>
+            <a href="https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb" target="_blank" class="pill" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#fff; background:linear-gradient(135deg,#9079c8,#5f82c6); padding:15px 30px; border-radius:999px; box-shadow:0 10px 26px rgba(20,16,45,0.5), inset 0 1px 0 rgba(255,255,255,0.35);">Open in Colab</a>
+            <a href="https://github.com/iLevyTate/ItaSoRL" target="_blank" class="darkghost" style="font-family:'IBM Plex Mono',monospace; font-size:13px; color:#cfc9e8; background:rgba(255,255,255,0.04); border:1px solid rgba(179,166,221,0.28); padding:14px 28px; border-radius:999px;">github.com/iLevyTate/ItaSoRL</a>
           </div>
         </div>
       </div>
@@ -656,7 +656,7 @@
         <div>
           <div style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:0.16em; text-transform:uppercase; color:#9a94b0; margin-bottom:14px;">Connect</div>
           <div style="display:flex; flex-direction:column; gap:10px; font-family:'IBM Plex Mono',monospace; font-size:12.5px;">
-            <a href="https://github.com/iLevyTate/ITASORL" target="_blank">GitHub</a><a href="https://colab.research.google.com/github/iLevyTate/ITASORL/blob/main/notebooks/colab_gpu.ipynb" target="_blank">Colab notebook</a><a href="https://github.com/iLevyTate/ITASORL/blob/main/docs/ITASORL.md" target="_blank">Research plan</a>
+            <a href="https://github.com/iLevyTate/ItaSoRL" target="_blank">GitHub</a><a href="https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb" target="_blank">Colab notebook</a><a href="https://github.com/iLevyTate/ItaSoRL/blob/main/docs/ITASORL.md" target="_blank">Research plan</a>
           </div>
         </div>
       </div>
@@ -846,7 +846,7 @@ class Component extends DCLogic {
       markRef: this.markRef,
       copyLabel: this.state.copied ? 'copied \u2713' : 'copy',
       copyClone: () => {
-        const cmd = 'git clone https://github.com/iLevyTate/ITASORL.git';
+        const cmd = 'git clone https://github.com/iLevyTate/ItaSoRL.git';
         if (navigator.clipboard) navigator.clipboard.writeText(cmd);
         this.setState({ copied: true });
         clearTimeout(this._ct);
