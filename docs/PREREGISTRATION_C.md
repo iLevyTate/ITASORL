@@ -334,6 +334,26 @@ but the re-run's write-up must use the amplification framing.
    treatment layout to the steepest certified cell so gate 1 can pass, or
    (b) keep the frozen layout and accept that the re-run is a
    gates-and-machinery pilot that cannot adjudicate emergence.
+
+   **Resolved 2026-07-20 (run owner): option (c), no launch.** A bias-guarded
+   re-run of the steepness sweep (`scripts/run_expC_gate1_sweep.py`, seeds
+   7100-7105, disjoint from the certification seeds 7000-7009 so no winner's
+   curse) finds NO cell clears the 0.005 margin: the best raw gap over the
+   25-cell reach x horizon lattice is 0.00445 (reach 0.50 / horizon 60), and
+   the reach 0.15 / horizon 80 cell this item cited is only 0.00362. The
+   earlier "clears the margin" reading came from the 2026-07-17 sweep on seeds
+   7000-7005, which overlap the certification seeds and inflated the selected
+   cell. Option (a) is therefore not available: no treatment geometry makes
+   gate 1 pass, which is the empirical signature that the scripted
+   constant-thrust controller cannot express the world-coupling (the
+   bottleneck is controller expressiveness, not payoff steepness). Since H3 is
+   already resolved NEGATIVE by the section-13.D validated null, a gates-only
+   pilot (option b) would only spend GPU-hours re-confirming a known null.
+   Decision: do NOT launch; genuinely re-opening Experiment C requires a
+   section-8 richer-controller redesign, not a geometry re-freeze. Evidence:
+   `artifacts/expC/gate1_steepness_sweep.json` (gate-1 lattice, determinism
+   True, control floor 0.000000) and `artifacts/expC/control_layout_derisk.json`
+   (control-neutrality PASS: control fitness gap 0.038 vs treatment 0.324).
 5. **Panel cadence (amends "each generation", sections 5/7/10).** The full
    panel runs at gen 0 (shared), every 10 generations inside evolution
    (`--panel-every 10`), and at the final generation of each arm. Gate 3's
@@ -369,3 +389,16 @@ but the re-run's write-up must use the amplification framing.
    "reproducible to 8 decimals", and a CUDA run adds a CPU-parity spot check
    on one seed. (The runner enables
    `torch.use_deterministic_algorithms(True, warn_only=True)`.)
+
+**Section-14 disposition (2026-07-20): NO LAUNCH; amendments recorded, not
+ratified for a run.** The run owner has reviewed section 14. Item 4's
+[DECISION] resolves to option (c) (see its resolved note): the bias-guarded
+gate-1 sweep shows no treatment geometry clears the exploitability margin, so a
+launch could only be a gates-and-machinery pilot, and H3 already stands
+resolved-negative on the section-13.D validated null. The gate battery (item 3)
+and the de-risked control layout (section 11) remain WIRED and validated for any
+future re-opening, but the section-14 items are deliberately NOT ratified as
+binding, because there is no re-run to bind: the DRAFT marker is retained on
+purpose to record that no run was launched under this section. Re-opening
+Experiment C requires the section-8 richer-controller redesign, at which point
+these amendments are the starting methodology.

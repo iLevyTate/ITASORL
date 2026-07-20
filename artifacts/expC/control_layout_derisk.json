@@ -1,0 +1,110 @@
+{
+ "source_run": "fullruns/expC_derisk/control_layout.json",
+ "git_commit_at_promotion": "f50defd75562d5b67ed19897cb6171ef595a0367",
+ "promoted": "2026-07-20",
+ "disposition_note": "Control-layout de-risk (PREREGISTRATION_C sec.11): control arm world-invariant (fitness gap 0.038 vs treatment 0.324, VERDICT PASS). Confirms 'the control is the claim' assumption holds for any future re-opening.",
+ "world": "P(k_land=1.5, k_water=1.5, gravity=0.4)",
+ "surrogate": "frozen L3 G_motion (hidden=8, seed=0)",
+ "config": {
+  "n": 24,
+  "embed": 8,
+  "hidden": 8,
+  "l3_hidden": 8,
+  "l3_seed": 0,
+  "drift_sigma": 1.0,
+  "n_eps": 2,
+  "max_steps": 60,
+  "seed_base": 320000,
+  "ray_steps": 5,
+  "geom_seeds": 200,
+  "ctrl_n_pellets": 80,
+  "ctrl_reach": 0.25,
+  "json": "fullruns/expC_derisk/control_layout.json"
+ },
+ "control_food": {
+  "n_pellets": 80,
+  "reach": 0.25
+ },
+ "geometry": {
+  "treatment": {
+   "mean_nearest": 0.10227153928898954,
+   "reach": 0.08
+  },
+  "control": {
+   "mean_nearest": 0.055751394084660254,
+   "reach": 0.25
+  }
+ },
+ "fitness_sensitivity": {
+  "treatment": {
+   "mean_abs_gap": 0.3240862873626424,
+   "max_abs_gap": 1.4960519346639949,
+   "mean_auth": -1.4527041040856463,
+   "mean_surr": -1.6121342631463496,
+   "mean_len": 49.385416666666664,
+   "per_gap": [
+    0.43893,
+    0.117626,
+    0.743609,
+    0.005493,
+    0.004094,
+    0.001866,
+    0.003477,
+    0.867368,
+    0.007905,
+    0.011946,
+    0.872644,
+    0.421399,
+    1.496052,
+    0.856447,
+    0.003262,
+    0.872614,
+    0.000798,
+    0.244444,
+    0.000204,
+    0.793131,
+    0.004146,
+    0.004172,
+    0.004081,
+    0.002364
+   ]
+  },
+  "control": {
+   "mean_abs_gap": 0.038413561238897595,
+   "max_abs_gap": 0.29997727583173195,
+   "mean_auth": 0.9361455580860775,
+   "mean_surr": 0.9713660779142937,
+   "mean_len": 53.28125,
+   "per_gap": [
+    0.003671,
+    0.000159,
+    0.010975,
+    0.299977,
+    0.003559,
+    0.00152,
+    0.003218,
+    0.203477,
+    0.008029,
+    0.035302,
+    0.001247,
+    0.000351,
+    0.021393,
+    0.292666,
+    0.003326,
+    9.4e-05,
+    0.000748,
+    0.015733,
+    0.00027,
+    0.002217,
+    0.004103,
+    0.003995,
+    0.0041,
+    0.001795
+   ]
+  }
+ },
+ "engaged": true,
+ "control_world_invariant": true,
+ "verdict": "PASS",
+ "wall_seconds": 31.5
+}

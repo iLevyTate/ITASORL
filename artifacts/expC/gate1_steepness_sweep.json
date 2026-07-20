@@ -1,0 +1,267 @@
+{
+ "source_run": "fullruns/expC_gate1_sweep/steepness.json",
+ "git_commit_at_promotion": "f50defd75562d5b67ed19897cb6171ef595a0367",
+ "promoted": "2026-07-20",
+ "disposition_note": "Bias-guarded gate-1 payoff-steepness sweep (seeds 7100-7105, disjoint from certification seeds 7000-7009). No cell clears the 0.005 margin (best raw gap 0.00445 at reach 0.50/h60); descriptive go/no-go input for PREREGISTRATION_C sec.14 item 4 -> option (c) no launch.",
+ "world": "P(k_land=1.5, k_water=1.5, gravity=0.4)",
+ "surrogate": "frozen L3 G_motion (hidden=8, seed=0)",
+ "config": {
+  "hidden": 8,
+  "seed": 0,
+  "seeds": [
+   7100,
+   7101,
+   7102,
+   7103,
+   7104,
+   7105
+  ],
+  "reaches": [
+   0.15,
+   0.25,
+   0.35,
+   0.5,
+   0.75
+  ],
+  "horizons": [
+   20,
+   30,
+   40,
+   60,
+   80
+  ],
+  "ctrl_reach": 0.05,
+  "ctrl_horizon": 1,
+  "n_thrusts": 21,
+  "ray_steps": 5,
+  "baseline_gap": 0.0023,
+  "json": "fullruns/expC_gate1_sweep/steepness.json"
+ },
+ "baseline_gap": 0.0023,
+ "cells": [
+  {
+   "reach": 0.15,
+   "horizon": 20,
+   "name": "r0.15_h20",
+   "gap": 0.0013169567964396375,
+   "norm_gap": 0.00877971197626425,
+   "ratio_to_baseline": 0.5725899114954945
+  },
+  {
+   "reach": 0.15,
+   "horizon": 30,
+   "name": "r0.15_h30",
+   "gap": 0.001943233086813714,
+   "norm_gap": 0.01295488724542476,
+   "ratio_to_baseline": 0.8448839507885713
+  },
+  {
+   "reach": 0.15,
+   "horizon": 40,
+   "name": "r0.15_h40",
+   "gap": 0.000741021079427614,
+   "norm_gap": 0.004940140529517427,
+   "ratio_to_baseline": 0.32218307801200613
+  },
+  {
+   "reach": 0.15,
+   "horizon": 60,
+   "name": "r0.15_h60",
+   "gap": 0.000894133205613217,
+   "norm_gap": 0.005960888037421446,
+   "ratio_to_baseline": 0.3887535676579204
+  },
+  {
+   "reach": 0.15,
+   "horizon": 80,
+   "name": "r0.15_h80",
+   "gap": 0.0036175006130339804,
+   "norm_gap": 0.02411667075355987,
+   "ratio_to_baseline": 1.572826353493035
+  },
+  {
+   "reach": 0.25,
+   "horizon": 20,
+   "name": "r0.25_h20",
+   "gap": 0.0009426918615031884,
+   "norm_gap": 0.0037707674460127536,
+   "ratio_to_baseline": 0.4098660267405167
+  },
+  {
+   "reach": 0.25,
+   "horizon": 30,
+   "name": "r0.25_h30",
+   "gap": 0.0033098269852840563,
+   "norm_gap": 0.013239307941136225,
+   "ratio_to_baseline": 1.4390552109930679
+  },
+  {
+   "reach": 0.25,
+   "horizon": 40,
+   "name": "r0.25_h40",
+   "gap": 0.0032274094342635493,
+   "norm_gap": 0.012909637737054197,
+   "ratio_to_baseline": 1.4032214931580649
+  },
+  {
+   "reach": 0.25,
+   "horizon": 60,
+   "name": "r0.25_h60",
+   "gap": 0.0011639088699229073,
+   "norm_gap": 0.004655635479691629,
+   "ratio_to_baseline": 0.5060473347490901
+  },
+  {
+   "reach": 0.25,
+   "horizon": 80,
+   "name": "r0.25_h80",
+   "gap": 0.0018286622091589627,
+   "norm_gap": 0.007314648836635851,
+   "ratio_to_baseline": 0.7950705257212881
+  },
+  {
+   "reach": 0.35,
+   "horizon": 20,
+   "name": "r0.35_h20",
+   "gap": 0.0002641203963029785,
+   "norm_gap": 0.0007546297037227958,
+   "ratio_to_baseline": 0.11483495491433848
+  },
+  {
+   "reach": 0.35,
+   "horizon": 30,
+   "name": "r0.35_h30",
+   "gap": 0.0006281858942423756,
+   "norm_gap": 0.001794816840692502,
+   "ratio_to_baseline": 0.27312430184451114
+  },
+  {
+   "reach": 0.35,
+   "horizon": 40,
+   "name": "r0.35_h40",
+   "gap": 0.0035464181315275622,
+   "norm_gap": 0.010132623232935893,
+   "ratio_to_baseline": 1.541920926751114
+  },
+  {
+   "reach": 0.35,
+   "horizon": 60,
+   "name": "r0.35_h60",
+   "gap": 0.0024384959102373704,
+   "norm_gap": 0.006967131172106773,
+   "ratio_to_baseline": 1.060215613146683
+  },
+  {
+   "reach": 0.35,
+   "horizon": 80,
+   "name": "r0.35_h80",
+   "gap": 0.002100316007840062,
+   "norm_gap": 0.0060009028795430346,
+   "ratio_to_baseline": 0.91318087297394
+  },
+  {
+   "reach": 0.5,
+   "horizon": 20,
+   "name": "r0.5_h20",
+   "gap": 9.444812656139723e-05,
+   "norm_gap": 0.00018889625312279446,
+   "ratio_to_baseline": 0.0410644028527814
+  },
+  {
+   "reach": 0.5,
+   "horizon": 30,
+   "name": "r0.5_h30",
+   "gap": 0.0,
+   "norm_gap": 0.0,
+   "ratio_to_baseline": 0.0
+  },
+  {
+   "reach": 0.5,
+   "horizon": 40,
+   "name": "r0.5_h40",
+   "gap": 0.0012479073817495273,
+   "norm_gap": 0.0024958147634990546,
+   "ratio_to_baseline": 0.5425684268476206
+  },
+  {
+   "reach": 0.5,
+   "horizon": 60,
+   "name": "r0.5_h60",
+   "gap": 0.004450191717160439,
+   "norm_gap": 0.008900383434320877,
+   "ratio_to_baseline": 1.9348659639827994
+  },
+  {
+   "reach": 0.5,
+   "horizon": 80,
+   "name": "r0.5_h80",
+   "gap": 0.002243523242442471,
+   "norm_gap": 0.004487046484884942,
+   "ratio_to_baseline": 0.9754448880184656
+  },
+  {
+   "reach": 0.75,
+   "horizon": 20,
+   "name": "r0.75_h20",
+   "gap": 0.0,
+   "norm_gap": 0.0,
+   "ratio_to_baseline": 0.0
+  },
+  {
+   "reach": 0.75,
+   "horizon": 30,
+   "name": "r0.75_h30",
+   "gap": 0.0,
+   "norm_gap": 0.0,
+   "ratio_to_baseline": 0.0
+  },
+  {
+   "reach": 0.75,
+   "horizon": 40,
+   "name": "r0.75_h40",
+   "gap": 0.0,
+   "norm_gap": 0.0,
+   "ratio_to_baseline": 0.0
+  },
+  {
+   "reach": 0.75,
+   "horizon": 60,
+   "name": "r0.75_h60",
+   "gap": 0.002402619316725104,
+   "norm_gap": 0.0032034924223001385,
+   "ratio_to_baseline": 1.0446170942283062
+  },
+  {
+   "reach": 0.75,
+   "horizon": 80,
+   "name": "r0.75_h80",
+   "gap": 0.004103528429839354,
+   "norm_gap": 0.005471371239785805,
+   "ratio_to_baseline": 1.7841427955823277
+  }
+ ],
+ "best_by_gap": {
+  "reach": 0.5,
+  "horizon": 60,
+  "name": "r0.5_h60",
+  "gap": 0.004450191717160439,
+  "norm_gap": 0.008900383434320877,
+  "ratio_to_baseline": 1.9348659639827994
+ },
+ "best_by_norm_gap": {
+  "reach": 0.15,
+  "horizon": 80,
+  "name": "r0.15_h80",
+  "gap": 0.0036175006130339804,
+  "norm_gap": 0.02411667075355987,
+  "ratio_to_baseline": 1.572826353493035
+ },
+ "control_floor": {
+  "reach": 0.05,
+  "horizon": 1,
+  "gap": 0.0,
+  "norm_gap": 0.0
+ },
+ "determinism_bit_reproducible": true,
+ "wall_seconds": 748.1
+}
