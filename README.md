@@ -9,6 +9,11 @@ seams, with detection **read out, not rewarded**.*
 
 **Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb). Enable a GPU runtime, then run all cells (clones the repo and runs `python scripts/run_e2e.py`).
 
+**New to the project?** Start with the nine-page illustrated series - the same walkthrough in two voices, every number read from the committed artifacts:
+
+- [**Plain-English series (PDF)**](docs/itasorl-series-plain-english.pdf) - the story: the question, the world, the trick, what we found.
+- [**Research edition (PDF)**](docs/itasorl-series-research.pdf) - the same pages in research terms: design, control battery, pre-registered results, open questions.
+
 ---
 
 ## The theme in one line
@@ -214,6 +219,8 @@ function class. See
 |   |-- PREREGISTRATION_L3.md   L3 pre-registration + deviation log
 |   |-- PREREGISTRATION_C.md    Experiment C pre-registration (design-complete)
 |   |-- AUDIT_2026-07.md        research-integrity audit
+|   |-- itasorl-series-plain-english.pdf  illustrated walkthrough (plain English)
+|   |-- itasorl-series-research.pdf       illustrated walkthrough (research edition)
 |   `-- figures/                result figures (.png) + provenance README
 |-- artifacts/                  published summaries (committed): expA/, expB/, expB2/, expC/, l3_crossrecipe/
 |-- fullruns/                   e2e run bundles (gitignored; default output)
@@ -224,6 +231,8 @@ function class. See
 
 ### Documents
 
+- [`docs/itasorl-series-plain-english.pdf`](docs/itasorl-series-plain-english.pdf): the illustrated walkthrough in plain English - the friendliest entry point to the whole project.
+- [`docs/itasorl-series-research.pdf`](docs/itasorl-series-research.pdf): the same series in research terms - design, control battery, pre-registered results, open questions.
 - [`docs/ITASORL.md`](docs/ITASORL.md): the research plan, core question, literature white-space, hypotheses (H1 to H4), experiments (A/B/C), the surrogate ladder, validity audit, statistics, and engineering architecture.
 - [`docs/ITASORL_world_spec.md`](docs/ITASORL_world_spec.md): the world specification, "A Patch of Earth" v0, the 2.5D representation, fields and forcing, dynamics, ecology, the ~146-dim observation, ladder attachment, and confound management.
 - [`docs/FINDINGS.md`](docs/FINDINGS.md): empirical results from the first build-and-test cycle.
