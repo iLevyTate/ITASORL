@@ -81,13 +81,3 @@ jobs:
 
       - name: Recompute every published number from committed artifacts
         run: python scripts/audit_stats_recheck.py
-
-  shell:
-    name: Shellcheck Ralph loop
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run shellcheck
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y shellcheck
-          shellcheck ralph/ralph.sh

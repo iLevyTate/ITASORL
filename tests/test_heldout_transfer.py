@@ -1,5 +1,5 @@
 """Tests for the held-out fingerprint transfer channel (spec:
-docs/superpowers/specs/2026-07-14-l3-heldout-common-garden-probe-design.md).
+docs/specs/2026-07-14-l3-heldout-common-garden-probe-design.md).
 
 Synthetic ground truth: a fingerprint-GENERAL signal (same discriminative
 direction in train and test pools) must transfer; a fingerprint-SPECIFIC

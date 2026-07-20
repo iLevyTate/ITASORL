@@ -9,6 +9,11 @@ seams, with detection **read out, not rewarded**.*
 
 **Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb). Enable a GPU runtime, then run all cells (clones the repo and runs `python scripts/run_e2e.py`).
 
+**New to the project?** Start with the nine-page illustrated series - the same walkthrough in two voices, every number read from the committed artifacts:
+
+- [**Plain-English series (PDF)**](docs/itasorl-series-plain-english.pdf) - the story: the question, the world, the trick, what we found.
+- [**Research edition (PDF)**](docs/itasorl-series-research.pdf) - the same pages in research terms: design, control battery, pre-registered results, open questions.
+
 ---
 
 ## The theme in one line
@@ -92,7 +97,7 @@ L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversaria
 | Experiment A (detectability ceiling, agent-free), L1 | **done** |
 | Experiment A, L2 | **done** |
 | Experiment B (incidental detection), L2 arc | **done (robust negative result)** |
-| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity (behavior-independent signal ~0.72 at both; survival-specificity holds at the subtler artifact only); held-out probe: capacity-variant transfer subtle-to-coarse (0.773; same recipe/data, FINDINGS §10.6 scope note) but not coarse-to-subtle (0.638, frozen rule fails); cross-recipe probe carries the generalization claim (different surrogate family, 0.684, rule passes); the re-scored common-garden control passes the frozen rule on both directions (forward 0.666, reverse 0.684), so the signal is a modest persistent world-identity component, not purely reactive (FINDINGS §10.6.1)** |
+| Experiment B, L3 (learned-dynamics) | **positive at n=10, replicated at a second capacity** - behavior-independent signal ~0.72 at both; transfer is direction-dependent but recipe-general; the re-scored common-garden control shows a modest persistent world-identity component (details in [Key result](#key-result) below and FINDINGS §10.6.1) |
 | Experiment C (emergence under selection) | first pilot run; recorded null **invalidated** by two since-fixed measurement bugs (FINDINGS §13.C) - pre-registered re-run on fixed code pending ([`docs/PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md)) |
 | Ladder L4 (adversarially-hardened surrogate) | not started |
 
@@ -113,8 +118,9 @@ is near chance (about 0.57), the survival probe reads **0.752** (n = 10, honest 
 dissociation is robust: it is not reward-mediated (world is not decodable from summed reward,
 AUROC 0.541, clean 10 of 10 seeds), not survivorship-biased (0 early deaths, every pool
 110/110), not a linear-probe artifact (the untrained net stays near chance even nonlinearly),
-and the L0 authentic-vs-authentic control is at chance (0.517). **And the signal is not just
-behavior.** The agent does move and forage differently in the two worlds - in fact the full
+and the L0 authentic-vs-authentic control is at chance (0.517).
+
+**And the signal is not just behavior.** The agent does move and forage differently in the two worlds - in fact the full
 behavior trace alone decodes the world at **0.803**, better than the state probe itself - so
 the obvious deflationary reading was that the probe reads behavior, not a representation. A
 pre-registered per-timestep control (dump every step's speed/energy/food/drag, residualize the
@@ -134,15 +140,18 @@ behavior-independent world-signal of about **0.73** that clears the pre-register
 is the first place "detectable does not imply learned" reverses: a from-scratch agent, never
 rewarded for it, comes to carry world-discriminative state as a byproduct of surviving. The
 mediation audit is reproducible code (`scripts/audit_behavior_mediation.py`; artifacts in
-`artifacts/expB2/`). *A pre-registered replication at a second calibrated capacity sharpens
-the claim.* The second in-band fingerprint (hidden = 7, selected by a frozen fallback rule
+`artifacts/expB2/`).
+
+*A pre-registered replication at a second calibrated capacity sharpens the claim.* The second in-band fingerprint (hidden = 7, selected by a frozen fallback rule
 after hidden = 4 failed its gates) passes every gate and replicates the behavior-independent
 world-signal almost exactly: **0.722** (t-based 90% CI [0.672, 0.773]) vs 0.726 at hidden = 8. But
 that coarser artifact is one every trained agent picks up (predictor 0.714 vs survival 0.737,
 under the pre-registered +0.05 dissociation requirement), so the survival-*only* part of the
 claim is conditional on the subtler hidden = 8 artifact. What survives both capacities is a
 reward-clean, survivorship-clean, behavior-independent world-signal of about **0.72** in the
-survival agent's state. *A held-out probe (n = 10, committed per-seed summary in
+survival agent's state.
+
+*A held-out probe (n = 10, committed per-seed summary in
 `artifacts/expB2/heldout_l3_h8_summary.json`) then sharpens what that signal is.* It splits: the world-identity direction learned against the trained fingerprint
 still reads a held-out capacity variant of it (transfer **0.773** vs
 untrained floor 0.569; the pre-registered rule passes) - note the variant shares the training
@@ -158,8 +167,9 @@ stored world-identity component the survival policy also expresses reactively: i
 common-garden bar but only just, and its late tail fades, so it is persistent-but-weak, not strongly
 stored. *(The original common-garden numbers, 0.557 below the bar, were scored with a since-fixed
 biased estimator and have now been re-scored, overturning the reactive reading; see FINDINGS §10.6.1.
-The transfer numbers were unaffected.)* A cross-recipe
-probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
+The transfer numbers were unaffected.)*
+
+A cross-recipe probe (n = 10, `artifacts/l3_crossrecipe/summary.json`) then extends the transfer half across
 surrogate *families*: the same direction reads a gate-calibrated random-Fourier-features ridge law
 the agent never lived with (**0.684** vs untrained floor 0.548; the pre-registered rule passes,
 machine-checked; a thin pass - the t-based 90% CI lower bound clears the bar by 0.004 and 7/10
@@ -203,27 +213,30 @@ function class. See
 |   |-- ITASORL_world_spec.md   world specification ("A Patch of Earth" v0)
 |   |-- FINDINGS.md             empirical results
 |   |-- LEARNING.md             running lab notebook / lessons log
-|   |-- PAPER_OUTLINE.md        paper outline + claims inventory
+|   |-- PAPER_OUTLINE.md        writeup outline + claims inventory
 |   |-- PREREGISTRATION.md      B-v2 pre-registration
 |   |-- PREREGISTRATION_Bv3.md  B-v3 pre-registration
 |   |-- PREREGISTRATION_L3.md   L3 pre-registration + deviation log
 |   |-- PREREGISTRATION_C.md    Experiment C pre-registration (design-complete)
 |   |-- AUDIT_2026-07.md        research-integrity audit
+|   |-- itasorl-series-plain-english.pdf  illustrated walkthrough (plain English)
+|   |-- itasorl-series-research.pdf       illustrated walkthrough (research edition)
 |   `-- figures/                result figures (.png) + provenance README
 |-- artifacts/                  published summaries (committed): expA/, expB/, expB2/, expC/, l3_crossrecipe/
 |-- fullruns/                   e2e run bundles (gitignored; default output)
 |-- results/LATEST_RUN.txt      pointer to latest fullruns folder
 |-- notebooks/colab_gpu.ipynb   Colab end-to-end runner
-|-- tests/                      pytest regression suite
-`-- ralph/                      autonomous research + bug-fix loop (Claude Code)
+`-- tests/                      pytest regression suite
 ```
 
 ### Documents
 
+- [`docs/itasorl-series-plain-english.pdf`](docs/itasorl-series-plain-english.pdf): the illustrated walkthrough in plain English - the friendliest entry point to the whole project.
+- [`docs/itasorl-series-research.pdf`](docs/itasorl-series-research.pdf): the same series in research terms - design, control battery, pre-registered results, open questions.
 - [`docs/ITASORL.md`](docs/ITASORL.md): the research plan, core question, literature white-space, hypotheses (H1 to H4), experiments (A/B/C), the surrogate ladder, validity audit, statistics, and engineering architecture.
 - [`docs/ITASORL_world_spec.md`](docs/ITASORL_world_spec.md): the world specification, "A Patch of Earth" v0, the 2.5D representation, fields and forcing, dynamics, ecology, the ~146-dim observation, ladder attachment, and confound management.
 - [`docs/FINDINGS.md`](docs/FINDINGS.md): empirical results from the first build-and-test cycle.
-- [`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md): the paper outline and a claims inventory linking every headline number to its committed artifact.
+- [`docs/PAPER_OUTLINE.md`](docs/PAPER_OUTLINE.md): the writeup outline and a claims inventory linking every headline number to its committed artifact.
 - [`docs/LEARNING.md`](docs/LEARNING.md): the running lab notebook (methods lessons, dead ends, decisions).
 - [`docs/PREREGISTRATION_L3.md`](docs/PREREGISTRATION_L3.md), [`PREREGISTRATION_Bv3.md`](docs/PREREGISTRATION_Bv3.md), [`PREREGISTRATION.md`](docs/PREREGISTRATION.md), [`PREREGISTRATION_C.md`](docs/PREREGISTRATION_C.md): pre-registrations (with deviation logs) for the B-v2, B-v3, L3, and (design-complete) C experiments.
 - [`docs/AUDIT_2026-07.md`](docs/AUDIT_2026-07.md): a skeptical research-integrity audit (numbers, statistics, pre-registration timing, citations).

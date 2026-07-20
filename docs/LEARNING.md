@@ -599,7 +599,6 @@ and `fullruns/` (the full bundles, ignored by git, with the latest pointer in
 | Pre-registration | Predictions sealed in an envelope before running; removes after-the-fact knob tweaking | PREREGISTRATION*.md |
 | Predictor (agent) | The daydreamer arm of the three-creature comparison | B-v2/L3 |
 | Probe | The reader: an outside classifier reading world identity from h_t | probes |
-| Ralph | An autonomous Claude Code loop used for development chores | `ralph/` |
 | Readout, not reward | Read the diary, never pay for answers: identity is probed, never trained on | core invariant |
 | Recal (recalibration) | Rerunning gate-0 across forger sizes on the corrected world; re-froze the second capacity at hidden=7 | `fullruns/l3_gate0_recal` |
 | Regime drift | B-v3's version of L2: one constant drag offset per episode | `--drift-mode regime` |

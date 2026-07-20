@@ -1,3 +1,0 @@
-# Ignore per-iteration logs, keep the directory.
-*
-!.gitignore

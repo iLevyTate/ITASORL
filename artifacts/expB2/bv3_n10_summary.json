@@ -7,7 +7,7 @@
   "python": "3.13.2",
   "torch": "2.7.0+cu126",
   "cuda_available": true,
-  "cuda_device": "NVIDIA GeForce RTX 4050 Laptop GPU"
+  "cuda_device": "NVIDIA GPU"
  },
  "generated_by": "scripts/promote_ab_summaries.py",
  "flags": [
@@ -25,7 +25,7 @@
   "--updates",
   "300",
   "--dump-states",
-  "C:\\Users\\benja\\Documents\\GitHub\\ITASORL\\fullruns\\07062026\\states",
+  "fullruns/07062026/states",
   "--drift-mode",
   "regime"
  ],

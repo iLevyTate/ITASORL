@@ -17,7 +17,7 @@ world-identity representation. This module makes that audit reproducible:
 All controls are fit IN-FOLD (train folds only, GroupKFold at episode level,
 same estimator family as the headline probe) because in-sample residualization
 over-removes: it deflated the audited signal to 0.56-0.63 in the ad hoc run.
-Spec: docs/superpowers/specs/2026-07-12-l3-behavior-audit-design.md.
+Spec: docs/specs/2026-07-12-l3-behavior-audit-design.md.
 """
 
 from __future__ import annotations

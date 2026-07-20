@@ -137,7 +137,7 @@ def check_ram(min_free_gb: float) -> None:
         raise SystemExit(
             f"Only {free:.1f} GB system RAM free (< {min_free_gb:.0f} GB "
             "needed; episode buffers live in RAM). Free memory first, e.g. "
-            "stop the ralph loop.")
+            "close other heavy processes.")
     print(f"Free RAM: {free:.1f} GB -- OK", flush=True)
 
 
