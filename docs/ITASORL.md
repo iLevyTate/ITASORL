@@ -73,7 +73,41 @@ ITASORL's structural advantage is that the project **owns the ground truth** and
 | Active inference / MBRL | RSSM architectures and anomaly detection via prediction error | Agents exploit flaws for reward, not ontological categories |
 | **ITASORL (proposed)** | Integrates probing, substrate artifacts, and RSSMs | Measures emergent, non-rewarded ontological classification from scratch |
 
-**Novelty posture.** The obvious and adjacent literatures have been searched thoroughly, but global novelty across all historical compute paradigms cannot be certified. Before any public claim, a head-to-head cross-reference against ALife proceedings, open-endedness workshops, and the evaluation-awareness citation graph remains a required final check. The defensible claim is *"first controlled demonstration in this specific ALife setting,"* not *"first ever simulation detection."*
+### The nearest neighbors, axis by axis (cross-reference performed 2026-07)
+
+The head-to-head cross-reference this section calls for has now been run: a multi-angle
+sweep across the seven adjacent literatures (evaluation awareness, incidental-encoding
+probing, agent-side reality-gap detection, ALife substrate detection, embedded agency,
+simulation-physics, and VM red-pill detection), with each candidate match verified
+against its primary source. The project's novelty is defined by four axes:
+
+1. **tabula rasa** - a from-scratch, non-linguistic recurrent agent, no pretraining, no semantics;
+2. **substrate-grounded cues** - discretization, rollout drift, and learned-dynamics fingerprints are the *only* tells;
+3. **world identity as the probed variable** - authentic base dynamics vs a learned surrogate, never labeled, never rewarded, read out only post-hoc;
+4. **the gap as the object** - the headline measurement is the gap between external oracle detectability and spontaneous internal encoding.
+
+Every located prior work fails at least one axis, and most fail three:
+
+- **Evaluation awareness in LLMs** - behavioral (Berglund et al., arXiv:2309.00667; the SAD benchmark, arXiv:2407.04694; Needham et al., arXiv:2505.23836, Gemini 2.5 Pro at AUC 0.83) and probe-based (Nguyen et al., arXiv:2507.01786; scaled in arXiv:2509.13333). Fails axis 1 (pretrained semantic substrate) and axis 4 (no oracle-vs-probe comparison); follow-up work suggests those probe signals partly track benchmark surface format.
+- **Incidental-encoding probe studies** - AtariARI (Anand et al., NeurIPS 2019, arXiv:1906.08226) and Othello-GPT (Li et al., ICLR 2023, arXiv:2210.13382) established post-hoc probing of never-trained-on variables. Fails axis 3: both probe *within-world* variables of a single fixed generative process, never *which* of two processes is running.
+- **Agent-side dynamics-mismatch detection** - GalilAI (AISTATS 2022, arXiv:2110.15489) has an agent actively experiment to decide whether its dynamics changed; RAPT (2026, arXiv:2602.01515) monitors sim-to-real mismatch online on a real humanoid. Fails axes 3-4: detection is the *explicit designed objective* - these live on the oracle side of our gap, not the incidental-encoding side.
+- **Necessity-of-world-models theory** - Richens et al. (ICML 2025, arXiv:2506.01622) prove a generally-capable agent must encode an extractable model of its environment's dynamics. Single environment, no surrogate discrimination, no probes on recurrent state; the closest *theoretical* antecedent to the incidental-encoding framing.
+
+**Novelty posture.** Global novelty across all historical compute paradigms cannot be
+certified; absence of prior work can only be searched for, not proven. With the
+cross-reference above on record, the defensible claim is:
+
+> *To our knowledge, this is the first study to measure the gap between external
+> detectability and spontaneous internal encoding of simulator authenticity - whether
+> an agent's world runs on authentic base dynamics or a learned surrogate - in
+> tabula-rasa recurrent agents, with substrate-level artifacts as the only cue and
+> world identity read out post-hoc, never rewarded.*
+
+Phrasings that would overclaim, each preempted by the works above: "first agent to
+detect it is in a simulation / being tested"; "first internal representation of
+test-vs-real context"; "first unrewarded post-hoc probe readout of environment
+variables"; "first agent-side reality-gap detection"; "first to show agents
+incidentally encode dynamics information."
 
 ## Hypotheses
 

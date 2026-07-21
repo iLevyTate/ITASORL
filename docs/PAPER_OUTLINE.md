@@ -48,7 +48,15 @@ resolve.*
      (empty gate-0 window) - coefficient-bias artifacts cannot be made
      subtle-but-detectable, independently motivating learned-texture surrogates.
 5. **Limitations** (FINDINGS 11, verbatim spirit)
-6. **Related work** (ITASORL.md Part I literature sections)
+6. **Related work** (ITASORL.md Part I literature sections, incl. the 2026-07
+   axis-by-axis cross-reference: evaluation awareness behavioral and probe-based
+   (arXiv:2309.00667, 2407.04694, 2505.23836, 2507.01786, 2509.13333),
+   incidental-encoding probes (AtariARI arXiv:1906.08226; Othello-GPT
+   arXiv:2210.13382), agent-side mismatch detection (GalilAI arXiv:2110.15489;
+   RAPT arXiv:2602.01515), and necessity-of-world-models theory (Richens et al.
+   arXiv:2506.01622). State the novelty claim exactly as worded in ITASORL.md's
+   novelty posture; list the five preempted overclaim phrasings as what we do
+   *not* claim.)
 7. **Reproducibility statement** (FINDINGS 12; artifacts/expB2/ promotion history;
    CITATION.cff)
 

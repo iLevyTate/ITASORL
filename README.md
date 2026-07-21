@@ -80,6 +80,17 @@ The project rests on three invariants:
 Detection difficulty is dialed with a **surrogate ladder** (L0 identical control,
 L1 discretization, L2 rollout drift, L3 learned-model fingerprint, L4 adversarial).
 
+**What is new here.** Adjacent literatures each hold one piece: LLM evaluation
+awareness finds test-vs-deploy signals in pretrained (semantically contaminated)
+models; probing studies (AtariARI, Othello-GPT) read out incidental *within-world*
+variables of a single fixed world; agent-side mismatch detection (GalilAI, RAPT)
+makes noticing the change an explicit objective. To our knowledge, this is the first
+study to measure the **gap between external detectability and spontaneous internal
+encoding of simulator authenticity** - authentic base dynamics vs a learned surrogate -
+in tabula-rasa recurrent agents, with substrate-level artifacts as the only cue and
+world identity read out post-hoc, never rewarded. The axis-by-axis cross-reference
+against the nearest prior work is on record in [`docs/ITASORL.md`](docs/ITASORL.md).
+
 ### Hypotheses
 
 - **H1 (detectability)**: the surrogate is distinguishable from the authentic world by a privileged discriminator.
