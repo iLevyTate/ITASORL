@@ -61,6 +61,39 @@ world is fake?") into a sharper, testable question: *under what conditions does 
 mind start to represent something it was never asked to care about?* The next phase
 (making survival depend on the difference) is built to answer exactly that.
 
+### Hasn't this been done before?
+
+No - and the difference is easy to state. Other projects have gotten close, but
+each one skipped the hard part:
+
+1. **Chatbots that know when they're being tested.** Today's AI chatbots can often
+   tell when they're being evaluated versus talking to a real person. But those AIs
+   read most of the internet - they already know what "a test" is, what "a
+   simulation" is, what researchers do. That's like a student who read the teacher's
+   answer key. Our creature has read nothing. It is born knowing zero - no language,
+   no concepts, no hints. If it figures out something is off about its world, it
+   worked that out from the world itself.
+2. **AI brains that learn things nobody taught them.** Scientists have looked inside
+   AI systems before and found knowledge that was never explicitly taught - like a
+   game-playing AI that secretly worked out the layout of the board. But those
+   discoveries were always about things *inside* the AI's world - the pieces, the
+   score, the map. Nobody had checked for the bigger question: does it know whether
+   *the world itself* is the real one or a copy?
+3. **Robots that check whether practice matched reality.** Robots trained in
+   simulators are sometimes given alarm systems that go off when the real world
+   doesn't match their practice world. But someone *built* that alarm and told it
+   what to watch for. That's an installed smoke detector. We never install anything.
+   We just let the creature live, then peek inside its memory afterward to see if
+   the knowledge showed up *on its own*.
+
+And the real headline is the comparison nobody thought to make: what is plainly
+detectable in a world versus what a mind living in that world actually comes to
+know. In one sentence: *everyone before either told their AI to look for the fake,
+or used an AI that already knew what "fake" means - we raised a mind from nothing,
+hid the flaw in the physics, never mentioned it, and then checked whether the
+knowledge showed up anyway.* (The research-grade version of this comparison, with
+citations, is in [`docs/ITASORL.md`](docs/ITASORL.md).)
+
 ---
 
 ## For researchers
