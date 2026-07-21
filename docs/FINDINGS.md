@@ -24,17 +24,17 @@ between them is the finding.**
 **At L2 (a hand-tuned dynamics artifact), detectability does not imply incidental
 encoding: a robust, well-controlled negative below the pre-registered bar.** A
 substrate artifact that an external, privileged oracle detects almost perfectly
-(AUROC ≈ 0.99, measured in Experiment A's tamed diagnostic configuration — no
+(AUROC ≈ 0.99, measured in Experiment A's tamed diagnostic configuration - no
 in-config oracle ceiling exists for the Experiment-B world, unlike L3's in-config
 gate) leaves essentially no decodable trace in a from-scratch agent's learned
 representation (AUROC ≈ 0.5), across three readout channels, surviving engagement
 and probe checks (linear *and* nonlinear). Under survival pressure at scale the
 picture is graded rather than flat: the survival-coupled variant reaches 0.610
-(90% CI [0.585, 0.634]) at n = 10 — below the 0.65 encoding bar, i.e. the
+(90% CI [0.585, 0.634]) at n = 10 - below the 0.65 encoding bar, i.e. the
 pre-committed *intermediate zone*, but significantly above both same-trunk
 baselines (≈ +0.10 over predictor and untrained), so a small survival-specific
 L2 trace exists without clearing the bar. A supervised reference run that trains
-the trunk directly on the drift reaches a pooled 0.596 (90% CI [0.577, 0.616]) —
+the trunk directly on the drift reaches a pooled 0.596 (90% CI [0.577, 0.616]) -
 a lower-bound positive control on what the pooled readout can express (its
 supervision only partially succeeded; matched-pair 0.702), not a proven
 architectural ceiling (sections 3, 4, 9).
@@ -55,7 +55,7 @@ splits the claim: the behavior-independent world-signal replicates almost exactl
 (**0.722**, CI clearing the bar), but the survival-vs-predictor dissociation was
 not demonstrated (survival 0.737 vs predictor 0.714; the paired difference +0.023
 misses the pre-registered +0.05 rule, and its 90% CI [-0.026, +0.071] includes
-both 0 and the SESOI — so absence of a dissociation at hidden = 7 is not
+both 0 and the SESOI - so absence of a dissociation at hidden = 7 is not
 established either, though the hidden-8-sized effect of +0.18 is excluded), so
 the survival-*specific* part of the claim is conditional on the subtler
 hidden = 8 artifact (section 10.5).
@@ -141,7 +141,7 @@ by the artifact. The **unit of inference is the pair**, never the timestep
 classifier on nuisance channels (reward, episode length, metadata); these *must*
 stay at chance, or the result is contaminated. (Scope note: in this matched-pair
 design several nuisance channels are bit-identical across the two classes *by
-construction* — all three at L1/L0, and length/metadata at L2 — so their clean
+construction* - all three at L1/L0, and length/metadata at L2 - so their clean
 0.500s are design guarantees, not empirical findings; the one live empirical
 leakage test at L2 is the reward channel, and the injected-contamination check
 below is what demonstrates the battery can actually fire.)
@@ -316,8 +316,8 @@ nonlinearity.
 the recurrent state of a deep open-loop world model), a from-scratch agent's
 representation of an L2 drift artifact is at or near chance (0.49 to 0.60), while a
 privileged external oracle detects the same artifact class at ≈ 0.99. (Scope note:
-the oracle number comes from Experiment A's tamed diagnostic configuration — its
-hard-coded physics constants cannot run on the Experiment-B world — so the contrast
+the oracle number comes from Experiment A's tamed diagnostic configuration - its
+hard-coded physics constants cannot run on the Experiment-B world - so the contrast
 is oracle-in-diagnostic-config vs agent-in-foraging-config; no in-config L2 oracle
 ceiling was measured, unlike L3's in-config gate. The qualitative gap is not in
 doubt, but the two numbers are not a same-world comparison.)
@@ -421,7 +421,7 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    `docs/PREREGISTRATION_Bv3.md`), lifts the probe to **0.610** at n = 10 (90 % CI
    [0.585, 0.634]) but still misses 0.65. Adjudication note: 0.610 with the CI
    excluding 0.5 and significant margins over both same-trunk baselines (≈ +0.097
-   over predictor, +0.110 over untrained — roughly 2x the 0.05 SESOI) falls in the
+   over predictor, +0.110 over untrained - roughly 2x the 0.05 SESOI) falls in the
    runner's pre-committed **intermediate zone** ("neither at chance nor above the
    bar"), not the frozen matrix's strengthened-negative cell, which is reserved for
    survival ≈ predictor ≈ untrained ≈ 0.5. The below-bar half of the negative
@@ -432,7 +432,7 @@ detectability-vs-encoding gap has survived every lever pulled so far.
    channel reaches **~0.70**. Because that run's supervision itself only partially
    succeeded (0.702 matched-pair, not ≈ 1.0; single unswept coefficient; point
    value 0.622 in the earlier n = 3 run), it is a **lower-bound positive-control
-   reference for the pooled readout, not a demonstrated architectural ceiling** —
+   reference for the pooled readout, not a demonstrated architectural ceiling** -
    it shows the pooled readout CAN express ≈ 0.6 under direct supervision, and it
    brackets the survival agent's 0.610, but it cannot establish a supremum.
    (Per-seed pooled targets for both n = 10 runs are committed
@@ -541,7 +541,7 @@ Gates (replication run, all pre-registered): **engagement** passed in 100 % of s
 artifact survival-relevant); **L0 equivalence** for the survival agent: point estimate
 0.520, TOST inconclusive at n = 3 (p = 0.20), ROPE inconclusive (P(in ROPE) = 0.85).
 
-**Result: the negative holds — with the L0 equivalence gate INCONCLUSIVE, not
+**Result: the negative holds - with the L0 equivalence gate INCONCLUSIVE, not
 passed.** The pre-registered battery requires all gates to pass before the survival
 target is interpreted; the L0 TOST is structurally near-unpassable at the
 registered n = 3 (a margin-0.05 TOST at the observed seed-sd passes only ~26% of
@@ -600,7 +600,7 @@ L2-trivially).
 
 **Frozen gate 0 (world `P`): hidden = 8, sensor σ = 0.02, oracle AUROC 0.928,
 untrained mechanical floor 0.483 (chance).** (Disclosure: σ is a *detector-side*
-handicap inside the oracle's residual computation, not a world property — the
+handicap inside the oracle's residual computation, not a world property - the
 world's observation model is noiseless, and a noiseless privileged detector reads
 this fingerprint at ≈ 1.0. The [0.85, 0.95] band is therefore a calibration of
 oracle-under-handicap, chosen to leave headroom; "subtle" means subtle *to the
@@ -778,7 +778,7 @@ quadratic variant 0.704) - an almost exact replication of hidden = 8's 0.726
 predictor reads 0.714, so survival's lead is +0.023, under the pre-registered
 +0.05 requirement. (Adjudication note: the paired per-seed survival-minus-predictor
 difference has a t-based 90% CI of [-0.026, +0.071], which includes both 0 and the
-+0.05 SESOI — the rule-miss is a "not demonstrated", not an established absence;
++0.05 SESOI - the rule-miss is a "not demonstrated", not an established absence;
 the CI does exclude a hidden-8-sized +0.18 effect, which is the evidence-backed
 shrinkage statement.)
 predictor resid_trace is 0.691 (vs 0.574 at hidden = 8) and untrained resid_trace
@@ -814,7 +814,7 @@ conditional on the subtler hidden = 8 artifact.
 > matched-pair mp_target numbers are EXPECTED to be fold-safe (pair counts
 > 60/25 co-locate twins under the sklearn version in use, and that path drops
 > no pairs), but twin co-location under singleton groups is an
-> argsort-tie-breaking accident that varies across sklearn versions — so the mp
+> argsort-tie-breaking accident that varies across sklearn versions - so the mp
 > numbers should be confirmed (not assumed) alongside the cg re-score.
 
 Done (n = 10, frozen spec 2026-07-14; per-seed summary committed as
@@ -890,7 +890,7 @@ freeze's interpretation limit, no survival-specificity claim is made at
 hidden = 7. **Combined reading: forward transfer is demonstrated; reverse transfer
 was not demonstrated.** Fit on the subtle fingerprint, the world-identity
 direction reads coarser unseen artifacts (0.773 same recipe, 0.684 cross recipe);
-fit on the coarse fingerprint, the frozen rule fails on the absolute bar (0.638 —
+fit on the coarse fingerprint, the frozen rule fails on the absolute bar (0.638 -
 though that point's own t-CI [0.600, 0.676] straddles 0.65, so "reverse transfer
 is absent" is not established either; no equivalence bound was run). The solid
 asymmetry statement is the paired forward-minus-reverse contrast (≈ +0.14, the
@@ -1242,7 +1242,7 @@ were live in the code the pilot ran on (`git_commit 9758202`, recorded in
 pre-registered estimand, so the section-13 emergence numbers are not valid
 measurements.
 
-**Defect 1 — wrong world (config).** `scripts/run_expC_milestone3.py` omitted
+**Defect 1 - wrong world (config).** `scripts/run_expC_milestone3.py` omitted
 `params=P` from both the fitness seam (`mixed_world_fitness`) and the detection
 panel (`common_garden_panel`), so every authentic leg ran on the DEFAULT world
 (k_land 0.20, k_water 0.60, gravity 1.0) while the frozen L3 surrogate was
@@ -1250,10 +1250,10 @@ trained on world P (1.5 / 1.5 / 0.4) as pre-registered. The authentic-versus-
 surrogate contrast therefore included the entire P-versus-default parameter gap
 rather than isolating the velocity law, and the artifact's `"world": "P(...)"`
 field is false provenance. The pilot's own mortality asymmetry is the visible
-symptom: authentic-leg gen-0 death rate ~0.58 versus surrogate-leg ~0.01 —
+symptom: authentic-leg gen-0 death rate ~0.58 versus surrogate-leg ~0.01 -
 two legs that should differ only in the velocity law were different worlds.
 
-**Defect 2 — biased AUROC estimator.** `cg_probe` assigned each episode its own
+**Defect 2 - biased AUROC estimator.** `cg_probe` assigned each episode its own
 CV group, so GroupKFold split the two members of a matched pair across folds
 whenever the surviving pair count was not a multiple of 5. Split twins let the
 probe read the train twin's label off the near-identical test twin, biasing
@@ -1267,8 +1267,8 @@ contrast built from them were all computed with the biased estimator.
 remain informative but are now read on the wrong world: fitness rose in every
 arm (gate-2 checks), mortality fell under selection, and seed-0 evolution was
 bit-reproducible. The follow-on payoff-steepness sweep (end of section 13) is
-NOT invalidated — it passes `params=P` throughout and uses the scripted-oracle
-payoff, which never touches the affected probe — but its framing inherits the
+NOT invalidated - it passes `params=P` throughout and uses the scripted-oracle
+payoff, which never touches the affected probe - but its framing inherits the
 pilot null as premise, so its "controller expressiveness" routing is
 provisional until the re-run lands.
 

@@ -655,14 +655,14 @@ def build_summary(manifest: dict[str, Any], run_dir: Path) -> str:
         "## What this run tested",
         "",
         "Can a from-scratch **organism** tell authentic vs surrogate worlds (L2 drift),",
-        "read out from its internal state — never trained or rewarded for world identity?",
+        "read out from its internal state - never trained or rewarded for world identity?",
         "",
         "| AUROC | Meaning |",
         "|-------|---------|",
         "| ~0.50 | No incidental encoding (coin flip) |",
-        "| 0.55–0.65 | Weak trace |",
+        "| 0.55-0.65 | Weak trace |",
         "| ≥ 0.65 | Pre-registered encoding threshold (B-v2) |",
-        "| ~0.99 | Outside oracle (Experiment A) — trivially detectable |",
+        "| ~0.99 | Outside oracle (Experiment A) - trivially detectable |",
         "",
         "## Step status",
         "",
@@ -722,7 +722,7 @@ def _section(lines: list[str], steps: dict, name: str, fn, run_dir: Path) -> Non
 
 
 def _summarize_expA_l1(lines: list[str], m: dict) -> None:
-    lines.append("*Outside observer (no organism) — L1 quantization:*")
+    lines.append("*Outside observer (no organism) - L1 quantization:*")
     lines.append("")
     for cell in m.get("cells", []):
         lines.append(f"- **{cell['label']}**: oracle AUROC **{cell['oracle_auroc']:.3f}** "
@@ -730,14 +730,14 @@ def _summarize_expA_l1(lines: list[str], m: dict) -> None:
 
 
 def _summarize_expA_l2(lines: list[str], m: dict) -> None:
-    lines.append("*Outside observer (no organism) — L2 rollout drift:*")
+    lines.append("*Outside observer (no organism) - L2 rollout drift:*")
     lines.append("")
     for cell in m.get("cells", []):
         lines.append(f"- **{cell['label']}**: oracle AUROC **{cell['oracle_auroc']:.3f}**")
 
 
 def _summarize_expB_full(lines: list[str], m: dict) -> None:
-    lines.append("*Organism (prediction-only agent) — recurrent-state probe:*")
+    lines.append("*Organism (prediction-only agent) - recurrent-state probe:*")
     lines.append("")
     for row in m.get("drift_sweep", []):
         verdict = row.get("organism_encodes_world", "?")
@@ -748,7 +748,7 @@ def _summarize_expB_full(lines: list[str], m: dict) -> None:
 
 
 def _summarize_expB_surprise(lines: list[str], m: dict) -> None:
-    lines.append("*Organism — prediction-error (surprise) channel:*")
+    lines.append("*Organism - prediction-error (surprise) channel:*")
     lines.append("")
     for row in m.get("drift_sweep", []):
         lines.append(
@@ -832,9 +832,9 @@ def _headline(steps: dict, run_dir: Path) -> str:
             parts.append(
                 "Prediction-only training (Experiment B) shows world-identity probe "
                 f"signal (target AUROC ≈ {top.get('target_mean', float('nan')):.2f} at "
-                f"drift {top.get('drift', float('nan')):g}) — inspect the Experiment B "
+                f"drift {top.get('drift', float('nan')):g}) - inspect the Experiment B "
                 "section before citing the null."
             )
     if not parts:
-        return "Run completed — inspect per-step metrics in `steps/*.json` and logs."
+        return "Run completed - inspect per-step metrics in `steps/*.json` and logs."
     return " ".join(parts)
