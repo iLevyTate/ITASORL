@@ -1,0 +1,92 @@
+{
+  "duration_ms": 90000,
+  "fps": 24,
+  "size": [1080, 1350],
+  "numbers": {
+    "oracle_l2": { "display": "0.99", "source": "docs/FINDINGS.md sec 2.2 (0.993)" },
+    "probe_chance": { "display": "0.50", "source": "artifacts h8 untrained target 0.488 / L0 0.517" },
+    "probe_survival": { "display": "0.73", "source": "artifacts h8 survival resid_trace 0.726 / h7 0.722" }
+  },
+  "beats": [
+    {
+      "id": "creature",
+      "t0": 0,
+      "t1": 10000,
+      "world": { "mode": "single", "zoom": [1.0, 1.05], "stage": 0, "fan": "calm" },
+      "caption": {
+        "kicker": "A PATCH OF EARTH",
+        "headline": "Raise a creature ((from nothing.))",
+        "subline": "No labels. No instructions. It senses, moves, eats, and learns to predict what happens next."
+      }
+    },
+    {
+      "id": "trick",
+      "t0": 10000,
+      "t1": 25000,
+      "world": { "mode": "split", "zoom": [1.0, 1.03], "stage": 1 },
+      "caption": {
+        "kicker": "THE TRICK",
+        "headline": "Sometimes its world is real. Sometimes it is a ((flawed copy.))",
+        "subline": "Same land, same food. But the copy's physics is a tiny neural net imitating the real rules - every step of motion lands a hair off. Can you tell? By eye, neither can we."
+      }
+    },
+    {
+      "id": "physics",
+      "t0": 25000,
+      "t1": 35000,
+      "world": { "mode": "physics", "stage": 1 },
+      "caption": {
+        "kicker": "WHAT ACTUALLY CHANGED",
+        "headline": "The world runs on rules. The copy runs on a ((guess.))",
+        "subline": "A physics engine is the world's rulebook: take this moment, compute the next. The copy's rulebook is a tiny neural net trained by watching the real one. Close - but never exact. A hair off, every single step."
+      }
+    },
+    {
+      "id": "observer",
+      "t0": 35000,
+      "t1": 45000,
+      "world": { "mode": "scan", "zoom": [1.0, 1.0] },
+      "gauge": { "label": "the outside observer - can it spot the copy?", "from": 0.5, "to": 0.99, "display": "0.99", "sweep": [1000, 5000] },
+      "caption": {
+        "kicker": "THE OUTSIDE OBSERVER",
+        "headline": "From outside, the copy is ((obvious.))",
+        "subline": "An observer replays the creature's raw motion and checks each step against the true physics. Every flag is a step that bent the wrong way. It catches the fake almost every time."
+      }
+    },
+    {
+      "id": "nocare",
+      "t0": 45000,
+      "t1": 60000,
+      "world": { "mode": "single", "zoom": [1.02, 1.06], "stage": 2, "fan": "calm", "glitch": true, "worldT0": 35000 },
+      "gauge": { "label": "the creature's mind - does it know?", "from": 0.99, "to": 0.5, "display": "0.50", "sweep": [1200, 5200] },
+      "caption": {
+        "kicker": "THE CREATURE'S MIND",
+        "headline": "The creature ((never notices.))",
+        "subline": "We read its internal state - and never reward it for anything. The difference leaves no trace. Detectable is not learned."
+      }
+    },
+    {
+      "id": "survival",
+      "t0": 60000,
+      "t1": 80000,
+      "world": { "mode": "single", "zoom": [1.0, 1.08], "energy": true, "stage": 3, "fan": "alert", "glitch": true, "worldT0": 50000 },
+      "gauge": { "label": "the creature's mind - does it know?", "from": 0.5, "to": 0.73, "display": "0.73", "sweep": [4000, 14000] },
+      "caption": {
+        "kicker": "SURVIVAL PRESSURE",
+        "headline": "Until its life ((depends on it.))",
+        "subline": "Make the copy something it must cope with to eat, and the difference shows up in its head - unasked, unrewarded, a side effect of surviving."
+      }
+    },
+    {
+      "id": "close",
+      "t0": 80000,
+      "t1": 90000,
+      "world": { "mode": "none" },
+      "endcard": {
+        "headline": "Detectable is not learned. Survival changes that.",
+        "url": "ilevytate.github.io/ITASORL",
+        "foot": "AUROC, n = 10 seeds, pre-specified 0.65 bar. Readout, not reward."
+      }
+    }
+  ]
+}

@@ -209,6 +209,9 @@ artifacts/expB2/logs/
 # Claude Code local session state
 .claude/
 
+# Rendered film output: byte-reproducible from viz/ code + scene.json (verified deterministic).
+viz/out/
+
 # Local working documents and tooling: keep out of the public repo.
 docs/PAPER_DRAFT*.md
 paper/

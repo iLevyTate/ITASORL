@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>ItaSoRL - Detectable is not learned</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600&family=Hanken+Grotesk:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="stage">
+    <div id="world-card" class="layer">
+      <canvas id="world" width="960" height="960"></canvas>
+      <div class="pool-chip" id="chip-a">REAL WORLD<span class="chip-sub">true physics</span></div>
+      <div class="pool-chip" id="chip-b">FLAWED COPY<span class="chip-sub">imitation physics</span></div>
+    </div>
+
+    <div id="gauge" class="layer">
+      <div id="gauge-label"></div>
+      <div id="gauge-row">
+        <div id="gauge-track">
+          <div id="gauge-fill"></div>
+          <div id="gauge-tick"></div>
+        </div>
+        <div id="gauge-value">0.50</div>
+      </div>
+      <div id="gauge-scale"><span>0.50 = coin flip</span><span>1.00 = always right</span></div>
+    </div>
+
+    <div id="caption" class="layer">
+      <div id="kicker"></div>
+      <div id="headline"></div>
+      <div id="subline"></div>
+    </div>
+
+    <div id="endcard" class="layer">
+      <div class="glyph blob-glyph"></div>
+      <div id="end-headline"></div>
+      <div id="end-url"></div>
+      <div id="end-foot"></div>
+    </div>
+  </div>
+  <script src="player.js"></script>
+</body>
+</html>
