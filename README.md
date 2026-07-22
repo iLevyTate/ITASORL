@@ -7,7 +7,7 @@ seams, with detection **read out, not rewarded**.*
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb)
 
-**Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb). Enable a GPU runtime, then run all cells (clones the repo and runs `python scripts/run_e2e.py`).
+**Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb). **Make your own copy first** (`File -> Save a copy in Drive`) so your run and outputs are saved - the notebook's first cell enforces this. Then enable a GPU runtime and run all cells (clones the repo and runs `python scripts/run_e2e.py`).
 
 **New to the project?** Start with the nine-page illustrated series - the same walkthrough in two voices, every number read from the committed artifacts:
 
@@ -340,7 +340,7 @@ pip install -r requirements-dev.txt
 pytest -q
 ```
 
-**Google Colab (GPU):** [Open in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb) (same notebook as the badge at the top). Enable a GPU runtime, run all cells.
+**Google Colab (GPU):** [Open in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb) (same notebook as the badge at the top). Make your own copy first (`File -> Save a copy in Drive`; the first cell enforces this), enable a GPU runtime, then run all cells.
 
 **Local Jupyter / VS Code:** open [`notebooks/colab_gpu.ipynb`](notebooks/colab_gpu.ipynb) from this repo; it auto-detects local mode (no Drive/download cells).
 
