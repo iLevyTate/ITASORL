@@ -835,8 +835,11 @@ class Player {
           label(s[0], s[1] - 18 * worldScale, "FOOD", calloutAlpha(tl, 6400, 9300));
         }
       } else if (beat.id === "trick" && ghost && ghost.label) {
+        // Fixed side (-1): let the auto side flip as the ghost crosses the panel
+        // midline and the tag jumps left/right frame to frame. Pinning it left of
+        // the ring keeps it steady and inside the REAL panel.
         const gs2 = map(ghost.scr[0], ghost.scr[1]);
-        label(gs2[0], gs2[1] - 14, ghost.label, calloutAlpha(tl, 2200, 6200));
+        label(gs2[0], gs2[1] - 14, ghost.label, calloutAlpha(tl, 2200, 6200), -1);
       } else if (beat.id === "nocare") {
         const gl = glitchAt(0, 1, 1900);
         if (gl) {
@@ -893,22 +896,29 @@ class Player {
       const cam = camFor([real.scr]);
       drawPatch(0, 960, "simReal", cam, real,
         { scr: copy.scr, color: "rgba(224,82,110,ALPHA)" });
+      // Anchor tags to the SMOOTH interpolated screen point (same one the sprite
+      // uses), not surfaceAt(u,v) - that snaps to the nearest tile centre, so a
+      // tag pinned to it hops one grid cell at a time and reads as a glitch.
       const m0 = (tx, ty) => [((tx - cam.sx) / cam.sw) * 960, ((ty - cam.sy) / cam.sw) * 960];
-      const rs = m0(...this.iso.surfaceAt(real.u, real.v));
-      const cs = m0(...this.iso.surfaceAt(copy.u, copy.v));
+      const rs = m0(real.scr[0], real.scr[1]);
+      const cs = m0(copy.scr[0], copy.scr[1]);
       const gap = Math.hypot(rs[0] - cs[0], rs[1] - cs[1]);
-      drawCallout(ctx, rs[0], rs[1] - 60, "SAME START", [-46, -34],
-        calloutAlpha(tl, 400, 2200));
-      drawCallout(ctx, rs[0], rs[1] - 12, "REAL: WHAT HAPPENS",
-        rs[0] < 480 ? [46, -34] : [-46, -34], calloutAlpha(tl, 2400, 5200));
-      if (gap > 40) {
-        drawCallout(ctx, cs[0], cs[1] - 12, "THE COPY'S GUESS",
-          cs[0] < 480 ? [46, -34] : [-46, -34], calloutAlpha(tl, 3400, 9600));
+      // One tag at a time: SAME START -> name the green -> name the red -> drift.
+      // The green/real label sits above the creature and points away from the red
+      // ghost, so the two never overlap once they separate.
+      const realSide = cs[0] < rs[0] ? [46, -34] : [-46, -34];
+      drawCallout(ctx, rs[0], rs[1] - 66, "SAME START", [-46, -34],
+        calloutAlpha(tl, 400, 2400));
+      drawCallout(ctx, rs[0], rs[1] - 66, "REAL: WHAT HAPPENS", realSide,
+        calloutAlpha(tl, 2600, 5000));
+      if (gap > 34) {
+        drawCallout(ctx, cs[0], cs[1] + 26, "THE COPY'S GUESS",
+          cs[0] < rs[0] ? [-46, 30] : [46, 30], calloutAlpha(tl, 5200, 9600));
       }
       if (gap > 60) {
         const dft = Math.hypot(real.u - copy.u, real.v - copy.v);
-        drawCallout(ctx, (rs[0] + cs[0]) / 2, (rs[1] + cs[1]) / 2 - 34,
-          "DRIFT +" + dft.toFixed(2), [40, -26], calloutAlpha(tl, 6000, 9600));
+        drawCallout(ctx, (rs[0] + cs[0]) / 2, (rs[1] + cs[1]) / 2 - 30,
+          "DRIFT +" + dft.toFixed(2), [40, -24], calloutAlpha(tl, 5600, 9600));
       }
     } else if (mode === "forage") {
       // Active hunt under the copy's floaty momentum: overshoot-and-miss early
@@ -919,7 +929,7 @@ class Player {
       const sw = beat.gauge ? beat.gauge.sweep : [4000, 14000];
       const Lf = easeInOut(ramp(tl, sw[0], sw[1]));
       const m0 = (tx, ty) => [((tx - cam.sx) / cam.sw) * 960, ((ty - cam.sy) / cam.sw) * 960];
-      const cs = m0(...this.iso.surfaceAt(pos.u, pos.v));
+      const cs = m0(pos.scr[0], pos.scr[1]);   // smooth anchor (see diverge note)
       if (Lf < 0.5) {
         drawCallout(ctx, cs[0], cs[1] - 64, "IT OVERSHOOTS", [46, -34],
           calloutAlpha(tl, 4200, sw[1] * 0.5));
