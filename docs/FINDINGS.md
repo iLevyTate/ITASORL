@@ -386,7 +386,18 @@ inducing it (if possible) requires something more deliberate.
   cross-recipe probe (section 10.7): the same direction reads a
   gate-calibrated random-Fourier-features law (0.684, rule passes), so the
   world-identity signal is recipe-general.
-- **H2 (substrate-grounding via ablations)**: not yet tested.
+- **H2 (substrate-grounding via ablations).** CONFIRMED for the L3 rung at
+  hidden=8 (section 14). A graded neutralization of the one substrate seam (the
+  learned velocity law, blended `(1-alpha)*authentic + alpha*G`) collapses the
+  incidentally-encoded survival world-signal monotonically to the chance floor as
+  the seam is removed: pooled target 0.752, 0.723, 0.683, 0.618, 0.538, 0.506
+  across alpha 1.00, 0.75, 0.50, 0.25, 0.10, 0.00 (Spearman rho 1.0), and at
+  alpha=0 the signal is equivalent to chance (ROPE accept, mean 0.506). The
+  untrained floor stays flat near chance (0.46 to 0.49) at every alpha, so the
+  collapse is specific to the learned signal, not an artifact of the graded world.
+  With the task-confound controls already banked (behavior, absolute position and
+  heading, reward, metadata; sections 10.4 and 10.4.1), detection loads on the
+  substrate artifact, which is what H2 asserts.
 - **H3 (emergence under selection).** RESOLVED NEGATIVE. The first pilot's
   recorded null was **invalidated** (section 13.C): the run executed on pre-fix
   code carrying two since-fixed measurement defects (the fitness/panel legs ran
@@ -1321,3 +1332,85 @@ in this world did not produce an emergent world-detector. The payoff-steepness
 sweep's "controller expressiveness" framing (in the opening body above 13.C) is
 no longer provisional-on-the-re-run: the re-run confirms the null it took as
 premise.
+
+---
+
+## 14. H2 substrate-grounding: the graded-seam ablation (A1)
+
+**Status: CONFIRMED for the L3 rung at hidden=8.** Design spec:
+`docs/specs/2026-07-21-h2-substrate-grounding-ablation-design.md`. Committed
+artifact: `artifacts/expH2/summary.json`. Every number below is recomputed from
+the per-seed cells by `scripts/audit_stats_recheck.py`.
+
+H2 asks whether the incidentally-encoded world-signal is *driven by the
+computational substrate artifact* and not by a task confound. The "not a task
+confound" half was already established for the hidden=8 headline by the controls
+in sections 10.4 and 10.4.1 (the signal survives residualizing behavior, absolute
+position, and heading), section 10 (the pooled reward-leak audit is clean, and
+per-world death counts are zero so there is no survivorship asymmetry), and the
+mechanical-channel checks (length and metadata sit at chance). What those controls
+do not supply is the *positive necessity* half: remove the substrate artifact
+itself and show the signal dies. A1 supplies exactly that.
+
+**Design (readout-only, no training).** The one substrate seam is the per-step
+velocity law: authentic `(1 - drag*dt)*vel + a*dt` versus the learned `G` that
+imitates it (`itasorl/surrogate_l3.py`; in world P drag is the exact constant 1.5
+so the authentic law is exactly linear and `G`'s systematic error is the whole
+fingerprint). A1 attaches a graded blend
+`g_alpha = (1 - alpha)*authentic + alpha*G` in place of `G`
+(`GradedGMotion`), so alpha dials the seam from full (1.0) to absent (0.0), and
+runs the standard pooled world-identity readout at each alpha on the saved
+hidden=8 agents (`fullruns/l3_h8_heldout`, 10 seeds, drift 0.45). At alpha=1 the
+blend is bit-identical to `G`; at alpha=0 it is bit-identical to the authentic
+law. Runner: `scripts/run_expH2_ablation.py`.
+
+**Integrity gate (determinism check #5).** At alpha=1 the regenerated pools
+bit-match the saved dumps and the drift-0.45 survival mean reproduces the
+published headline exactly, 0.752; the untrained arm at alpha=1 reads 0.488, also
+matching the published floor. The pipeline is faithful before any ablation is
+interpreted. (The gate did its job in practice: a first run on CPU failed the
+bit-match at the first cell, because the saved bundle is GPU-generated; the
+CUDA re-run reproduces it.)
+
+**The signal collapses with the seam, monotonically, to the chance floor.**
+
+| alpha (seam) | survival target | untrained floor |
+|---|---|---|
+| 1.00 | 0.752 | 0.488 |
+| 0.75 | 0.723 | 0.491 |
+| 0.50 | 0.683 | 0.483 |
+| 0.25 | 0.618 | 0.470 |
+| 0.10 | 0.538 | 0.460 |
+| 0.00 | 0.506 | 0.463 |
+
+The survival collapse is strictly monotone (Spearman rho of the per-alpha means
+against alpha is 1.0). At alpha=0, with the seam fully removed, the survival
+signal is equivalent to chance: mean 0.506, 90% bootstrap HDI [0.481, 0.530],
+entirely inside the ROPE [0.45, 0.55] (accept equivalence), 0/10 seeds above the
+0.65 bar. So the incidentally-encoded world-identity signal is *necessary on* the
+substrate seam: dial the seam out and it dose-responsively vanishes.
+
+**The collapse is specific to the learned signal.** The untrained agent's floor
+stays flat near chance (0.46 to 0.49) at every alpha and clears the 0.65 bar in
+0/10 seeds at every alpha. The graded world by itself does not manufacture a
+decodable signal in a generic recurrent agent; only the trained survival agent's
+state rides the seam. Had the graded world simply made the two pools separable,
+the untrained floor would have risen with alpha too. It does not.
+
+**Verdict.** Combined with the banked task-confound controls, A1 is the "detection
+loads on the structural artifact" evidence H2 requires: the survival world-signal
+is dose-controlled by, and collapses to chance without, the substrate velocity-law
+seam, specifically for the trained agent. H2 is confirmed for the L3 rung at
+hidden=8, conditional on that artifact.
+
+**Scope and deferred follow-ons.** This is a necessity-plus-specificity result on
+one rung at one capacity; it does not speak to L1/L2 (different substrate
+primitives) or to H3 (resolved negative, section 13). The reactive reading of the
+common-garden control (section 10.6.1: the signal is a modest persistent component
+the policy also expresses reactively while the dynamics bite) is unchanged; A1
+neutralizes the felt dynamics divergence, so a collapse is fully consistent with
+it. Deferred in the spec: A2, an observation-channel localization that must re-run
+rollouts with masked observations (the probe reads recurrent state, not the
+observation, so it cannot be a post-hoc mask); A3, the same test through a
+different substrate primitive (for example the L1 discretization rung), which
+needs a fresh training run; and a hidden=7 second-capacity robustness check.

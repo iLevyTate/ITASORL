@@ -552,6 +552,46 @@ def main() -> int:
                    for c in cells)
                and all(c["death_rate_auth_gen0"] <= 1e-6 for c in cells))
 
+    print("== FINDINGS 14: H2 substrate-grounding ablation (A1 graded-seam sweep) ==")
+    with open(os.path.join(ARTROOT, "expH2", "summary.json"), encoding="utf-8") as fh:
+        h2 = json.load(fh)
+    h2_alphas = h2["config"]["alphas"]
+    h2_surv = h2["cells"]["survival"]
+    h2_untr = h2["cells"]["untrained"]
+    # survival collapse curve: recompute each alpha mean from the per-seed cells
+    curve_doc = {0.0: 0.506, 0.1: 0.538, 0.25: 0.618, 0.5: 0.683, 0.75: 0.723, 1.0: 0.752}
+    surv_means = []
+    for al in h2_alphas:
+        m = float(np.mean(h2_surv[f"a{al:.2f}"]["per_seed"]))
+        surv_means.append(m)
+        # alpha=1 raw mean is 0.7525, exactly the 3dp rounding midpoint of the
+        # canonical 0.752 L3 headline, so allow one extra digit of slack there.
+        tol = 1e-3 if al == 1.0 else TOL
+        check(f"H2 survival target at alpha={al:.2f} ({curve_doc[al]:.3f})", m, curve_doc[al], tol=tol)
+    check_true("H2 survival collapse strictly monotone increasing in alpha",
+               all(b > a for a, b in zip(surv_means, surv_means[1:])))
+    check_true("H2 stored Spearman rho == 1.0", abs(h2["survival_monotonicity_rho"] - 1.0) <= 1e-9)
+    # endpoints: alpha=1 reproduces the published 0.752 headline; alpha=0 at the L0 floor
+    check("H2 alpha=1 survival == published L3 headline (0.752)", surv_means[-1], 0.752, tol=1e-3)
+    check("H2 integrity gate alpha=1 survival mean (0.752)",
+          h2["integrity"]["survival_mean_alpha1"], 0.752)
+    check_true("H2 integrity pools bit-match saved dumps (determinism check #5)",
+               h2["integrity"]["pools_bit_match"] is True)
+    # L0 anchor: alpha=0 survival equivalent to chance (ROPE [0.45, 0.55])
+    h2rr = rope_test(h2_surv["a0.00"]["per_seed"], rope=(0.45, 0.55))
+    check("H2 L0 anchor alpha=0 survival mean (0.506)", h2rr.mean, 0.506)
+    check_true("H2 L0 anchor accepts equivalence to chance (ROPE)", h2rr.accept)
+    check_true("H2 L0 anchor recompute matches stored accept",
+               h2rr.accept == bool(h2["l0_anchor_alpha0"]["accept_equiv"]))
+    # untrained floor control: flat near chance at EVERY alpha, so the collapse is
+    # specific to the learned survival signal, not an artifact of the graded world.
+    untr_means = [float(np.mean(h2_untr[f"a{al:.2f}"]["per_seed"])) for al in h2_alphas]
+    check("H2 untrained floor at alpha=1 (0.488)", untr_means[-1], 0.488)
+    check_true("H2 untrained floor flat/below bar at every alpha (max mean < 0.55)",
+               max(untr_means) < 0.55)
+    check_true("H2 untrained clears the 0.65 bar in 0/10 seeds at every alpha",
+               all(h2_untr[f"a{al:.2f}"]["n_ge_065"] == 0 for al in h2_alphas))
+
     # ---- derived-doc resolution guard -----------------------------------
     # The reactive-vs-persistent reading was PROVISIONAL until the section 10.6
     # re-score; it is now RESOLVED (FINDINGS 10.6.1, 2026-07-19): the corrected

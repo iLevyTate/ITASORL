@@ -64,6 +64,41 @@ class GMotion:
         return (h * self._ys + self._ym).astype(float)
 
 
+class GradedGMotion:
+    """A convex blend of the authentic velocity law and a frozen `GMotion`, callable as the
+    world's `_g_motion` hook `(vel, a, drag) -> vel_next`:
+
+        g_alpha(vel, a, drag) = (1 - alpha) * ((1 - drag*dt)*vel + a*dt) + alpha * g(vel, a, drag)
+
+    `alpha == 1.0` returns exactly `g` (the full L3 surrogate); `alpha == 0.0` returns
+    exactly the authentic analytic law of `patch_of_earth.py` (`_integrate_motion`), so a
+    graded world at alpha=0 is authentic-vs-authentic and reads the L0 chance floor. Used
+    by the H2 substrate-grounding ablation (docs/specs/2026-07-21-h2-substrate-grounding-
+    ablation-design.md): dialing alpha 1 -> 0 neutralizes the substrate seam, and the
+    incidentally-encoded world-identity signal should collapse to the floor if it is
+    substrate-grounded. The endpoints short-circuit so alpha=1 is bit-identical to `g`
+    (the determinism gate against the saved dumps) and alpha=0 to the authentic law."""
+
+    def __init__(self, g, alpha: float, dt: float):
+        self.g = g
+        self.alpha = float(alpha)
+        self.dt = float(dt)
+
+    def _true_law(self, vel, a, drag) -> np.ndarray:
+        # Exact arithmetic of patch_of_earth.py:177 `(1 - drag*dt)*vel + a*dt`.
+        vel = np.asarray([vel[0], vel[1]], float)
+        a = np.asarray([a[0], a[1]], float)
+        return (1.0 - drag * self.dt) * vel + a * self.dt
+
+    def __call__(self, vel, a, drag=None) -> np.ndarray:
+        if self.alpha >= 1.0:
+            return self.g(vel, a, drag)
+        true = self._true_law(vel, a, drag)
+        if self.alpha <= 0.0:
+            return true
+        return (1.0 - self.alpha) * true + self.alpha * np.asarray(self.g(vel, a, drag), float)
+
+
 def train_g_motion(*, hidden: int = 8, n_eps: int = 250, steps: int = 40, epochs: int = 300,
                    lr: float = 1e-3, seed: int = 0, params=None, ray_steps: int = 5,
                    device: str = "cpu") -> GMotion:
