@@ -30,42 +30,37 @@ function ramp(t, a, b) { return b <= a ? 1 : clamp01((t - a) / (b - a)); }
 // existing posAt interpolation). Rows are [u, v, heading, energy] like a recorded
 // trajectory, so they drop into posAt / drawPatch / drawTrail / drawFan unchanged.
 
-// Two worlds, SAME start and SAME steering. The REAL world integrates a clean
-// momentum law (constant drag -> linear, like world P). The COPY runs the same law
-// a hair off every step (its velocity is rotated + scaled a touch before it
-// integrates), so its path drifts away and the error COMPOUNDS. sameStart holds the
-// error off for the first few steps so an onion-skin overlay begins pixel-identical.
+// Two worlds, SAME start and the SAME steering plan (a fixed schedule of shared
+// waypoints both aim at each step). The ONE isolated variable is GRIP (drag): the
+// REAL world has firm traction and hugs the plan; the COPY is slippery, so it keeps
+// its momentum, slides past every corner and overshoots - the same intent, a body
+// that will not stop. That slide is the physical change the film is about, and it is
+// the only thing different. sameStart ramps the copy's grip down over the first few
+// steps so an onion-skin overlay begins pixel-identical, then it slides away.
 function buildMomentumSim(seed, drift, sameStart) {
-  const N = 220, drag = 0.16, cap = 0.0032;
-  // The copy's velocity is rotated a hair every step; the turn compounds so the
-  // path visibly curves away from the real one. Tuned for legibility (the real
-  // difference is far smaller); DRIFT_FACTOR is the single dial.
-  const err0 = (drift || 0.45) * 0.16;          // ~0.072 rad/step
+  const N = 220;
+  const DR = 0.30;                                        // real: firm grip
+  const DC = lerp(DR, 0.10, clamp01((drift || 0.45) / 0.45)); // copy: slippery
+  const aMag = 0.0062;                                    // same steering effort
   const r = mulberry32(seed >>> 0);
-  const acc = [];                                // shared, gentle "push" both feel
-  let ax = 0.010, ay = -0.004;
-  for (let k = 0; k < N; k++) {
-    ax += (r() - 0.5) * 0.0030; ay += (r() - 0.5) * 0.0030;
-    const sp = Math.hypot(ax, ay);
-    if (sp > cap) { ax *= cap / sp; ay *= cap / sp; }
-    acc.push([ax, ay]);
-  }
+  const ph = r() * 6.28;                                  // seeded curve phase
   const run = (isCopy) => {
     const pts = [];
-    let x = 0.42, y = 0.62, vx = 0.014, vy = -0.006, energy = 0.85;
+    let x = 0.40, y = 0.58, vx = 0.004, vy = 0.002, energy = 0.85;
     for (let k = 0; k < N; k++) {
-      if (isCopy) {
-        const on = sameStart ? clamp01((k - 6) / 7) : 1;
-        const e = err0 * on;
-        const c = Math.cos(e), s = Math.sin(e);
-        const nvx = vx * c - vy * s, nvy = vx * s + vy * c;
-        vx = nvx; vy = nvy;
-      }
-      vx = (1 - drag) * vx + acc[k][0];
-      vy = (1 - drag) * vy + acc[k][1];
+      // ONE shared steering command each step: a gently curving heading both
+      // intend to follow. The only difference is grip, so the slippery copy keeps
+      // its momentum, sails ahead and drifts wide on every curve - the gap GROWS,
+      // and it grows because of traction alone.
+      const ang = 0.5 + 1.05 * Math.sin(k * 0.032 + ph);
+      const grip = isCopy
+        ? (sameStart ? lerp(DR, DC, clamp01((k - 6) / 10)) : DC)
+        : DR;
+      vx = (1 - grip) * vx + Math.cos(ang) * aMag;
+      vy = (1 - grip) * vy + Math.sin(ang) * aMag;
       x += vx; y += vy;
-      if (x < 0.12 || x > 0.88) { vx *= -0.9; x = Math.max(0.12, Math.min(0.88, x)); }
-      if (y < 0.12 || y > 0.88) { vy *= -0.9; y = Math.max(0.12, Math.min(0.88, y)); }
+      if (x < 0.12 || x > 0.88) { vx *= -0.7; x = Math.max(0.12, Math.min(0.88, x)); }
+      if (y < 0.12 || y > 0.88) { vy *= -0.7; y = Math.max(0.12, Math.min(0.88, y)); }
       energy = Math.max(0.2, Math.min(1, energy + (mulberry32(seed + k)() - 0.5) * 0.01));
       pts.push([x, y, Math.atan2(vy, vx), energy]);
     }
@@ -847,11 +842,14 @@ class Player {
           label(s[0], s[1] - 18 * worldScale, "FOOD", calloutAlpha(tl, 6400, 9300));
         }
       } else if (beat.id === "trick" && ghost && ghost.label) {
-        // Fixed side (-1): let the auto side flip as the ghost crosses the panel
-        // midline and the tag jumps left/right frame to frame. Pinning it left of
-        // the ring keeps it steady and inside the REAL panel.
+        // REAL panel: mark where the copy has slid to. Fixed side (-1) so the tag
+        // does not flip left/right as the ghost crosses the panel midline.
         const gs2 = map(ghost.scr[0], ghost.scr[1]);
         label(gs2[0], gs2[1] - 14, ghost.label, calloutAlpha(tl, 2200, 6200), -1);
+      } else if (beat.id === "trick" && vx > 0) {
+        // COPY panel: name the one changed rule (grip). Stable placement inside the
+        // panel so it never clips the divider while the copy slides around below it.
+        label(vx + 118, 132, "SLIDES TOO FAR", calloutAlpha(tl, 3000, 8600), 1);
       } else if (beat.id === "nocare") {
         const gl = glitchAt(0, 1, 1900);
         if (gl) {

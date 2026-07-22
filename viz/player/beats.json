@@ -25,9 +25,9 @@
       "t1": 25000,
       "world": { "mode": "split", "sim": true, "worldT0": 0, "zoom": [1.0, 1.03], "stage": 1 },
       "caption": {
-        "kicker": "THE SECRET SWITCH",
+        "kicker": "THE EXPERIMENT: CHANGE ONE THING",
         "headline": "Sometimes we swap in a ((fake copy.))",
-        "subline": "Same ground, same food. But in the copy, things move a tiny bit wrong, like a game with floaty physics. One of these is real, one is fake. Can you tell? Neither can we."
+        "subline": "Same world, same food, same plan. We change ONE rule and nothing else: how well it grips the ground. The copy is more slippery, so it slides too far. Can you tell which is which? Neither can we."
       }
     },
     {
