@@ -17,15 +17,18 @@
     </div>
 
     <div id="gauge" class="layer">
+      <div id="gauge-source"></div>
       <div id="gauge-label"></div>
       <div id="gauge-row">
         <div id="gauge-track">
           <div id="gauge-fill"></div>
-          <div id="gauge-tick"></div>
+          <div id="gauge-ref"></div>
+          <div id="gauge-ref-label"></div>
         </div>
-        <div id="gauge-value">0.50</div>
+        <div id="gauge-value">50%</div>
       </div>
-      <div id="gauge-scale"><span>0.50 = coin flip</span><span>1.00 = always right</span></div>
+      <div id="gauge-legend">shown one real world + one fake - how often it picks the fake</div>
+      <div id="gauge-scale"><span>50% - coin flip</span><span>100% - always right</span></div>
     </div>
 
     <div id="caption" class="layer">
@@ -37,6 +40,7 @@
     <div id="endcard" class="layer">
       <div class="glyph blob-glyph"></div>
       <div id="end-headline"></div>
+      <div id="end-recap"></div>
       <div id="end-url"></div>
       <div id="end-foot"></div>
     </div>

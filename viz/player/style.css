@@ -92,13 +92,22 @@ html, body {
 #gauge {
   position: absolute;
   left: 60px;
-  top: 1076px;
+  top: 1052px;
   width: 960px;
   border-radius: 22px;
-  padding: 16px 26px 18px;
+  padding: 14px 26px 14px;
   background: var(--substrate);
   box-shadow: inset 6px 6px 14px var(--shadow-dark), inset -6px -6px 14px var(--shadow-light);
   opacity: 0;
+}
+#gauge-source {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 4px;
 }
 #gauge-label {
   font-family: var(--font-mono);
@@ -107,7 +116,7 @@ html, body {
   text-transform: uppercase;
   color: var(--muted);
 }
-#gauge-row { display: flex; align-items: center; gap: 22px; margin-top: 8px; }
+#gauge-row { display: flex; align-items: center; gap: 22px; margin-top: 10px; }
 #gauge-track {
   position: relative;
   flex: 1;
@@ -123,27 +132,48 @@ html, body {
   border-radius: 999px;
   background: var(--grad);
 }
-#gauge-tick {
+/* Pinned reference marker: where the outside watcher landed (99%), held on
+   the mind beats so the live needle reads against it instead of falling. */
+#gauge-ref {
   position: absolute;
   top: -7px;
-  width: 2px;
+  width: 3px;
   height: 28px;
-  background: var(--muted);
-  opacity: 0.9;
+  border-radius: 2px;
+  background: var(--blue);
+  opacity: 0;
+}
+#gauge-ref-label {
+  position: absolute;
+  top: -34px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--blue);
+  opacity: 0;
 }
 #gauge-value {
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: 36px;
+  font-size: 32px;
   color: var(--ink);
-  min-width: 110px;
+  min-width: 96px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+#gauge-legend {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
+  color: var(--secondary);
 }
 #gauge-scale {
   display: flex;
   justify-content: space-between;
-  margin-top: 7px;
+  margin-top: 5px;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.06em;
@@ -218,8 +248,38 @@ html, body {
   color: var(--ink);
   max-width: 800px;
 }
+/* One-glance recap of the arc: 99% -> 50% -> 73%, above the URL. */
+#end-recap {
+  display: flex;
+  gap: 22px;
+  margin-top: 40px;
+  justify-content: center;
+}
+.recap-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  border-radius: 18px;
+  background: var(--substrate);
+  box-shadow: inset 4px 4px 9px var(--shadow-dark), inset -4px -4px 9px var(--shadow-light);
+}
+.recap-pct {
+  font-family: var(--font-head);
+  font-weight: 600;
+  font-size: 40px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.recap-label {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  color: var(--secondary);
+}
 #end-url {
-  margin-top: 30px;
+  margin-top: 34px;
   font-family: var(--font-mono);
   font-size: 18px;
   color: var(--blue);

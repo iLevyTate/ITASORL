@@ -3,9 +3,9 @@
   "fps": 24,
   "size": [1080, 1350],
   "numbers": {
-    "oracle_l2": { "display": "0.99", "source": "docs/FINDINGS.md sec 2.2 (0.993)" },
-    "probe_chance": { "display": "0.50", "source": "artifacts h8 untrained target 0.488 / L0 0.517" },
-    "probe_survival": { "display": "0.73", "source": "artifacts h8 survival resid_trace 0.726 / h7 0.722" }
+    "oracle_l2": { "display": "99%", "source": "docs/FINDINGS.md sec 2.2 (0.993)" },
+    "probe_chance": { "display": "50%", "source": "artifacts h8 untrained target 0.488 / L0 0.517" },
+    "probe_survival": { "display": "73%", "source": "artifacts h8 survival resid_trace 0.726 / h7 0.722" }
   },
   "beats": [
     {
@@ -16,7 +16,7 @@
       "caption": {
         "kicker": "MEET THE CREATURE",
         "headline": "Born knowing ((nothing at all.))",
-        "subline": "No rules, no lessons. It just lives here: eating, moving, and guessing what happens next. The little lines are its senses, feeling the world around it."
+        "subline": "No rules, no lessons. It just lives here - and the little rays are its senses."
       }
     },
     {
@@ -27,7 +27,7 @@
       "caption": {
         "kicker": "THE EXPERIMENT: CHANGE ONE THING",
         "headline": "Sometimes we swap in a ((fake copy.))",
-        "subline": "Same world, same food, same plan. We change ONE rule and nothing else: how well it grips the ground. The copy is more slippery, so it slides too far. Can you tell which is which? Neither can we."
+        "subline": "Same world, same food, same plan. We change ONE rule: the copy is more slippery. Can you tell which is which?"
       }
     },
     {
@@ -38,7 +38,7 @@
       "caption": {
         "kicker": "WHAT IS ACTUALLY DIFFERENT",
         "headline": "The real world has rules. The copy just ((guesses.))",
-        "subline": "Green is what really happens next. Red is the copy's best guess. Close, but never exact, and a hair off every single step."
+        "subline": "Green is what really happens. Red is the copy's guess - close, but wrong every step."
       }
     },
     {
@@ -46,11 +46,17 @@
       "t0": 35000,
       "t1": 45000,
       "world": { "mode": "scan", "zoom": [1.0, 1.0] },
-      "gauge": { "label": "can an outsider spot the fake?", "from": 0.5, "to": 0.99, "display": "0.99", "sweep": [1000, 5000] },
+      "gauge": {
+        "label": "can an outsider spot the fake?",
+        "unit": "pct",
+        "source": "an outside watcher",
+        "from": 0.5, "to": 0.99, "display": "99%",
+        "sweep": [1000, 5000]
+      },
       "caption": {
         "kicker": "A WATCHER FROM OUTSIDE",
         "headline": "From outside, the fake is ((easy to catch.))",
-        "subline": "A watcher who knows the real rules replays every move and checks it. Each flag is one step the copy got wrong. It catches the fake almost every time."
+        "subline": "A watcher who knows the real rules replays every move. It catches the fake almost every time."
       }
     },
     {
@@ -58,11 +64,18 @@
       "t0": 45000,
       "t1": 60000,
       "world": { "mode": "single", "zoom": [1.04, 1.0], "follow": 0.45, "stage": 2, "fan": "calm", "glitch": true, "worldT0": 35000 },
-      "gauge": { "label": "does the creature's own mind know?", "from": 0.99, "to": 0.5, "display": "0.50", "sweep": [1200, 5200] },
+      "gauge": {
+        "label": "does the creature's own mind know?",
+        "unit": "pct",
+        "source": "the creature's mind",
+        "reference": { "value": 0.99, "label": "outside watcher" },
+        "from": 0.5, "to": 0.5, "display": "50%",
+        "sweep": [1200, 5200]
+      },
       "caption": {
         "kicker": "NOW LOOK INSIDE ITS MIND",
         "headline": "But the creature itself ((never notices.))",
-        "subline": "We scan its brain and read its thoughts. Does it know its world is fake? No. Its mind is a coin flip. It never had a reason to care, so it never learned."
+        "subline": "Now read its mind. Does it know its world is fake? No - a coin flip. It never had a reason to care."
       }
     },
     {
@@ -70,11 +83,18 @@
       "t0": 60000,
       "t1": 80000,
       "world": { "mode": "forage", "zoom": [1.0, 1.08], "energy": true, "stage": 3, "fan": "calm", "worldT0": 0 },
-      "gauge": { "label": "does its mind know NOW?", "from": 0.5, "to": 0.73, "display": "0.73", "sweep": [4000, 14000] },
+      "gauge": {
+        "label": "does its mind know NOW?",
+        "unit": "pct",
+        "source": "the creature's mind",
+        "reference": { "value": 0.99, "label": "outside watcher" },
+        "from": 0.5, "to": 0.73, "display": "73%",
+        "sweep": [4000, 14000]
+      },
       "caption": {
         "kicker": "UNLESS ITS LIFE DEPENDS ON IT",
         "headline": "Now make the fake ((cost it dinner.))",
-        "subline": "This time the copy's wrong physics makes food harder to catch. Telling real from fake now keeps it alive, so it learns to tell, all on its own. We never asked. We never rewarded it."
+        "subline": "Now the copy's bad physics makes food hard to catch. To eat, it must tell real from fake - so it learns. Unasked."
       }
     },
     {
@@ -84,8 +104,13 @@
       "world": { "mode": "none" },
       "endcard": {
         "headline": "Being catchable is not the same as knowing. Survival is what teaches a mind to notice.",
+        "recap": [
+          { "label": "outside watcher", "pct": "99%" },
+          { "label": "its mind, idle", "pct": "50%" },
+          { "label": "its mind, surviving", "pct": "73%" }
+        ],
         "url": "ilevytate.github.io/ITASORL",
-        "foot": "Real runs, 10 each. 0.50 = coin flip, 1.00 = always right. Read out, never rewarded."
+        "foot": "Real runs, 10 each. 50% = coin flip, 100% = always right. Read out, never rewarded."
       }
     }
   ]

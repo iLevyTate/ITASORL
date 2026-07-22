@@ -1075,18 +1075,43 @@ class Player {
     if (g) {
       const el = $("gauge");
       el.style.opacity = vis.toFixed(3);
-      $("gauge-label").textContent = g.label;
+      // The source tag ("READING FROM - ...") tells the viewer WHAT the meter is
+      // wired to, so the same instrument reading a different source (outside
+      // watcher vs. the creature's mind) never reads as the score "falling".
+      $("gauge-source").textContent = g.source ? "READING FROM - " + g.source : "";
+      $("gauge-label").textContent = g.label || "";
       const tl = t - beat.t0;
       const p = easeInOut(ramp(tl, g.sweep[0], g.sweep[1]));
       const v = lerp(g.from, g.to, p);
-      const pct = clamp01((v - 0.45) / (1.0 - 0.45));
-      $("gauge-fill").style.width = (pct * 100).toFixed(2) + "%";
-      $("gauge-value").textContent = p >= 1 ? g.display : v.toFixed(2);
-      const barPct = clamp01((0.65 - 0.45) / (1.0 - 0.45));
-      $("gauge-tick").style.left = "calc(" + (barPct * 100).toFixed(2) + "% - 1px)";
-      $("caption").style.top = "1208px";
+      // Track spans 50% (coin flip) -> 100% (always right); 50% sits at the left
+      // edge so the legend reads honestly.
+      const barAt = (x) => clamp01((x - 0.5) / 0.5);
+      $("gauge-fill").style.width = (barAt(v) * 100).toFixed(2) + "%";
+      const unit = g.unit || "score";
+      $("gauge-value").textContent = p >= 1
+        ? g.display
+        : (unit === "pct" ? Math.round(v * 100) + "%" : v.toFixed(2));
+      // Pinned reference: where the outside watcher landed, held on the mind
+      // beats so the live needle reads against it instead of appearing to fall.
+      const ref = g.reference;
+      const refEl = $("gauge-ref");
+      const refLbl = $("gauge-ref-label");
+      if (ref) {
+        const rp = (barAt(ref.value) * 100).toFixed(2);
+        refEl.style.left = "calc(" + rp + "% - 1.5px)";
+        refEl.style.opacity = vis.toFixed(3);
+        refLbl.textContent = ref.label + " " + Math.round(ref.value * 100) + "%";
+        refLbl.style.left = rp + "%";
+        refLbl.style.opacity = vis.toFixed(3);
+      } else {
+        refEl.style.opacity = "0";
+        refLbl.style.opacity = "0";
+      }
+      $("caption").style.top = "1206px";
     } else {
       $("gauge").style.opacity = "0";
+      $("gauge-ref").style.opacity = "0";
+      $("gauge-ref-label").style.opacity = "0";
       $("caption").style.top = "1108px";
     }
 
@@ -1099,6 +1124,25 @@ class Player {
 
     if (beat.endcard) {
       $("end-headline").textContent = beat.endcard.headline;
+      // One-glance recap of the arc (99% -> 50% -> 73%). Built once with DOM
+      // nodes (no innerHTML) so content stays inert; idempotent under re-seeks.
+      const recapEl = $("end-recap");
+      if (beat.endcard.recap && !recapEl.dataset.built) {
+        recapEl.replaceChildren();
+        for (const r of beat.endcard.recap) {
+          const chip = document.createElement("div");
+          chip.className = "recap-chip";
+          const pct = document.createElement("div");
+          pct.className = "recap-pct";
+          pct.textContent = r.pct;
+          const lab = document.createElement("div");
+          lab.className = "recap-label";
+          lab.textContent = r.label;
+          chip.append(pct, lab);
+          recapEl.appendChild(chip);
+        }
+        recapEl.dataset.built = "1";
+      }
       $("end-url").textContent = beat.endcard.url;
       $("end-foot").textContent = beat.endcard.foot;
       $("endcard").style.opacity = inP.toFixed(3);
