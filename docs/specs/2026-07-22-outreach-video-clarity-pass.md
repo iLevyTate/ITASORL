@@ -171,6 +171,43 @@ No changes to world rendering, sims, camera, callouts, capture, or collector.
   instrument readouts shown as published; Soft Substrate palette only; ASCII
   punctuation in all captions; master 1080x1350.
 
+## Addendum (same day): deep pass - show, don't tell
+
+A second pass fixed every remaining place the film claimed something without
+showing it. All changes are visual/story only; the three published numbers and
+their provenance are untouched.
+
+1. **The question is now genuine.** The split beat is two beats: a *question*
+   beat (10-19s, chips read neutral "WORLD A / WORLD B", callout "SAME START,
+   SAME PLAN", caption asks "Can you tell which is the copy?") and a *reveal*
+   beat (19-25s, worldT0 continues at 9000 so the worlds do not jump, chips
+   flip to "REAL WORLD / the real thing" and "FAKE COPY / one rule wrong" with
+   colored underlines, caption "The copy is on the right."). The materialize
+   wipe is suppressed on the reveal beat (`world.wipe: false`).
+2. **Coin flip is shown, not claimed.** The nocare gauge gets `wobble: true`:
+   the needle flickers about +/-2 points around 50% (deterministic sines of
+   beat time), then locks onto 50% about 1.5s before the beat ends. Transient
+   49/51% readings are honest - the beat is explicitly about chance.
+3. **The mind-reading wire is shown.** Beats with `world.probe: true` (nocare,
+   survival) draw a violet dashed halo around the creature plus a dashed lead
+   line running down toward the meter - the same violet as the gauge's
+   "READING FROM - the creature's mind" tag. The watcher beat's source tag is
+   blue (`gauge.accent`), matching its scan band and the pinned reference
+   marker, so each meter source has one color.
+4. **The track now spans 0-100%** with a marked mid-line, so "50% = coin flip"
+   is a half-full bar on the mark (what a lay viewer expects), not an empty
+   bar contradicting the number. Scale line reads `0% / 50% - coin flip /
+   100% - always right`.
+5. **Color-decoding removed from the physics caption**: "The creature is what
+   really happens. The red ring is the copy's guess - close, but wrong every
+   step." (The creature sprite is teal; naming it "green" made viewers hunt
+   for a color.)
+6. **Vocabulary unified**: "FLAWED COPY" chip is now "FAKE COPY" - one word
+   ("fake") across chips, captions, and the meter legend.
+7. **Guard updated**: `viz/collect.py::verify_numbers` now expects the percent
+   displays (`99% / 50% / 73%`) so the number-honesty check stays binding with
+   the lay format; `tests/test_viz_collect.py` fixtures updated to match.
+
 ## Verification
 
 - Browser pass at each beat boundary and a full `?play=1` run at 1080x1350;

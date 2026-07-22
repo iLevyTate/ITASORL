@@ -97,20 +97,23 @@ def verify_numbers(beats, cells, findings_text):
     disp = {b["id"]: b["gauge"]["display"] for b in beats["beats"] if "gauge" in b}
     nums = beats["numbers"]
 
+    # The film shows whole percents (the lay reading of AUROC on a balanced
+    # one-real-one-fake comparison); each must still match the artifacts.
     surv = _pooled(cells, "survival", "resid_trace")
-    if f"{surv:.2f}" != disp["survival"] or disp["survival"] != nums["probe_survival"]["display"]:
+    if (f"{surv * 100:.0f}%" != disp["survival"]
+            or disp["survival"] != nums["probe_survival"]["display"]):
         raise SystemExit("number honesty: survival resid_trace pools to "
                          + f"{surv:.4f}, film shows " + disp["survival"])
 
     untr = _pooled(cells, "untrained", "target")
-    if (abs(untr - 0.50) > 0.03 or disp["nocare"] != "0.50"
-            or nums["probe_chance"]["display"] != "0.50"):
+    if (abs(untr - 0.50) > 0.03 or disp["nocare"] != "50%"
+            or nums["probe_chance"]["display"] != "50%"):
         raise SystemExit("number honesty: untrained target pools to "
                          + f"{untr:.4f}, film shows " + disp["nocare"] + " as chance")
 
-    if ("0.993" not in findings_text or disp["observer"] != "0.99"
-            or nums["oracle_l2"]["display"] != "0.99"):
-        raise SystemExit("number honesty: 0.993 missing from FINDINGS or gauge is not 0.99")
+    if ("0.993" not in findings_text or disp["observer"] != "99%"
+            or nums["oracle_l2"]["display"] != "99%"):
+        raise SystemExit("number honesty: 0.993 missing from FINDINGS or gauge is not 99%")
 
     return {"survival_resid_trace_pooled": round(surv, 4),
             "untrained_target_pooled": round(untr, 4),

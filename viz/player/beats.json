@@ -22,12 +22,25 @@
     {
       "id": "trick",
       "t0": 10000,
-      "t1": 25000,
+      "t1": 19000,
       "world": { "mode": "split", "sim": true, "worldT0": 0, "zoom": [1.0, 1.03], "stage": 1 },
+      "chips": { "a": ["WORLD A", ""], "b": ["WORLD B", ""], "colors": false },
       "caption": {
         "kicker": "THE EXPERIMENT: CHANGE ONE THING",
-        "headline": "Sometimes we swap in a ((fake copy.))",
-        "subline": "Same world, same food, same plan. We change ONE rule: the copy is more slippery. Can you tell which is which?"
+        "headline": "One of these is a ((fake copy.))",
+        "subline": "Same start, same plan. We changed ONE rule: how well it grips the ground. Can you tell which is the copy?"
+      }
+    },
+    {
+      "id": "reveal",
+      "t0": 19000,
+      "t1": 25000,
+      "world": { "mode": "split", "sim": true, "worldT0": 9000, "wipe": false, "zoom": [1.03, 1.06], "stage": 1 },
+      "chips": { "a": ["REAL WORLD", "the real thing"], "b": ["FAKE COPY", "one rule wrong"], "colors": true },
+      "caption": {
+        "kicker": "THE REVEAL",
+        "headline": "The copy is on the ((right.))",
+        "subline": "Wrong grip, so it slides a hair too far - every single step. By eye, you would never know."
       }
     },
     {
@@ -38,7 +51,7 @@
       "caption": {
         "kicker": "WHAT IS ACTUALLY DIFFERENT",
         "headline": "The real world has rules. The copy just ((guesses.))",
-        "subline": "Green is what really happens. Red is the copy's guess - close, but wrong every step."
+        "subline": "The creature is what really happens. The red ring is the copy's guess - close, but wrong every step."
       }
     },
     {
@@ -50,6 +63,7 @@
         "label": "can an outsider spot the fake?",
         "unit": "pct",
         "source": "an outside watcher",
+        "accent": "#5F82C6",
         "from": 0.5, "to": 0.99, "display": "99%",
         "sweep": [1000, 5000]
       },
@@ -63,26 +77,27 @@
       "id": "nocare",
       "t0": 45000,
       "t1": 60000,
-      "world": { "mode": "single", "zoom": [1.04, 1.0], "follow": 0.45, "stage": 2, "fan": "calm", "glitch": true, "worldT0": 35000 },
+      "world": { "mode": "single", "zoom": [1.04, 1.0], "follow": 0.45, "stage": 2, "fan": "calm", "glitch": true, "probe": true, "worldT0": 35000 },
       "gauge": {
         "label": "does the creature's own mind know?",
         "unit": "pct",
         "source": "the creature's mind",
         "reference": { "value": 0.99, "label": "outside watcher" },
+        "wobble": true,
         "from": 0.5, "to": 0.5, "display": "50%",
         "sweep": [1200, 5200]
       },
       "caption": {
         "kicker": "NOW LOOK INSIDE ITS MIND",
         "headline": "But the creature itself ((never notices.))",
-        "subline": "Now read its mind. Does it know its world is fake? No - a coin flip. It never had a reason to care."
+        "subline": "We wire a meter to its mind. Does it know its world is fake? No - a coin flip. It never had a reason to care."
       }
     },
     {
       "id": "survival",
       "t0": 60000,
       "t1": 80000,
-      "world": { "mode": "forage", "zoom": [1.0, 1.08], "energy": true, "stage": 3, "fan": "calm", "worldT0": 0 },
+      "world": { "mode": "forage", "zoom": [1.0, 1.08], "energy": true, "stage": 3, "fan": "calm", "probe": true, "worldT0": 0 },
       "gauge": {
         "label": "does its mind know NOW?",
         "unit": "pct",

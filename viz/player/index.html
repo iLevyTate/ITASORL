@@ -12,8 +12,8 @@
   <div id="stage">
     <div id="world-card" class="layer">
       <canvas id="world" width="960" height="960"></canvas>
-      <div class="pool-chip" id="chip-a">REAL WORLD<span class="chip-sub">true physics</span></div>
-      <div class="pool-chip" id="chip-b">FLAWED COPY<span class="chip-sub">imitation physics</span></div>
+      <div class="pool-chip" id="chip-a"><span class="chip-label"></span><span class="chip-sub"></span></div>
+      <div class="pool-chip" id="chip-b"><span class="chip-label"></span><span class="chip-sub"></span></div>
     </div>
 
     <div id="gauge" class="layer">
@@ -22,13 +22,14 @@
       <div id="gauge-row">
         <div id="gauge-track">
           <div id="gauge-fill"></div>
+          <div id="gauge-mid"></div>
           <div id="gauge-ref"></div>
           <div id="gauge-ref-label"></div>
         </div>
         <div id="gauge-value">50%</div>
       </div>
       <div id="gauge-legend">shown one real world + one fake - how often it picks the fake</div>
-      <div id="gauge-scale"><span>50% - coin flip</span><span>100% - always right</span></div>
+      <div id="gauge-scale"><span>0%</span><span id="gauge-mid-label">50% - coin flip</span><span>100% - always right</span></div>
     </div>
 
     <div id="caption" class="layer">

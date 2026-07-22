@@ -74,9 +74,10 @@ html, body {
   letter-spacing: 0.12em;
   color: var(--ink);
   opacity: 0;
+  border-bottom: 3px solid var(--divider);   /* neutral until the reveal */
 }
-#chip-a { border-bottom: 3px solid #35B5A2; }
-#chip-b { border-bottom: 3px solid #E0526E; }
+#chip-a.chip-real { border-bottom-color: #35B5A2; }
+#chip-b.chip-copy { border-bottom-color: #E0526E; }
 .chip-sub {
   display: block;
   margin-top: 3px;
@@ -85,6 +86,7 @@ html, body {
   text-transform: lowercase;
   color: var(--secondary);
 }
+.chip-sub:empty { display: none; }
 #chip-a { left: 34px; }
 #chip-b { right: 34px; }
 
@@ -132,6 +134,24 @@ html, body {
   border-radius: 999px;
   background: var(--grad);
 }
+/* Coin-flip mid-line: the track spans 0-100%, and 50% is marked so "chance"
+   reads as a half-full bar sitting on this line. */
+#gauge-mid {
+  position: absolute;
+  left: calc(50% - 1px);
+  top: -5px;
+  width: 2px;
+  height: 24px;
+  border-radius: 2px;
+  background: var(--muted);
+  opacity: 0.85;
+}
+#gauge-scale #gauge-mid-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 /* Pinned reference marker: where the outside watcher landed (99%), held on
    the mind beats so the live needle reads against it instead of falling. */
 #gauge-ref {
@@ -171,6 +191,7 @@ html, body {
   color: var(--secondary);
 }
 #gauge-scale {
+  position: relative;
   display: flex;
   justify-content: space-between;
   margin-top: 5px;

@@ -12,7 +12,7 @@ vc = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(vc)
 
 
-def _beats(surv="0.73", untr="0.50", orac="0.99"):
+def _beats(surv="73%", untr="50%", orac="99%"):
     return {
         "numbers": {
             "oracle_l2": {"display": orac},
