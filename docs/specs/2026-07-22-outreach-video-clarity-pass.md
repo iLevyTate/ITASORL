@@ -188,12 +188,15 @@ their provenance are untouched.
    the needle flickers about +/-2 points around 50% (deterministic sines of
    beat time), then locks onto 50% about 1.5s before the beat ends. Transient
    49/51% readings are honest - the beat is explicitly about chance.
-3. **The mind-reading wire is shown.** Beats with `world.probe: true` (nocare,
-   survival) draw a violet dashed halo around the creature plus a dashed lead
-   line running down toward the meter - the same violet as the gauge's
-   "READING FROM - the creature's mind" tag. The watcher beat's source tag is
-   blue (`gauge.accent`), matching its scan band and the pinned reference
-   marker, so each meter source has one color.
+3. **The mind-reading scan is shown.** Beats with `world.probe: true` (nocare,
+   survival) draw a violet dashed halo ringing the creature - the same violet
+   as the gauge's "READING FROM - the creature's mind" tag, and the nocare
+   subline names it ("The violet ring is us reading its mind"). A light
+   under-stroke keeps the dashes legible on the lavender terraces. (An earlier
+   dashed lead line running from the creature to the card edge read as a
+   rendering artifact and was removed.) The watcher beat's source tag is blue
+   (`gauge.accent`), matching its scan band and the pinned reference marker,
+   so each meter source has one color.
 4. **The track now spans 0-100%** with a marked mid-line, so "50% = coin flip"
    is a half-full bar on the mark (what a lay viewer expects), not an empty
    bar contradicting the number. Scale line reads `0% / 50% - coin flip /
@@ -207,6 +210,20 @@ their provenance are untouched.
 7. **Guard updated**: `viz/collect.py::verify_numbers` now expects the percent
    displays (`99% / 50% / 73%`) so the number-honesty check stays binding with
    the lay format; `tests/test_viz_collect.py` fixtures updated to match.
+
+## Addendum (same day): layout + close-card polish
+
+Follow-up on owner review of the v3 render:
+
+1. **Meter card reflowed** for hierarchy and breathing room: one header row
+   (question left in ink, "READING FROM - ..." source tag right in its accent
+   color), the what-the-number-means legend directly beneath, then the bar row
+   with a clear gap for the pinned "outside watcher 99%" label, then the
+   0/50/100 scale row. Caption moved to 1214px to keep the gap consistent.
+2. **Close card rewritten in plain English**: "The fake was detectable all
+   along. The creature only noticed when survival made it matter." (replaces
+   "Being catchable is not the same as knowing...", which did not read
+   naturally).
 
 ## Verification
 

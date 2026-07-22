@@ -90,7 +90,7 @@
       "caption": {
         "kicker": "NOW LOOK INSIDE ITS MIND",
         "headline": "But the creature itself ((never notices.))",
-        "subline": "We wire a meter to its mind. Does it know its world is fake? No - a coin flip. It never had a reason to care."
+        "subline": "The violet ring is us reading its mind. Does it know its world is fake? No - a coin flip. It never had a reason to care."
       }
     },
     {
@@ -118,7 +118,7 @@
       "t1": 90000,
       "world": { "mode": "none" },
       "endcard": {
-        "headline": "Being catchable is not the same as knowing. Survival is what teaches a mind to notice.",
+        "headline": "The fake was detectable all along. The creature only noticed when survival made it matter.",
         "recap": [
           { "label": "outside watcher", "pct": "99%" },
           { "label": "its mind, idle", "pct": "50%" },

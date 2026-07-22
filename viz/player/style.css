@@ -94,31 +94,39 @@ html, body {
 #gauge {
   position: absolute;
   left: 60px;
-  top: 1052px;
+  top: 1050px;
   width: 960px;
   border-radius: 22px;
-  padding: 14px 26px 14px;
+  padding: 15px 28px 13px;
   background: var(--substrate);
   box-shadow: inset 6px 6px 14px var(--shadow-dark), inset -6px -6px 14px var(--shadow-light);
   opacity: 0;
 }
-#gauge-source {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--violet);
-  margin-bottom: 4px;
+/* Header row: the question on the left, the meter's source on the right. */
+#gauge-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 20px;
 }
 #gauge-label {
   font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.16em;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--ink);
 }
-#gauge-row { display: flex; align-items: center; gap: 22px; margin-top: 10px; }
+#gauge-source {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--violet);
+  white-space: nowrap;
+}
+#gauge-row { display: flex; align-items: center; gap: 22px; margin-top: 26px; }
 #gauge-track {
   position: relative;
   flex: 1;
@@ -165,7 +173,7 @@ html, body {
 }
 #gauge-ref-label {
   position: absolute;
-  top: -34px;
+  top: -24px;
   transform: translateX(-50%);
   white-space: nowrap;
   font-family: var(--font-mono);
@@ -177,14 +185,14 @@ html, body {
 #gauge-value {
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: 32px;
+  font-size: 30px;
   color: var(--ink);
-  min-width: 96px;
+  min-width: 92px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 #gauge-legend {
-  margin-top: 8px;
+  margin-top: 5px;
   font-family: var(--font-mono);
   font-size: 12.5px;
   letter-spacing: 0.03em;
@@ -194,7 +202,7 @@ html, body {
   position: relative;
   display: flex;
   justify-content: space-between;
-  margin-top: 5px;
+  margin-top: 9px;
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.06em;

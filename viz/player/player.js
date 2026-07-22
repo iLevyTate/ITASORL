@@ -556,28 +556,29 @@ function drawGhost(ctx, gs, cp, scale, t, color) {
   ctx.restore();
 }
 
-// Mind-probe: a violet dashed halo around the creature plus a lead line
-// running down toward the meter below the card - the literal "wire" behind
-// the gauge's "READING FROM - the creature's mind" tag (same violet). Pure
-// function of t, so it is safe under non-monotonic capture seeks.
+// Mind-probe: a violet dashed scanning halo orbiting the creature - the
+// visual behind the gauge's "READING FROM - the creature's mind" tag (same
+// violet). Halo only: an earlier lead line running to the card edge read as a
+// rendering artifact. Pure function of t, safe under capture seeks.
 function drawMindProbe(ctx, x, y, scale, t) {
-  const breathe = 0.65 + 0.3 * Math.sin(t / 480);
-  const r = 42 * scale;
+  const breathe = 0.82 + 0.18 * Math.sin(t / 480);
+  const r = 46 * scale;
+  const cy = y - 24 * scale;
   ctx.save();
-  ctx.strokeStyle = `rgba(138,114,192,${(0.95 * breathe).toFixed(3)})`;
-  ctx.lineWidth = 3;
-  ctx.setLineDash([9, 7]);
-  ctx.lineDashOffset = -((t / 26) % 16);
+  // Soft light under-stroke so the violet dashes stay legible on the
+  // similarly-toned lavender terraces.
+  ctx.setLineDash([]);
+  ctx.strokeStyle = "rgba(251,250,255,0.85)";
+  ctx.lineWidth = 8;
   ctx.beginPath();
-  ctx.ellipse(x, y - 24 * scale, r, r * 0.62, 0, 0, 2 * Math.PI);
+  ctx.ellipse(x, cy, r, r * 0.62, 0, 0, 2 * Math.PI);
   ctx.stroke();
-  ctx.setLineDash([3, 9]);
-  ctx.lineDashOffset = -((t / 9) % 12);   // dashes march down toward the gauge
-  ctx.strokeStyle = "rgba(138,114,192,0.7)";
-  ctx.lineWidth = 2.6;
+  ctx.strokeStyle = `rgba(122,94,186,${breathe.toFixed(3)})`;
+  ctx.lineWidth = 4;
+  ctx.setLineDash([10, 8]);
+  ctx.lineDashOffset = -((t / 26) % 18);
   ctx.beginPath();
-  ctx.moveTo(x, y + 12 * scale);
-  ctx.lineTo(x, 960);
+  ctx.ellipse(x, cy, r, r * 0.62, 0, 0, 2 * Math.PI);
   ctx.stroke();
   ctx.restore();
 }
@@ -1155,7 +1156,7 @@ class Player {
         refEl.style.opacity = "0";
         refLbl.style.opacity = "0";
       }
-      $("caption").style.top = "1206px";
+      $("caption").style.top = "1214px";
     } else {
       $("gauge").style.opacity = "0";
       $("gauge-ref").style.opacity = "0";
