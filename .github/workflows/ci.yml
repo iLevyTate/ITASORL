@@ -38,7 +38,9 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
           if ls pyproject.toml setup.py setup.cfg >/dev/null 2>&1; then pip install -e . || true; fi
-          pip install ruff pytest
+          # ruff is pinned (requirements-dev.txt): unpinned installs let a new
+          # ruff release (0.16.0) fail CI on untouched code.
+          pip install "ruff==0.15.20" pytest
 
       - name: Lint (ruff)
         run: |

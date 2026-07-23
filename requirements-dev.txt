@@ -1,5 +1,5 @@
 # Dev / CI / Colab tooling (runtime deps are in requirements.txt).
 -r requirements.txt
 pytest>=7.0
-ruff>=0.4
+ruff==0.15.20  # pinned: lint gate must not move under us (0.16.0 flags 189 new errors)
 pyarrow>=14  # tests/test_logschema.py (StepWriter) skips without it
