@@ -1251,8 +1251,16 @@ class Player {
 // ---------------------------------------------------------------- boot
 
 function fitStage() {
-  const s = Math.min(window.innerWidth / 1080, window.innerHeight / 1350);
-  $("stage").style.transform = `translate(-50%, -50%) scale(${s})`;
+  // Reserve room for the transport bar while it is visible so the film's
+  // lower-third caption never sits underneath it. Capture mode hides the bar
+  // and refits, so encoded frames keep scale = 1 at exactly 1080x1350.
+  const controls = $("controls");
+  const reserve = controls && controls.style.display !== "none" ? 96 : 0;
+  const h = window.innerHeight - reserve;
+  const s = Math.min(window.innerWidth / 1080, h / 1350);
+  const stage = $("stage");
+  stage.style.transform = `translate(-50%, -50%) scale(${s})`;
+  stage.style.top = `${h / 2}px`;
 }
 
 async function loadJSON(url) {
@@ -1316,17 +1324,43 @@ function makeTransport(player, duration) {
   };
   const toggle = () => (playing ? pause() : play());
   const seekBy = (dt) => { pause(); draw(tCur + dt); };
+  const galleryOpen = () => $("gallery").style.display === "flex";
 
   btn.addEventListener("click", toggle);
   $("stage").addEventListener("click", toggle);
   scrub.addEventListener("input", () => { pause(); draw(parseFloat(scrub.value)); });
   window.addEventListener("keydown", (e) => {
+    if (galleryOpen()) return;                 // overlay owns the keyboard
     if (e.code === "Space") { e.preventDefault(); toggle(); }
     else if (e.code === "ArrowLeft") seekBy(-5000);
     else if (e.code === "ArrowRight") seekBy(5000);
   });
 
   return { draw, play, pause };
+}
+
+// Overlay gallery: the four companion loop clips from the main page's "More
+// ways to see it" strip, viewable without leaving the player. Opening pauses
+// the film; the clips only play while the overlay is up.
+function wireGallery(pauseFilm) {
+  const gal = $("gallery");
+  const vids = Array.from(gal.querySelectorAll("video"));
+  const show = () => {
+    pauseFilm();
+    gal.style.display = "flex";
+    for (const v of vids) v.play().catch(() => {});
+  };
+  const hide = () => {
+    gal.style.display = "none";
+    for (const v of vids) v.pause();
+  };
+  $("ctl-views").addEventListener("click", show);
+  $("gallery-close").addEventListener("click", hide);
+  gal.addEventListener("click", (e) => { if (e.target === gal) hide(); });
+  window.addEventListener("keydown", (e) => {
+    if (e.code === "Escape" && gal.style.display === "flex") hide();
+  });
+  return { hide };
 }
 
 async function main() {
@@ -1346,10 +1380,13 @@ async function main() {
   await document.fonts.ready;
   const player = new Player(beats, scene, creature);
   const transport = makeTransport(player, beats.duration_ms);
+  const gallery = wireGallery(transport.pause);
 
   window.__seek = (t) => {
     transport.pause();
+    gallery.hide();
     $("controls").style.display = "none";   // capture frames stay chrome-free
+    fitStage();                             // back to scale 1 at 1080x1350
     player.render(t);
     return true;
   };
