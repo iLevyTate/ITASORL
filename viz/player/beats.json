@@ -90,14 +90,14 @@
       "caption": {
         "kicker": "NOW LOOK INSIDE ITS MIND",
         "headline": "But the creature itself ((never notices.))",
-        "subline": "The violet ring is us reading its mind. Does it know its world is fake? No - a coin flip. It never had a reason to care."
+        "subline": "We read its mind each time the fake glitches. Does it catch them? No - a coin flip. It never had a reason to care."
       }
     },
     {
       "id": "survival",
       "t0": 60000,
       "t1": 80000,
-      "world": { "mode": "forage", "zoom": [1.0, 1.08], "energy": true, "stage": 3, "fan": "calm", "probe": true, "worldT0": 0 },
+      "world": { "mode": "forage", "zoom": [1.0, 1.08], "energy": true, "stage": 3, "fan": "calm", "probe": true, "glitch": true, "worldT0": 0 },
       "gauge": {
         "label": "does its mind know NOW?",
         "unit": "pct",

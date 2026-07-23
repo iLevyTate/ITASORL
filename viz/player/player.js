@@ -556,30 +556,39 @@ function drawGhost(ctx, gs, cp, scale, t, color) {
   ctx.restore();
 }
 
-// Mind-probe: a violet dashed scanning halo orbiting the creature - the
-// visual behind the gauge's "READING FROM - the creature's mind" tag (same
-// violet). Halo only: an earlier lead line running to the card edge read as a
-// rendering artifact. Pure function of t, safe under capture seeks.
-function drawMindProbe(ctx, x, y, scale, t) {
-  const breathe = 0.82 + 0.18 * Math.sin(t / 480);
-  const r = 46 * scale;
-  const cy = y - 24 * scale;
+// Mind catching a glitch. When the creature's own read-out flags the fake's
+// wrong-physics moment, a violet mark pops right on the glitch (violet = the
+// mind, matching the gauge's "reading from the creature's mind"). A MISS just
+// fizzles grey - the glitch slipped past unnoticed. This replaces the old idle
+// orbiting halo: now the probe visibly does something, and what it does is catch
+// glitches. Pure function of t, safe under capture seeks.
+function drawMindCatch(ctx, x, y, scale, phase, caught) {
+  const pop = clamp01(phase / 130);
+  const fade = 1 - clamp01((phase - 260) / 340);
+  const a = pop * fade;
+  if (a <= 0) return;
   ctx.save();
-  // Soft light under-stroke so the violet dashes stay legible on the
-  // similarly-toned lavender terraces.
-  ctx.setLineDash([]);
-  ctx.strokeStyle = "rgba(251,250,255,0.85)";
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.ellipse(x, cy, r, r * 0.62, 0, 0, 2 * Math.PI);
-  ctx.stroke();
-  ctx.strokeStyle = `rgba(122,94,186,${breathe.toFixed(3)})`;
-  ctx.lineWidth = 4;
-  ctx.setLineDash([10, 8]);
-  ctx.lineDashOffset = -((t / 26) % 18);
-  ctx.beginPath();
-  ctx.ellipse(x, cy, r, r * 0.62, 0, 0, 2 * Math.PI);
-  ctx.stroke();
+  if (caught) {
+    const R = (12 + 30 * (1 - fade)) * scale;              // ring snaps shut on it
+    ctx.strokeStyle = `rgba(122,94,186,${(0.85 * a).toFixed(3)})`;
+    ctx.lineWidth = 3.5;
+    ctx.beginPath(); ctx.arc(x, y, R, 0, 2 * Math.PI); ctx.stroke();
+    ctx.fillStyle = `rgba(122,94,186,${a.toFixed(3)})`;
+    ctx.beginPath(); ctx.arc(x, y, 5.5 * scale, 0, 2 * Math.PI); ctx.fill();
+    ctx.strokeStyle = `rgba(251,250,255,${a.toFixed(3)})`;   // white check tick
+    ctx.lineWidth = 2.2; ctx.lineCap = "round";
+    ctx.beginPath();
+    ctx.moveTo(x - 3.4 * scale, y);
+    ctx.lineTo(x - 0.7 * scale, y + 2.8 * scale);
+    ctx.lineTo(x + 3.6 * scale, y - 3.0 * scale);
+    ctx.stroke();
+  } else {
+    const R = (10 + 18 * (1 - fade)) * scale;               // faint miss, fizzles
+    ctx.setLineDash([4, 5]);
+    ctx.strokeStyle = `rgba(150,142,170,${(0.5 * a).toFixed(3)})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(x, y, R, 0, 2 * Math.PI); ctx.stroke();
+  }
   ctx.restore();
 }
 
@@ -835,7 +844,24 @@ class Player {
       const cp = map(pos.scr[0], pos.scr[1]);
       if (fanMode) drawFan(ctx, view, cp, pos.u, pos.v, pos.heading, t, worldScale, alert);
       drawCreature(ctx, this.creature, beat.world.stage || 0, cp[0], cp[1], t, sc);
-      if (beat.world.probe) drawMindProbe(ctx, cp[0], cp[1], worldScale, t);
+      // Mind-probe: show the mind CATCHING the fake's glitches, not an idle halo.
+      // Catch chance = how far the gauge sits above coin-flip, so the flags the
+      // viewer sees ARE the number: nocare (50%) barely catches - it doesn't
+      // react; survival climbs 50% -> 73%, so it misses early then starts catching.
+      if (beat.world.probe && glitch) {
+        const gg = beat.gauge;
+        const evTl = GLITCH_START + glitch.seed * GLITCH_EVERY;
+        const gv = gg ? lerp(gg.from, gg.to, easeInOut(ramp(evTl, gg.sweep[0], gg.sweep[1]))) : 0.5;
+        const pCatch = clamp01((gv - 0.5) / 0.3);          // detection skill above chance
+        const caught = mulberry32(glitch.seed * 104729 + 7)() < pCatch;
+        const gc = view.pt(glitch.u, glitch.v);
+        drawMindCatch(ctx, gc[0], gc[1], worldScale, glitch.phase, caught);
+        if (caught) {
+          const ca = Math.min(1, glitch.phase / 130) * (1 - clamp01((glitch.phase - 280) / 320));
+          drawCallout(ctx, gc[0], gc[1] - 20 * worldScale, "CAUGHT",
+            gc[0] < 480 ? [40, -26] : [-40, -26], ca);
+        }
+      }
       if (beat.world.energy) drawEnergyPill(ctx, cp[0], cp[1], pos.energy, worldScale, t);
       if (ghost) drawGhost(ctx, map(ghost.scr[0], ghost.scr[1]), cp, worldScale, t, ghost.color);
       if (alert) drawAlertPing(ctx, cp[0], cp[1], worldScale, glitch.age);
