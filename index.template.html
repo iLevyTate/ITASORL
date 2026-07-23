@@ -366,6 +366,7 @@
     #research > div:last-child{ grid-template-columns:1fr !important; }
     #readout > div > div{ grid-template-columns:1fr !important; gap:30px !important; }
     #novelty > div:nth-of-type(2){ grid-template-columns:1fr !important; }
+    #film > div > div:first-child{ grid-template-columns:1fr !important; gap:36px !important; }
     section{ margin-bottom:90px !important; }
   }
   @media (max-width:720px){
@@ -673,9 +674,46 @@
             <p style="font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; color:#9a94b0; margin:0;">Real runs, 10 each. 50% = coin flip, 100% = always right. Read out, never rewarded.</p>
           </div>
           <div style="justify-self:center;">
-            <video controls playsinline preload="metadata" poster="assets/film/detectable-not-learned-poster.jpg" style="display:block; width:100%; max-width:400px; aspect-ratio:4/5; border-radius:18px; background:#dedaeb; box-shadow:10px 10px 24px #c8c3dd, -10px -10px 24px #fbfaff;">
+            <video controls="controls" sc-camel-plays-inline="true" preload="metadata" poster="assets/film/detectable-not-learned-poster.jpg" style="display:block; width:100%; max-width:400px; aspect-ratio:4/5; border-radius:18px; background:#dedaeb; box-shadow:10px 10px 24px #c8c3dd, -10px -10px 24px #fbfaff;">
               <source src="assets/film/detectable-not-learned-web.mp4" type="video/mp4">
             </video>
+            <div style="display:flex; gap:18px; justify-content:center; margin-top:14px;">
+              <a href="assets/film/detectable-not-learned-web.mp4" download="detectable-not-learned.mp4" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#6b6588;">download the film (mp4) ↓</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- More ways to see it -->
+        <div style="position:relative; margin-top:48px; padding-top:40px; border-top:1px solid rgba(138,114,192,0.18);">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:24px;">
+            <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#8a72c0;">More ways to see it</div>
+            <a href="viz/player/" target="_blank" class="navlink" style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:#6b6588;">open the interactive player →</a>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px;">
+            <figure style="margin:0;">
+              <video sc-camel-auto-play="true" loop="loop" muted="muted" sc-camel-plays-inline="true" preload="metadata" style="display:block; width:100%; border-radius:14px; background:#12101f; box-shadow:8px 8px 18px #c8c3dd, -8px -8px 18px #fbfaff;">
+                <source src="assets/film/loop-idle-clouds.mp4" type="video/mp4">
+              </video>
+              <figcaption style="font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; color:#6b6588; margin-top:10px;">Idle mind - memories from the real and fake worlds sit in one mixed blob. It cannot tell.</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <video sc-camel-auto-play="true" loop="loop" muted="muted" sc-camel-plays-inline="true" preload="metadata" style="display:block; width:100%; border-radius:14px; background:#12101f; box-shadow:8px 8px 18px #c8c3dd, -8px -8px 18px #fbfaff;">
+                <source src="assets/film/loop-survival-clouds.mp4" type="video/mp4">
+              </video>
+              <figcaption style="font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; color:#6b6588; margin-top:10px;">Surviving mind - the two worlds' memories drift into separate islands. It can tell.</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <video sc-camel-auto-play="true" loop="loop" muted="muted" sc-camel-plays-inline="true" preload="metadata" style="display:block; width:100%; border-radius:14px; background:#12101f; box-shadow:8px 8px 18px #c8c3dd, -8px -8px 18px #fbfaff;">
+                <source src="assets/film/loop-race.mp4" type="video/mp4">
+              </video>
+              <figcaption style="font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; color:#6b6588; margin-top:10px;">Two brains train side by side - the detection score only climbs when the fake matters.</figcaption>
+            </figure>
+            <figure style="margin:0;">
+              <video sc-camel-auto-play="true" loop="loop" muted="muted" sc-camel-plays-inline="true" preload="metadata" style="display:block; width:100%; border-radius:14px; background:#12101f; box-shadow:8px 8px 18px #c8c3dd, -8px -8px 18px #fbfaff;">
+                <source src="assets/film/loop-brain-pair.mp4" type="video/mp4">
+              </video>
+              <figcaption style="font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; color:#6b6588; margin-top:10px;">Inside the brain - teal rings mark the memory cells that hold the clue, present only under survival.</figcaption>
+            </figure>
           </div>
         </div>
       </div>
