@@ -827,6 +827,26 @@ conditional on the subtler hidden = 8 artifact.
 > no pairs), but twin co-location under singleton groups is an
 > argsort-tie-breaking accident that varies across sklearn versions - so the mp
 > numbers should be confirmed (not assumed) alongside the cg re-score.
+> **MP CONFIRMATION RESOLVED (2026-07-22): the fold-safety expectation was
+> WRONG.** GroupKFold under the sklearn in use (1.5.2) splits twins at both
+> pair counts (33/60 and 24/25), and the committed drift-0.00 mp floors carry
+> the section-13.C bias signature (0.134-0.137 instead of ~0.5). The mp
+> rollouts are deterministic from the saved agent bundles, so both held-out
+> bundles were re-scored from regenerated rollouts
+> (`scripts/reanalyze_mp_readout.py`): every one of the 120 cells reproduced
+> its stored pre-fix value bit-for-bit under the old singleton-group scoring
+> (determinism gate), and under the fixed pair-grouped estimator every
+> drift-0.00 floor returns to 0.500 exactly. Corrected drift-0.45 means
+> (old -> fixed): forward run survival 0.883 -> 0.893, predictor
+> 0.615 -> 0.706, untrained 0.501 -> 0.612; reverse run survival
+> 0.814 -> 0.855, predictor 0.796 -> 0.838, untrained 0.622 -> 0.689. The bias
+> DEFLATED the recorded values, so no number was overstated. The mp channel is
+> secondary/demoted (a detectability index, sections 9 and 11) and no
+> pre-registered decision rides on it: this corrects the record, not a
+> verdict. Committed artifacts:
+> `artifacts/expB2/heldout_l3_h8_mp_rescore.json` and
+> `heldout_l3_h7_reverse_mp_rescore.json` (via
+> `scripts/promote_mp_rescore.py`).
 
 Done (n = 10, frozen spec 2026-07-14; per-seed summary committed as
 `artifacts/expB2/heldout_l3_h8_summary.json`, extracted from the
