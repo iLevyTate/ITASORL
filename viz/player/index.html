@@ -55,6 +55,48 @@
     <button id="ctl-play" aria-label="Pause">&#x2016;</button>
     <input id="ctl-scrub" type="range" min="0" max="89999" step="100" value="0" aria-label="Seek">
     <div id="ctl-time">0:00 / 1:30</div>
+    <button id="ctl-views">views</button>
+  </div>
+
+  <!-- Overlay gallery: the companion animations, viewable without leaving the
+       player. Hidden by the capture rig alongside the transport bar. -->
+  <div id="gallery">
+    <div id="gallery-panel">
+      <div id="gallery-head">
+        <div id="gallery-title">More ways to see it</div>
+        <button id="gallery-close" aria-label="Close">&#x2715;</button>
+      </div>
+      <div id="gallery-grid">
+        <figure>
+          <video loop muted playsinline preload="metadata">
+            <source src="../../assets/film/loop-idle-clouds.mp4" type="video/mp4">
+          </video>
+          <figcaption>Idle mind - memories from the real and fake worlds sit in one mixed blob. It cannot tell.</figcaption>
+        </figure>
+        <figure>
+          <video loop muted playsinline preload="metadata">
+            <source src="../../assets/film/loop-survival-clouds.mp4" type="video/mp4">
+          </video>
+          <figcaption>Surviving mind - the two worlds' memories drift into separate islands. It can tell.</figcaption>
+        </figure>
+        <figure>
+          <video loop muted playsinline preload="metadata">
+            <source src="../../assets/film/loop-race.mp4" type="video/mp4">
+          </video>
+          <figcaption>Two brains train side by side - the detection score only climbs when the fake matters.</figcaption>
+        </figure>
+        <figure>
+          <video loop muted playsinline preload="metadata">
+            <source src="../../assets/film/loop-brain-pair.mp4" type="video/mp4">
+          </video>
+          <figcaption>Inside the brain - teal rings mark the memory cells that hold the clue, present only under survival.</figcaption>
+        </figure>
+      </div>
+      <div id="gallery-foot">
+        <a href="../../#film">back to the main page &#x2192;</a>
+        <a href="../../assets/film/detectable-not-learned-web.mp4" download="detectable-not-learned.mp4">download the film (mp4) &#x2193;</a>
+      </div>
+    </div>
   </div>
 
   <script src="player.js"></script>

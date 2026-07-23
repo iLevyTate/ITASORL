@@ -387,3 +387,98 @@ html, body {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+#ctl-views {
+  flex: none;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--substrate);
+  box-shadow: inset 3px 3px 7px var(--shadow-dark), inset -3px -3px 7px var(--shadow-light);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--violet);
+  cursor: pointer;
+}
+
+/* Overlay gallery: companion animations without leaving the player. */
+#gallery {
+  position: fixed;
+  inset: 0;
+  display: none;              /* flex when open */
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(232, 229, 241, 0.82);
+  backdrop-filter: blur(6px);
+  z-index: 20;
+}
+#gallery-panel {
+  width: min(880px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 26px 30px 22px;
+  border-radius: 26px;
+  background: var(--substrate);
+  box-shadow: -14px -14px 30px var(--shadow-light), 14px 14px 30px var(--shadow-dark);
+}
+#gallery-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+#gallery-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--violet);
+}
+#gallery-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--substrate);
+  box-shadow: inset 3px 3px 7px var(--shadow-dark), inset -3px -3px 7px var(--shadow-light);
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+#gallery-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+@media (max-width: 720px) {
+  #gallery-grid { grid-template-columns: 1fr; }
+}
+#gallery-grid video {
+  display: block;
+  width: 100%;
+  border-radius: 14px;
+  background: #12101F;
+  box-shadow: 6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+}
+#gallery-grid figcaption {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--secondary);
+  margin-top: 10px;
+}
+#gallery-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 24px;
+}
+#gallery-foot a {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--blue);
+  text-decoration: none;
+}
+#gallery-foot a:hover { text-decoration: underline; }
