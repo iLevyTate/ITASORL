@@ -7,6 +7,10 @@ seams, with detection **read out, not rewarded**.*
 
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb)
 
+> **Start at the website: [ilevytate.github.io/ItaSoRL](https://ilevytate.github.io/ItaSoRL/)** - the whole
+> finding on one page, including the 90-second film, the headline numbers
+> (99% / 50% / 73%), and links to everything below.
+
 **Google Colab (GPU):** [Open `notebooks/colab_gpu.ipynb` in Colab](https://colab.research.google.com/github/iLevyTate/ItaSoRL/blob/main/notebooks/colab_gpu.ipynb). **Make your own copy first** (`File -> Save a copy in Drive`) so your run and outputs are saved - the notebook's first cell enforces this. Then enable a GPU runtime and run all cells (clones the repo and runs `python scripts/run_e2e.py`).
 
 **New to the project?** Start with the nine-page illustrated series - the same walkthrough in two voices, every number read from the committed artifacts:
