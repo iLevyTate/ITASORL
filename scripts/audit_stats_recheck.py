@@ -486,6 +486,27 @@ def main() -> int:
                 check_true(f"cg re-score L0 floor in chance band ({os.path.basename(rp)}:{key})",
                            0.4 <= agg["cg_tail_mean"] <= 0.6)
 
+    # Same gate for the corrected mp re-scores (FINDINGS 10.6 banner resolution,
+    # 2026-07-22): fixed-estimator L0 floors must sit at chance, and every cell's
+    # singleton-group re-score must have reproduced its stored pre-fix value
+    # (rollout-determinism gate). (No-op until an mp re-score artifact exists.)
+    for rp in sorted(_glob.glob(os.path.join(ARTROOT, "expB2", "*mp_rescore*.json"))):
+        with open(rp, encoding="utf-8") as fh:
+            rs = json.load(fh)
+        name = os.path.basename(rp)
+        for agent, floor in rs["floor_drift0_fixed"].items():
+            check_true(f"mp re-score L0 floor in chance band ({name}:{agent})",
+                       0.4 <= floor <= 0.6)
+        check_true(f"mp re-score determinism gate ({name})",
+                   rs["gates"]["all_cells_reproduce_stored_prefix_value"])
+    # the corrected survival means quoted in the FINDINGS 10.6 banner
+    for rp, quoted in (("heldout_l3_h8_mp_rescore.json", 0.893),
+                       ("heldout_l3_h7_reverse_mp_rescore.json", 0.855)):
+        with open(os.path.join(ARTROOT, "expB2", rp), encoding="utf-8") as fh:
+            rs = json.load(fh)
+        check(f"mp re-score survival mean matches doc quote ({rp})",
+              rs["strong_drift"]["survival"]["mp_fixed_mean"], quoted, tol=5e-4)
+
     print("== FINDINGS Exp C: emergence pilot (milestone 3, N=48 G=30 3 seeds) ==")
     # NOTE (2026-07-18): this block re-verifies the INVALIDATED pilot artifact
     # (git_commit 9758202, pre-fix; FINDINGS 13.C) as a historical record. The

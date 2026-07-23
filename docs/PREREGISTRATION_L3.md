@@ -553,6 +553,24 @@ Rigor carried from the B-v3 audit (2026-07-10):
   verdict could have flipped (shuffled at chance throughout); the operative definition is
   the raw target adjudicated at the bar, selectivity reported as a control.
 
+- **2026-07-22 - CORRECTION: THE MP CHANNEL WAS NOT FOLD-SAFE.** The 2026-07-18 entry above
+  asserted the matched-pair channel "(pair counts 60/25, fold-safe; no pair drops)" was
+  unaffected by the `1633bca` estimator fix. That assertion was checked (per FINDINGS 10.6's
+  "confirm, do not assume" banner) and is FALSE: under the sklearn in use (1.5.2), GroupKFold
+  with the pre-fix singleton groups splits matched-pair twins at both pair counts (33/60,
+  24/25), and the recorded drift-0.00 mp floors carry the 13.C bias signature (0.134-0.137
+  instead of ~0.5). Both held-out bundles' mp channels were re-scored from rollouts
+  regenerated off the saved agent bundles (`scripts/reanalyze_mp_readout.py`; deterministic -
+  all 120 cells reproduce their stored pre-fix values bit-for-bit under singleton-group
+  scoring). Under the fixed pair-grouped estimator all drift-0.00 floors return to 0.500
+  exactly; corrected drift-0.45 survival means are 0.893 (forward, was 0.883) and 0.855
+  (reverse, was 0.814 - the value quoted in the 2026-07-16 entry). The bias deflated, never
+  inflated. The mp channel is secondary/demoted (no frozen rule reads it), so no adjudication
+  changes; the corrected aggregates are committed as
+  `artifacts/expB2/heldout_l3_h8_mp_rescore.json` and
+  `artifacts/expB2/heldout_l3_h7_reverse_mp_rescore.json`. The transfer channel's exemption
+  in the 2026-07-18 entry stands (frozen-fit train/test, no CV grouping).
+
 ## 13. How to run (milestones, in order)
 
 1. **Build + calibrate the surrogate.** Train `G` on authentic rollouts; wrap as a World;

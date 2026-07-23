@@ -1,0 +1,81 @@
+{
+ "source_rescore": "fullruns/l3_h7_heldout/mp_rescore.json",
+ "bundle": "fullruns/l3_h7_heldout",
+ "l3_hidden": 7,
+ "estimator": "probe_world_identity (pair-grouped, post-1633bca)",
+ "mp_config": {
+  "n_pairs": 60,
+  "prefix_steps": 20,
+  "branch_steps": 24,
+  "ray_steps": 5
+ },
+ "git_commit_at_promotion": "6f061bf627642df0b8775f30979d1bcee3d0afbe",
+ "generated_by": "scripts/promote_mp_rescore.py",
+ "drift": "0.45",
+ "strong_drift": {
+  "survival": {
+   "n_seeds": 10,
+   "mp_old_mean": 0.814442501942502,
+   "mp_fixed_mean": 0.854722222222222,
+   "mp_fixed_per_seed": [
+    0.6361,
+    0.9306,
+    0.9139,
+    0.8861,
+    0.9167,
+    0.7472,
+    0.9042,
+    0.8681,
+    0.8514,
+    0.8931
+   ],
+   "all_reproduce_stored": true
+  },
+  "predictor": {
+   "n_seeds": 10,
+   "mp_old_mean": 0.7964491064491065,
+   "mp_fixed_mean": 0.8377777777777778,
+   "mp_fixed_per_seed": [
+    0.6653,
+    0.9417,
+    0.8347,
+    0.8833,
+    0.8389,
+    0.7944,
+    0.8944,
+    0.8417,
+    0.8097,
+    0.8736
+   ],
+   "all_reproduce_stored": true
+  },
+  "untrained": {
+   "n_seeds": 10,
+   "mp_old_mean": 0.6224378399378401,
+   "mp_fixed_mean": 0.68875,
+   "mp_fixed_per_seed": [
+    0.6444,
+    0.6417,
+    0.6694,
+    0.6375,
+    0.7,
+    0.7778,
+    0.7667,
+    0.7653,
+    0.6542,
+    0.6306
+   ],
+   "all_reproduce_stored": true
+  }
+ },
+ "floor_drift0_fixed": {
+  "survival": 0.5,
+  "predictor": 0.5,
+  "untrained": 0.5
+ },
+ "gates": {
+  "all_cells_reproduce_stored_prefix_value": true,
+  "floor_near_chance": true
+ },
+ "note": "secondary/demoted channel - detectability index, no frozen rule; corrects the 'fold-safe' assumption recorded 2026-07-19"
+}

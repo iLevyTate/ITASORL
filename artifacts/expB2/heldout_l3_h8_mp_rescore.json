@@ -1,0 +1,81 @@
+{
+ "source_rescore": "fullruns/l3_h8_heldout/mp_rescore.json",
+ "bundle": "fullruns/l3_h8_heldout",
+ "l3_hidden": 8,
+ "estimator": "probe_world_identity (pair-grouped, post-1633bca)",
+ "mp_config": {
+  "n_pairs": 60,
+  "prefix_steps": 20,
+  "branch_steps": 24,
+  "ray_steps": 5
+ },
+ "git_commit_at_promotion": "6f061bf627642df0b8775f30979d1bcee3d0afbe",
+ "generated_by": "scripts/promote_mp_rescore.py",
+ "drift": "0.45",
+ "strong_drift": {
+  "survival": {
+   "n_seeds": 10,
+   "mp_old_mean": 0.8827117327117326,
+   "mp_fixed_mean": 0.8934722222222222,
+   "mp_fixed_per_seed": [
+    0.9528,
+    0.8347,
+    0.9639,
+    0.9306,
+    0.95,
+    0.8028,
+    0.8764,
+    0.8597,
+    0.8667,
+    0.8972
+   ],
+   "all_reproduce_stored": true
+  },
+  "predictor": {
+   "n_seeds": 10,
+   "mp_old_mean": 0.6150942113442113,
+   "mp_fixed_mean": 0.7058333333333333,
+   "mp_fixed_per_seed": [
+    0.5944,
+    0.7681,
+    0.7417,
+    0.8028,
+    0.7486,
+    0.6653,
+    0.5875,
+    0.7528,
+    0.7444,
+    0.6528
+   ],
+   "all_reproduce_stored": true
+  },
+  "untrained": {
+   "n_seeds": 10,
+   "mp_old_mean": 0.5014947552447552,
+   "mp_fixed_mean": 0.6122222222222222,
+   "mp_fixed_per_seed": [
+    0.5778,
+    0.6625,
+    0.6292,
+    0.5097,
+    0.6694,
+    0.6403,
+    0.5694,
+    0.6347,
+    0.6194,
+    0.6097
+   ],
+   "all_reproduce_stored": true
+  }
+ },
+ "floor_drift0_fixed": {
+  "survival": 0.5,
+  "predictor": 0.5,
+  "untrained": 0.5
+ },
+ "gates": {
+  "all_cells_reproduce_stored_prefix_value": true,
+  "floor_near_chance": true
+ },
+ "note": "secondary/demoted channel - detectability index, no frozen rule; corrects the 'fold-safe' assumption recorded 2026-07-19"
+}
