@@ -81,3 +81,21 @@ jobs:
 
       - name: Recompute every published number from committed artifacts
         run: python scripts/audit_stats_recheck.py
+
+  deploy-pages:
+    # GitHub Pages serves the gh-pages branch, which is a pure mirror of main
+    # (no branch-only commits). Keep it in sync automatically so site changes
+    # go live on merge instead of waiting for a manual `git push main:gh-pages`.
+    name: Publish site (sync gh-pages to main)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [python, audit]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Mirror main onto gh-pages
+        run: git push --force origin HEAD:gh-pages
