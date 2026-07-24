@@ -660,7 +660,7 @@ def train_predictor_only(drift_sigma, params=None, *, n_eps=16, updates=200, emb
 # length constant across pools, so length/lifetime cannot leak the label.
 # ---------------------------------------------------------------------------
 def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_base, ray_steps,
-                 return_anchors: bool = False):
+                 return_anchors: bool = False, obs_mask=None):
     """Collect up to n_eps episodes of EXACTLY `steps` length (drop early deaths) with
     the frozen deterministic agent. Returns H (k,steps,Hdim), speeds (k,).
 
@@ -673,7 +673,12 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
     headline probe must be shown NOT to be reading 'how much it ate' instead of identity.
     Also returns the PER-TIMESTEP behavior traces (k, steps, 4) - the same
     speed/energy/food/drag accumulators the anchor means are taken over - so the
-    behavior-mediation audit can run its per-timestep control offline."""
+    behavior-mediation audit can run its per-timestep control offline.
+
+    `obs_mask` is an optional float/bool array of length obs_dim applied to the raw
+    observation before normalization; used for observation-channel localization."""
+    if obs_mask is not None:
+        obs_mask = np.asarray(obs_mask, dtype=np.float64)
     Hs, spd, energy, food, drag, reward, traces = [], [], [], [], [], [], []
     for i in range(n_eps):
         w = make_world(params, drift_sigma, ray_steps)
@@ -681,6 +686,8 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
         h = agent.initial_state(1, device)
         prev = torch.zeros(1, agent.act_dim, device=device)
         obs = w.observe().astype(np.float64)
+        if obs_mask is not None:
+            obs = obs * obs_mask
         Hrow, sp, en, fd, dg, px, py, hd, died = [], [], [], [], [], [], [], [], False
         rw = 0.0
         for _ in range(steps):
@@ -697,6 +704,8 @@ def collect_pool(agent, norm, params, drift_sigma, n_eps, steps, device, seed_ba
             hd.append(float(w.heading))              # available to the mediation control
             rw += float(r.reward)                     # summed homeostatic reward (never detection)
             obs = r.obs.astype(np.float64)
+            if obs_mask is not None:
+                obs = obs * obs_mask
             prev = env_act
             if r.terminated:
                 died = True
@@ -732,7 +741,8 @@ def _auroc_with_ci(X, y, seed: int = 0, groups: np.ndarray | None = None) -> tup
 
 
 def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray_steps=5,
-                   device=None, seed=0, dump_path=None, leak_margin=0.1, return_pools=False) -> dict:
+                   device=None, seed=0, dump_path=None, leak_margin=0.1, return_pools=False,
+                   obs_mask=None) -> dict:
     """Experiment-B-style probe: decode world identity across independent episodes.
     Reports the headline `target` (LEVEL features) with a bootstrap CI, plus two
     additive readouts that probe a VOLATILITY signature - `target_var` (dispersion
@@ -748,10 +758,10 @@ def pooled_readout(agent, norm, params, drift_sigma, *, n_eps=110, steps=24, ray
     device = device or default_device()
     Ha, spa, ena, fda, dra, rwa, bta = collect_pool(agent, norm, params, 0.0, n_eps, steps,
                                                     device, 800_000, ray_steps,
-                                                    return_anchors=True)
+                                                    return_anchors=True, obs_mask=obs_mask)
     Hs, sps, ens, fds, drs, rws, bts = collect_pool(agent, norm, params, drift_sigma, n_eps,
                                                     steps, device, 850_000, ray_steps,
-                                                    return_anchors=True)
+                                                    return_anchors=True, obs_mask=obs_mask)
     if dump_path is not None:
         d = os.path.dirname(dump_path)
         if d:

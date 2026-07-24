@@ -1440,11 +1440,10 @@ substrate primitives) or to H3 (resolved negative, section 13). The reactive
 reading of the common-garden control (section 10.6.1: the signal is a modest
 persistent component the policy also expresses reactively while the dynamics bite)
 is unchanged; A1 neutralizes the felt dynamics divergence, so a collapse is fully
-consistent with it. Deferred in the spec: A2, an observation-channel localization
-that must re-run rollouts with masked observations (the probe reads recurrent
-state, not the observation, so it cannot be a post-hoc mask); A3, the same test
-through a different substrate primitive (for example the L1 discretization
-rung), which needs a fresh training run.
+consistent with it. A2 observation-channel localization is now resolved in
+section 14.6. The remaining deferred follow-on is A3: the same H2 substrate-
+grounding test through a different substrate primitive (for example the L1
+discretization rung), which needs a fresh training run.
 
 ## 14.5 H2 texture-knockout: structure + dose-response ablations
 
@@ -1494,3 +1493,42 @@ encoded world-identity signal is driven by the learned structure of the substrat
 velocity-law surrogate, not by a task-level perturbation confound. The survival-
 specificity part remains conditional on the subtler hidden=8 artifact (section
 10.5).
+
+## 14.6 A2 observation-channel localization
+
+**Status: COMPLETE for the L3 rung at hidden=8.** Design and runner:
+`scripts/run_l3_obs_localization.py`. Local artifact:
+`fullruns/l3_h8_obs_localization/aggregate.json`.
+
+This probe asks *which* observation channels carry the world-identity signal in
+the survival agent's recurrent state. The agent is frozen; the only change is a
+channel-wise zero mask applied to the raw observation before its running norm. New
+pools are collected under the hidden=8 fingerprint at drift 0.45, and a fresh
+pooled_readout is run on each masked condition.
+
+| Mask | Zeroed dims | survival mean | predictor mean | untrained mean |
+|---|---|---|---|---|
+| none | 0 / 146 | **0.753** (8/10 >= 0.65) | 0.573 | 0.488 |
+| vision | 120 / 146 | **0.686** (7/10) | 0.598 | 0.567 |
+| intero | 14 / 146 | **0.756** (8/10) | 0.562 | 0.506 |
+| all | 146 / 146 | **0.500** (0/10) | 0.500 | 0.500 |
+
+**Reading.** Masking the entire observation collapses the signal to chance (0.500),
+which is a sanity check that the readout is not decoding from unmasked behavior
+correlates. Masking **interoception** (velocity, heading, energy, etc.) leaves the
+signal essentially unchanged, so the world-identity representation is not
+primarily driven by the dynamics-relevant proprioceptive channels. Masking **vision**
+(raycasts, including their radial-velocity components) causes a modest but clear
+drop from 0.753 to 0.686. This suggests the world-identity signal is carried by
+the visual stream and/or the behavior it shapes, not by explicit interoceptive
+velocity feedback. It is consistent with the behavior-mediation result (section
+10.4): the agent's state tracks what it *does* differently in the two worlds, and
+vision is the main input that shapes that differentiated behavior.
+
+**Scope.** One mask type is applied uniformly across all timesteps. It does not
+distinguish "the recurrent state passively mirrors a visually present world cue"
+from "the recurrent state stores a behavior plan shaped by vision"; finer lesion
+studies (e.g., masking only radial-velocity channels, or only reflectance/distance)
+would be needed to separate those. The run is at hidden=8 only; a hidden=7
+replication would test whether the same channel dependence holds at the coarser
+artifact.

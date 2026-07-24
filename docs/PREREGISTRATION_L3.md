@@ -571,6 +571,23 @@ Rigor carried from the B-v3 audit (2026-07-10):
   `artifacts/expB2/heldout_l3_h7_reverse_mp_rescore.json`. The transfer channel's exemption
   in the 2026-07-18 entry stands (frozen-fit train/test, no CV grouping).
 
+- **2026-07-24 - A2 OBSERVATION-CHANNEL LOCALIZATION (n=10, readout-only):
+  WORLD-IDENTITY SIGNAL IS VISUAL, NOT INTEROCEPTIVE at hidden=8.** Executes
+  `scripts/run_l3_obs_localization.py` against the saved
+  `fullruns/l3_h8_heldout` agents; no training. The frozen agent's observations
+  are channel-masked before the running norm and new drift-0.45 pools are
+  collected under the hidden=8 fingerprint. Baseline (no mask) survival mean
+  **0.753** reproduces the headline. Masking **vision** (120/146 dims) drops the
+  signal to **0.686** (7/10 seeds >= 0.65). Masking **interoception** (14/146
+  dims) leaves it at **0.756** (8/10). Masking **all** observations collapses it
+  to **0.500**. READING: the world-identity signal is carried by the visual
+  stream / visually-shaped behavior, not by the explicit velocity/energy
+  interoceptive channels. This is consistent with section 10.4's behavior-
+  mediation finding; it does not distinguish passive visual echo from a visually-
+  guided behavior plan. The probe's positive controls (speed, energy, food) remain
+  readable in every mask condition, so the chance collapse is not a dead-probe
+  artifact. Local artifact: `fullruns/l3_h8_obs_localization/aggregate.json`.
+
 - **2026-07-23 - H2 TEXTURE-KNOCKOUT: STRUCTURE + DOSE-RESPONSE ABLATIONS (n=10,
   readout-only): H2 CONFIRMED IN TEXTURE-SPECIFIC FORM at hidden=8 and hidden=7.**
   Executes the frozen spec
