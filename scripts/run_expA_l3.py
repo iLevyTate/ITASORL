@@ -65,7 +65,7 @@ def cfg():
     ap.add_argument("--json", type=str, default=None,
                     help="write the calibration table + selection to this path")
     ap.add_argument("--device", choices=("auto", "cpu", "cuda"), default="auto")
-    ap.add_argument("--family", choices=("mlp", "rff", "cd"), default="mlp",
+    ap.add_argument("--family", choices=("mlp", "rff", "cd", "gn"), default="mlp",
                     help="surrogate family to calibrate; mlp is the frozen "
                          "GMotion path and stays byte-identical to the "
                          "pre-flag behavior")
@@ -73,6 +73,8 @@ def cfg():
                     help="override the rff D sweep (bisection); default = frozen RFF_SWEEP")
     ap.add_argument("--cd-epss", type=float, nargs="+", default=None,
                     help="override the cd eps sweep (extension); default = frozen CD_SWEEP")
+    ap.add_argument("--gn-sigmas", type=float, nargs="+", default=None,
+                    help="override the gn sigma_v sweep (bisection); default = frozen GN_SWEEP")
     return ap.parse_args()
 
 
@@ -91,7 +93,14 @@ def main():
                       for h in a.hiddens)
     else:
         from itasorl.surrogate_l3_families import gate0_candidates
-        sweep = a.rff_ds if a.family == "rff" else a.cd_epss if a.family == "cd" else None
+        if a.family == "rff":
+            sweep = a.rff_ds
+        elif a.family == "cd":
+            sweep = a.cd_epss
+        elif a.family == "gn":
+            sweep = a.gn_sigmas
+        else:
+            sweep = None
         candidates = gate0_candidates(a.family, params=P, sweep=sweep)
 
     rows = []
@@ -175,6 +184,10 @@ def main():
         with open(a.json, "w", encoding="utf-8") as f:
             json.dump(payload, f, indent=2)
         print(f"saved {a.json}")
+    # H2 dose-response ladder scans only sub-band capacities outside the
+    # second-capacity set {4..7}; selection is N/A and a written JSON is success.
+    if a.family == "mlp" and not (set(a.hiddens) & {4, 5, 6, 7}):
+        return 0
     return 0 if selected is not None else 1
 
 
