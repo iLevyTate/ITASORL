@@ -1,7 +1,8 @@
 # H2 substrate-grounding ablations design
 
 Date: 2026-07-22
-Status: draft (awaiting owner review; frozen on approval, before any run)
+Status: frozen (approved for implementation 2026-07-23; no science run until
+tests pass and gate-0 calibrations are recorded)
 
 ## Purpose
 

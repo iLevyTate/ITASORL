@@ -1,13 +1,15 @@
-"""Cross-recipe held-out surrogate families (spec 2026-07-15).
+"""Held-out surrogate families for transfer / ablation probes.
 
-Both families satisfy the GMotion hook contract: callable `(vel, a, drag) ->
+Families satisfy the GMotion hook contract: callable `(vel, a, drag) ->
 vel_next`, drag ignored, numpy-only per world step. They are EVALUATION-ONLY
 transfer targets; the training surrogate stays the frozen GMotion MLP.
 
-World-P scope (spec): drag is constant in the frozen organism world, so the
-authentic velocity law is exactly linear in (vel, a). A family therefore only
-has a fingerprint if it CANNOT represent that linear map (G_rff: cosine basis)
-or is deliberately mis-set (G_cd: wrong drag constant).
+World-P scope: drag is constant in the frozen organism world, so the authentic
+velocity law is exactly linear in (vel, a). Cross-recipe families (spec
+2026-07-15) only have a fingerprint if they CANNOT represent that linear map
+(G_rff: cosine basis) or are deliberately mis-set (G_cd: wrong drag constant).
+The H2 structure-knockout family (spec 2026-07-22) keeps the authentic
+deterministic law and adds unstructured iid velocity jitter (G_gn).
 """
 
 from __future__ import annotations
@@ -39,6 +41,45 @@ def make_g_cd(*, eps: float, params) -> GConstantDrag:
     if c * params.dt >= 1.0:
         raise ValueError(f"unstable constant-drag law: c*dt = {c * params.dt:.3f} >= 1")
     return GConstantDrag(c=c, dt=params.dt)
+
+
+class GNoise:
+    """Authentic deterministic velocity law plus iid Gaussian jitter.
+
+    Off-ladder H2 structure knockout (spec 2026-07-22): the deterministic part
+    equals world-P's authentic law to machine precision, so the ONLY tell is
+    unstructured eta ~ N(0, sigma_v^2 I2). Holds its own Philox stream; call
+    `reseed` before each pool for per-pool bit-reproducibility.
+    """
+
+    def __init__(self, sigma_v: float, drag0: float, dt: float, seed: int = 0) -> None:
+        self._sigma_v = float(sigma_v)
+        self._drag0 = float(drag0)
+        self._dt = float(dt)
+        self._seed = int(seed)
+        self._rng = np.random.Generator(np.random.Philox(self._seed))
+
+    def reseed(self, seed: int) -> None:
+        self._seed = int(seed)
+        self._rng = np.random.Generator(np.random.Philox(self._seed))
+
+    def __call__(self, vel, a, drag=None) -> np.ndarray:
+        base = ((1.0 - self._drag0 * self._dt) * np.asarray(vel, float)
+                + np.asarray(a, float) * self._dt)
+        if self._sigma_v == 0.0:
+            return base
+        eta = self._rng.normal(0.0, self._sigma_v, size=2)
+        return base + eta
+
+
+def make_g_gn(*, sigma_v: float, params, seed: int = 0) -> GNoise:
+    """Authentic-law + iid velocity jitter. Requires uniform drag so the
+    deterministic part is exactly the world-P linear map (same refusal as
+    make_g_cd)."""
+    if params.k_land != params.k_water:
+        raise ValueError("make_g_gn requires a uniform-drag world (k_land == k_water)")
+    return GNoise(sigma_v=float(sigma_v), drag0=float(params.k_land),
+                  dt=float(params.dt), seed=int(seed))
 
 
 class GRff:
@@ -82,18 +123,25 @@ def fit_g_rff(*, D: int = 32, lam: float = 1e-3, ell: float = 1.0,
 
 RFF_SWEEP = (8, 16, 32, 64, 128)          # spec: ascending, freeze FIRST in-band
 CD_SWEEP = (0.05, 0.1, 0.2, 0.4, 0.8)     # spec: coarse grid, then bisect
+GN_SWEEP = (0.0025, 0.005, 0.01, 0.02, 0.04)  # H2 knockout; brackets sigma_meas=0.02
 
 
 def gate0_candidates(family: str, *, params, sweep=None, **fit_kwargs):
     """Yield ((knob_name, knob_value), g) pairs for the gate-0 sweep.
     `sweep` overrides the frozen default grid (sorted ascending so the
     freeze-FIRST-in-band selection rule stays well-defined).
-    fit_kwargs pass through to fit_g_rff (test-size overrides)."""
+    fit_kwargs pass through to fit_g_rff (test-size overrides); for gn only
+    `seed` is consumed (default 0)."""
     if family == "rff":
         for D in sorted(sweep) if sweep is not None else RFF_SWEEP:
             yield ("D", int(D)), fit_g_rff(D=int(D), params=params, **fit_kwargs)
     elif family == "cd":
         for eps in sorted(sweep) if sweep is not None else CD_SWEEP:
             yield ("eps", float(eps)), make_g_cd(eps=float(eps), params=params)
+    elif family == "gn":
+        seed = int(fit_kwargs.get("seed", 0))
+        for sigma_v in sorted(sweep) if sweep is not None else GN_SWEEP:
+            yield (("sigma_v", float(sigma_v)),
+                   make_g_gn(sigma_v=float(sigma_v), params=params, seed=seed))
     else:
         raise ValueError(f"unknown family: {family!r}")
